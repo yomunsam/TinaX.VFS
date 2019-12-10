@@ -1,0 +1,18 @@
+{
+    "name": "io.nekonya.tinax.vfs",
+    "version": "6.6.0",
+    "displayName": "TinaX VFS",
+    "description": "Virtual File System - Assets manager system in TinaX Framework.",
+    "unity": "2019.2",
+   "keywords": [
+      "TinaX",
+      "VFS",
+      "Assets"
+    ],
+    "author": {
+      "name": "yomunsam",
+      "email": "yomunsam@gmail.com",
+      "url": "https://yomunchan.moe"
+    }
+  }
+  
