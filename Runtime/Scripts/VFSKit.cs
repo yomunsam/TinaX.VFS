@@ -16,7 +16,7 @@ namespace TinaX.VFSKit
             throw new NotImplementedException();
         }
 
-        public Task<T> LoadAssetAsync<T>(string assetPath)
+        public Task<T> LoadAssetAsync<T>(string assetPath) where T : UnityEngine.Object
         {
             throw new NotImplementedException();
         }

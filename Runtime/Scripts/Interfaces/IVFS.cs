@@ -26,7 +26,7 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         UnityEngine.Object LoadAsset(string assetPath, System.Type type);
 
-        Task<T> LoadAssetAsync<T>(string assetPath);
+        Task<T> LoadAssetAsync<T>(string assetPath) where T : UnityEngine.Object;
 
         Task<UnityEngine.Object> LoadAssetAsync(string assetPath, System.Type type);
 

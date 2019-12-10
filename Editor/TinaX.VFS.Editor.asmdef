@@ -1,0 +1,16 @@
+{
+    "name": "TinaX.VFS.Editor",
+    "references": [
+        "GUID:c2cbe029685ec88498e06f89c89cda5d"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
