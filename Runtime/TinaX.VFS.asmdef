@@ -1,6 +1,10 @@
 {
     "name": "TinaX.VFS",
-    "references": [],
+    "references": [
+        "UniRx",
+        "UniRx.Async",
+        "Nekonya.TinaX.Core"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -8,5 +12,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [],
+    "noEngineReferences": false
 }
