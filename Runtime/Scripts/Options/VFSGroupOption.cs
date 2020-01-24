@@ -1,42 +1,41 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using TinaX.VFSKitInternal.Utils;
 
 
 namespace TinaX.VFSKit
 {
-    public class VFSGroup
+    [Serializable]
+    public class VFSGroupOption
     {
-        public string GroupName { get; set; }
-        public List<string> FolderPaths { get; private set; } = new List<string>();
+        internal static VFSGroupOption New() => new VFSGroupOption();
+        internal static VFSGroupOption New(string groupName) => new VFSGroupOption() { GroupName = groupName };
 
-        private VFSGroupOption mOption;
+        public string GroupName = "common";
 
-        public VFSGroup()
-        {
+        [Header("Asset folders in this group | 当前资源组下包含的资源目录.")]
+        public string[] FolderPaths = { };
 
-        }
+        [Header("Asset file in this group | 当前资源组下的资源文件.")]
+        public string[] AssetPaths = { };
 
-        public VFSGroup(VFSGroupOption option)
-        {
-            mOption = option;
-            GroupName = option.GroupName;
-            FolderPaths.AddRange(option.FolderPaths);
-        }
+        [Header("Head Mode")]
+        public GroupHandleMode GroupAssetsHandleMode = GroupHandleMode.LocalAndUpdatable;
 
         /// <summary>
-        /// 检查组内的文件夹冲突，并将存在冲突的内容返回，如果没有冲突则返回值的Count = 0
+        /// 检查文件夹冲突，并将存在冲突的内容返回，如果没有冲突则返回值的Count = 0
         /// </summary>
         /// <returns></returns>
         public List<string> CheckFolderConflict()
         {
             List<string> result = new List<string>();
-            for (int i = 0; i < FolderPaths.Count; i++)
+            for(int i = 0; i < FolderPaths.Length; i++)
             {
-                if (i > 0)
+                if(i > 0)
                 {
-                    for (int j = 0; j < i; j++)
+                    for(int j = 0; j < i; j++)
                     {
                         if (VFSUtil.IsSameOrSubPath(FolderPaths[i], FolderPaths[j], true))
                         {
@@ -52,7 +51,7 @@ namespace TinaX.VFSKit
         }
 
         /// <summary>
-        /// 检查组内的文件夹是否冲突，如果冲突，返回true，冲突的文件夹路径会放在out参数里
+        /// 检查文件夹是否冲突，如果冲突，返回true，冲突的文件夹路径会放在out参数里
         /// </summary>
         /// <param name="simplify">简化检测，如果有发现冲突直接返回false结果，而不遍历所有数据进行判断</param>
         /// <param name="paths"></param>
@@ -60,7 +59,7 @@ namespace TinaX.VFSKit
         public bool CheckFolderConflict(out List<string> paths, bool simplify = false)
         {
             List<string> result = new List<string>();
-            for (int i = 0; i < FolderPaths.Count; i++)
+            for (int i = 0; i < FolderPaths.Length; i++)
             {
                 if (i > 0)
                 {
@@ -87,24 +86,8 @@ namespace TinaX.VFSKit
             return (result.Count > 0);
         }
 
-        /// <summary>
-        /// 检查给定的文件夹路径是否与组内的文件夹配置冲突（相同或者互为子路径），如果冲突，返回true
-        /// </summary>
-        /// <param name="folderPath"></param>
-        /// <returns></returns>
-        public bool CheckFolderConflict(string folderPath)
-        {
-            foreach(var path in FolderPaths)
-            {
-                if (VFSUtil.IsSameOrSubPath(folderPath, path, true))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+
 
     }
 }
-
 

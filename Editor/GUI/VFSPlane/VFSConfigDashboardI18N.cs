@@ -82,5 +82,83 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+
+        internal static string Window_GroupConfig_Null_Tips
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "选择一个资源组.";
+                else
+                    return "Select a group.";
+            }
+        }
+
+        internal static string Window_GroupConfig_Title_GroupName
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "资源组：";
+                else
+                    return "Asset Group: ";
+            }
+        }
+
+
+        internal static string Window_GroupConfig_Title_FolderPaths
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "白名单文件夹路径：";
+                else
+                    return "Whitelist folder paths: ";
+            }
+        }
+
+        internal static string Window_GroupConfig_Title_AssetPaths
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "白名单资源路径：";
+                else
+                    return "Whitelist asset paths: ";
+            }
+        }
+
+        internal static string Window_GroupConfig_SelectFolder
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "选择文件夹：";
+                else
+                    return "Select a folder: ";
+            }
+        }
+        internal static string Window_GroupConfig_SelectAsset
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "选择资源：";
+                else
+                    return "Select a asset: ";
+            }
+        }
+
+        internal static string Window_GroupConfig_SelectAsset_Error_Select_Meta
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "不可以选择\".meta\"后缀的文件加入VFS名单";
+                else
+                    return "Can not select a \".meta\" file to add VFS Asset list.";
+            }
+        }
+
     }
 }

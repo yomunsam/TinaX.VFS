@@ -1,9 +1,9 @@
 {
     "name": "TinaX.VFS",
     "references": [
-        "UniRx",
-        "UniRx.Async",
-        "Nekonya.TinaX.Core"
+        "GUID:560b04d1a97f54a4e82edc0cbbb69285",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:4e58fd8b44ff4c14f917ce28647bad94"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
