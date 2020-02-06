@@ -12,7 +12,7 @@ namespace TinaX.VFSKit
     [XServiceProviderOrder(60)]
     public class VFSProvider : IXServiceProvider
     {
-        public string ServiceName => VFSConfig.ServiceName;
+        public string ServiceName => VFSConst.ServiceName;
 
         public Task<bool> OnInit()
         {

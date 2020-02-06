@@ -4,10 +4,10 @@ namespace TinaX.VFSKit.Exceptions
 {
     public class VFSException : XException
     {
-        public VFSException(string message) : base("[TinaX.VFS]" + message) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConfig.ServiceName; }
+        public VFSException(string message) : base("[TinaX.VFS]" + message) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConst.ServiceName; }
         
-        public VFSException(string message, int errorCode): base("[TinaX.VFS]" + message, errorCode) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConfig.ServiceName; }
-        public VFSException(string message, VFSErrorCode errorCode): base("[TinaX.VFS]" + message, (int)errorCode) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConfig.ServiceName; }
+        public VFSException(string message, int errorCode): base("[TinaX.VFS]" + message, errorCode) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConst.ServiceName; }
+        public VFSException(string message, VFSErrorCode errorCode): base("[TinaX.VFS]" + message, (int)errorCode) { base.ServiceException = true; base.ServiceName = TinaX.VFSKit.Const.VFSConst.ServiceName; }
 
     
     }

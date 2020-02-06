@@ -141,7 +141,12 @@ namespace TinaXEditor.VFSKit
             }
         }
 
-
+        private void OnDestroy()
+        {
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            VFSManagerEditor.RefreshManager(true);
+        }
 
         private void DrawGlobalConfig()
         {

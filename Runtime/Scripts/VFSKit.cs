@@ -14,7 +14,7 @@ namespace TinaX.VFSKit
 {
     public class VFSKit : IVFS , IVFSInternal , IAssetService
     {
-        public string ConfigPath { get; set; } = VFSConfig.ConfigFilePath_Resources;
+        public string ConfigPath { get; set; } = VFSConst.ConfigFilePath_Resources;
         public AssetLoadType ConfigLoadType { get; private set; } = AssetLoadType.Resources;
         private VFSConfigModel mConfig;
 

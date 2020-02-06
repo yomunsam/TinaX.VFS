@@ -23,6 +23,7 @@ namespace TinaX.VFSKit
             mOption = option;
             GroupName = option.GroupName;
             FolderPaths.AddRange(option.FolderPaths);
+
         }
 
         /// <summary>

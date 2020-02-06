@@ -24,6 +24,12 @@ namespace TinaX.VFSKit
         [Header("Head Mode")]
         public GroupHandleMode GroupAssetsHandleMode = GroupHandleMode.LocalAndUpdatable;
 
+        [Header("Ignore subpath in this group's FolderPaths whitelist. | 在当前资源组下的 资源目录 配置中的 忽略子路径")]
+        public string[] IgnoreSubPath = { };
+
+        [Header("Ignore extend name. | 忽略的扩展名")]
+        public string[] IngnoreExtName = { };
+
         /// <summary>
         /// 检查文件夹冲突，并将存在冲突的内容返回，如果没有冲突则返回值的Count = 0
         /// </summary>

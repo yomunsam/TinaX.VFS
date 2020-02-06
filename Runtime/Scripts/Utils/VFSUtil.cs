@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using TinaX.VFSKit;
 
 namespace TinaX.VFSKitInternal.Utils
 {
@@ -58,6 +61,53 @@ namespace TinaX.VFSKitInternal.Utils
             }
         }
 
+        public static bool IsInResources(string path)
+        {
+            return path.Replace('\\', '/').ToLower().Contains("/resources/");
+        }
+
+        /// <summary>
+        /// 配置规范化
+        /// </summary>
+        /// <param name="config"></param>
+        public static void NormalizationConfig(ref VFSConfigModel config)
+        {
+            if (config == null) return;
+            //全局配置
+
+            //后缀名配置 补全缺失的“框架内部定义的必须存在的”配置项
+            #region 全局 后缀名 内部配置项
+            if (config.GlobalVFS_Ignore_ExtName == null)
+                config.GlobalVFS_Ignore_ExtName = new string[0];
+            List<string> ext_list = new List<string>();
+            foreach (var item in TinaX.VFSKitInternal.InternalVFSConfig.GlobalIgnoreExtName)
+            {
+                if (!config.GlobalVFS_Ignore_ExtName.Contains(item))
+                {
+                    ext_list.Add(item);
+                }
+            }
+            if (ext_list.Count > 0)
+                ArrayUtil.Combine(ref config.GlobalVFS_Ignore_ExtName, ext_list.ToArray());
+            #endregion
+
+
+
+            //后缀名配置必须要以点开头，并小写
+            #region 全局 后缀名 格式规范
+            if (config.GlobalVFS_Ignore_ExtName != null && config.GlobalVFS_Ignore_ExtName.Length > 0)
+            {
+                for (var i = 0; i < config.GlobalVFS_Ignore_ExtName.Length; i++)
+                {
+                    if (!config.GlobalVFS_Ignore_ExtName[i].StartsWith("."))
+                        config.GlobalVFS_Ignore_ExtName[i] = "." + config.GlobalVFS_Ignore_ExtName[i];
+
+                    config.GlobalVFS_Ignore_ExtName[i] = config.GlobalVFS_Ignore_ExtName[i].ToLower();
+                }
+            }
+            #endregion
+
+        }
     }
 
 }
