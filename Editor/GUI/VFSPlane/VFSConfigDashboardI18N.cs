@@ -15,6 +15,17 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+        internal static string EnableVFS
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "启用VFS";
+                else
+                    return "Enable VFS";
+            }
+        }
+
         internal static string GlobalVFS_Ignore_ExtName
         {
             get
@@ -23,6 +34,17 @@ namespace TinaXEditor.VFSKit
                     return "忽略后缀名";
                 else
                     return "Ignore extname";
+            }
+        }
+
+        internal static string GlobalVFS_Ignore_PathItem
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "忽略路径项目";
+                else
+                    return "Ignore path item";
             }
         }
 
@@ -157,6 +179,61 @@ namespace TinaXEditor.VFSKit
                     return "不可以选择\".meta\"后缀的文件加入VFS名单";
                 else
                     return "Can not select a \".meta\" file to add VFS Asset list.";
+            }
+        }
+
+        internal static string Window_Cannot_delete_internal_config_content
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "由于VFS内部规则，不可以删除该项：{0}";
+                else
+                    return "The item \"{0}\"cannot be remove because of VFS internal rules.";
+            }
+        }
+
+        internal static string Window_Cannot_delete_internal_config_title
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "该项不可删除";
+                else
+                    return "Cannot remove item.";
+            }
+        }
+
+        internal static string Window_Group_HandleMode
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "资源组 处理模式：";
+                else
+                    return "Group handle type：";
+            }
+        }
+
+        internal static string Menu_Build
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "构建资源";
+                else
+                    return "Build";
+            }
+        }
+
+        internal static string Menu_Build_BaseAsset
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "完整资源包（母包）";
+                else
+                    return "Complete assets package";
             }
         }
 

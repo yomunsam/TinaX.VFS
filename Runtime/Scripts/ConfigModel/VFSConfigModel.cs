@@ -30,11 +30,11 @@ namespace TinaX.VFSKit
          * 其中“Assets” 、 “Image” 就是Path Item
          * 
          */
-        public string[] GlobalVFS_Ignore_Path_Item =
+        public string[] GlobalVFS_Ignore_Path_Item = ArrayUtil.Combine<string>(InternalVFSConfig.GlobalIgnorePathItem, new string[]
         {
             "Resources",
-            "Editor"
-        };
+        });
+
 
 
         internal string[] GlobalVFS_Ignore_Path_Item_Lower

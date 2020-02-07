@@ -6,6 +6,8 @@ using UnityEditorInternal;
 using UnityEditor.EditorTools;
 using TinaX;
 using TinaX.VFSKit;
+using TinaX.VFSKitInternal;
+using TinaXEditor.Utils;
 using System.Linq;
 
 namespace TinaXEditor.VFSKit
@@ -21,7 +23,7 @@ namespace TinaXEditor.VFSKit
 
         private int Window_Min_Weight = Window_Area_GlobalConfig_Min_Weight + Window_Area_GroupList_Min_Weight + Window_Area_GroupConfig_Min_Weight;
         private const int Window_Area_GlobalConfig_Min_Weight = 300;
-        private const int Window_Area_GroupList_Min_Weight = 280;
+        private const int Window_Area_GroupList_Min_Weight = 300;
         private const int Window_Area_GroupConfig_Min_Weight = 400;
 
 
@@ -39,9 +41,13 @@ namespace TinaXEditor.VFSKit
         private GUIStyle style_title_h2_center;
         private GUIStyle style_title_h3;
 
+        private Vector2 v2_scrollview_globalConfig = Vector2.zero;
 
         bool b_flodout_global_extname = false;
         private ReorderableList reorderableList_global_extname;
+
+        bool b_flodout_global_pathItem = false;
+        private ReorderableList reorderableList_global_pathItem;
 
         private Vector2 v2_scrollview_assetGroup = Vector2.zero;
         private string input_createGroupName;
@@ -58,6 +64,26 @@ namespace TinaXEditor.VFSKit
         /// </summary>
         private Texture img_folder_icon;
         private Texture img_file_icon;
+
+        private GenericMenu _build_menu;
+        private GenericMenu mBuildMenu
+        {
+            get
+            {
+                if(_build_menu == null)
+                {
+                    _build_menu = new GenericMenu();
+                    _build_menu.AddItem(new GUIContent(VFSConfigDashboardI18N.Menu_Build_BaseAsset), false, () => { Debug.Log("构建母包 被选择"); });
+                }
+                return _build_menu;
+            }
+        }
+
+        enum eTest
+        {
+            AA,
+            BB
+        }
 
         private void OnEnable()
         {
@@ -110,19 +136,37 @@ namespace TinaXEditor.VFSKit
 
 
                 //绘制顶部工具栏
-                EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-                GUILayout.Label("VFS Editor");
 
-                //工具栏 -> 配置
-                //EditorGUILayout.BeginHorizontal(EditorStyles.toolbarPopup);
-                //GUILayout.Button("喵");
-                //GUILayout.Button("喵2");
+                #region 旧代码
+                //EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+                //GUILayout.Label("VFS Editor");
+
+                ////工具栏 -> 配置
+                ////EditorGUILayout.BeginHorizontal(EditorStyles.toolbarPopup);
+                ////GUILayout.Button("喵");
+                ////GUILayout.Button("喵2");
+                ////EditorGUILayout.EndHorizontal();
+                ////工具栏 -> Build
+                //GUILayout.FlexibleSpace();
+                //if(GUILayout.Button("Build", EditorStyles.toolbarButton, GUILayout.MinWidth(75), GUILayout.MaxWidth(76)))
+                //{
+                //    mBuildMenu.ShowAsContext();
+                //}
+
                 //EditorGUILayout.EndHorizontal();
-                //工具栏 -> Build
-                GUILayout.FlexibleSpace();
-                GUILayout.Button("Build", EditorStyles.toolbarButton,GUILayout.MinWidth(75),GUILayout.MaxWidth(76));
 
-                EditorGUILayout.EndHorizontal();
+                #endregion
+
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+                {
+                    GUILayout.FlexibleSpace();
+
+                    //Build Button
+                    if (GUILayout.Button(VFSConfigDashboardI18N.Menu_Build, EditorStyles.toolbarPopup, GUILayout.Width(85)))
+                    {
+                        mBuildMenu.ShowAsContext();
+                    }
+                }
 
                 EditorGUILayout.BeginHorizontal(GUILayout.MinWidth(Window_Min_Weight));
                 //左边：全局设置
@@ -137,6 +181,7 @@ namespace TinaXEditor.VFSKit
 
                 EditorGUILayout.EndHorizontal();
 
+                mVFSConfigSerializedObject.ApplyModifiedProperties(); //只留这边一个
 
             }
         }
@@ -151,9 +196,13 @@ namespace TinaXEditor.VFSKit
         private void DrawGlobalConfig()
         {
             EditorGUILayout.BeginVertical(GUILayout.MaxWidth(450), GUILayout.MinWidth(Window_Area_GlobalConfig_Min_Weight));
-            GUILayout.Label("Global", style_title_h2);
-            EditorGUILayout.Space();
+            GUILayout.Label("VFS Config", style_title_h2);
+            EditorGUILayout.Separator();
 
+            v2_scrollview_globalConfig = EditorGUILayout.BeginScrollView(v2_scrollview_globalConfig);
+            //启用vfs
+            mVFSConfig.EnableWebVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableWebVFS);
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             //忽略后缀名
             b_flodout_global_extname = EditorGUILayout.Foldout(b_flodout_global_extname, VFSConfigDashboardI18N.GlobalVFS_Ignore_ExtName);
             if (b_flodout_global_extname)
@@ -192,16 +241,82 @@ namespace TinaXEditor.VFSKit
                             ReorderableList.defaultBehaviours.DoAddButton(list);
                         }
                     };
+                    reorderableList_global_extname.onRemoveCallback = (list) =>
+                    {
+                        SerializedProperty itemData = list.serializedProperty.GetArrayElementAtIndex(list.index);
+                        string item = itemData.stringValue.ToLower();
+                        if (InternalVFSConfig.GlobalIgnoreExtName.Contains(item))
+                        {
+                            EditorUtility.DisplayDialog(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_title, string.Format(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_content,item), VFSConfigDashboardI18N.MsgBox_Common_Confirm);
+                            return;
+                        }
+                        ReorderableList.defaultBehaviours.DoRemoveButton(list);
+                    };
                 }
 
                 reorderableList_global_extname.DoLayoutList();
-                mVFSConfigSerializedObject.ApplyModifiedProperties();
+                //mVFSConfigSerializedObject.ApplyModifiedProperties();
 
+            }
+
+            //忽略路径item
+            b_flodout_global_pathItem = EditorGUILayout.Foldout(b_flodout_global_pathItem, VFSConfigDashboardI18N.GlobalVFS_Ignore_PathItem);
+            if (b_flodout_global_pathItem)
+            {
+                if (reorderableList_global_pathItem == null)
+                {
+                    reorderableList_global_pathItem = new ReorderableList(mVFSConfigSerializedObject,
+                                                                         mVFSConfigSerializedObject.FindProperty("GlobalVFS_Ignore_Path_Item"),
+                                                                         true,
+                                                                         true,
+                                                                         true,
+                                                                         true);
+                    reorderableList_global_pathItem.drawElementCallback = (rect, index, selected, focused) =>
+                    {
+                        SerializedProperty itemData = reorderableList_global_pathItem.serializedProperty.GetArrayElementAtIndex(index);
+                        rect.y += 2;
+                        rect.height = EditorGUIUtility.singleLineHeight;
+                        EditorGUI.PropertyField(rect, itemData, GUIContent.none);
+                    };
+                    reorderableList_global_pathItem.drawHeaderCallback = (rect) =>
+                    {
+                        GUI.Label(rect, VFSConfigDashboardI18N.GlobalVFS_Ignore_PathItem);
+                    };
+                    reorderableList_global_pathItem.onAddCallback = (list) =>
+                    {
+                        if (list.serializedProperty != null)
+                        {
+                            list.serializedProperty.arraySize++;
+                            list.index = list.serializedProperty.arraySize - 1;
+
+                            SerializedProperty itemData = list.serializedProperty.GetArrayElementAtIndex(list.index);
+                            itemData.stringValue = string.Empty;
+                        }
+                        else
+                        {
+                            ReorderableList.defaultBehaviours.DoAddButton(list);
+                        }
+                    };
+                    reorderableList_global_pathItem.onRemoveCallback = (list) =>
+                    {
+                        SerializedProperty itemData = list.serializedProperty.GetArrayElementAtIndex(list.index);
+                        string item = itemData.stringValue.ToLower();
+                        if (InternalVFSConfig.GlobalIgnorePathItemLower.Contains(item))
+                        {
+                            EditorUtility.DisplayDialog(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_title, string.Format(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_content, itemData.stringValue), VFSConfigDashboardI18N.MsgBox_Common_Confirm);
+                            return;
+                        }
+                        ReorderableList.defaultBehaviours.DoRemoveButton(list);
+                    };
+                }
+
+                reorderableList_global_pathItem.DoLayoutList();
             }
 
             ////Groups
             //EditorGUILayout.Space();
             //GUILayout.Label("Groups", EditorStyles.boldLabel);
+            EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndVertical();
         }
@@ -212,8 +327,8 @@ namespace TinaXEditor.VFSKit
             //小toolbar
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             //num
-            GUILayout.Label("Current Groups Num: ");
-            EditorGUILayout.Space();
+            //GUILayout.Label("Current Groups Num: ");
+            //EditorGUILayout.Space();
             input_createGroupName = EditorGUILayout.TextField(input_createGroupName, EditorStyles.toolbarTextField);
             if (GUILayout.Button("Create Group"))
             {
@@ -463,8 +578,18 @@ namespace TinaXEditor.VFSKit
                 reorderableList_groups_assetList?.DoLayoutList();
                 #endregion
 
+                #region Group类型
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode,mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
+
+                #endregion
+
+
+
+
                 cur_group_drawing_data_index = cur_select_group_index.Value;
-                mVFSConfigSerializedObject.ApplyModifiedProperties();
+                //mVFSConfigSerializedObject.ApplyModifiedProperties();
                 GUILayout.EndScrollView();
             }
             //Group

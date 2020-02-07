@@ -21,7 +21,7 @@ namespace TinaX.VFSKit
         [Header("Asset file in this group | 当前资源组下的资源文件.")]
         public string[] AssetPaths = { };
 
-        [Header("Head Mode")]
+        [Header("Handle Mode")]
         public GroupHandleMode GroupAssetsHandleMode = GroupHandleMode.LocalAndUpdatable;
 
         [Header("Ignore subpath in this group's FolderPaths whitelist. | 在当前资源组下的 资源目录 配置中的 忽略子路径")]

@@ -81,6 +81,7 @@ namespace TinaXEditor.VFSKit
                 result.IgnoreByGlobal_IgnoreExtName_List = true;
                 if (simple) return;
             }
+            result.IgnoreByGlobal_IgnoreExtName_List = false;
 
             //检查【全局】忽略Path item
             //path_items.Except(config.GlobalVFS_Ignore_Path_Item) //不用LINQ了，需要忽略大小写
@@ -102,7 +103,7 @@ namespace TinaXEditor.VFSKit
                     }
                 }
             }
-            
+            result.IgnoreByGlobal_IgnorePathItem_List = false;
 
         }
 

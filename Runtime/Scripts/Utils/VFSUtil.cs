@@ -91,8 +91,6 @@ namespace TinaX.VFSKitInternal.Utils
                 ArrayUtil.Combine(ref config.GlobalVFS_Ignore_ExtName, ext_list.ToArray());
             #endregion
 
-
-
             //后缀名配置必须要以点开头，并小写
             #region 全局 后缀名 格式规范
             if (config.GlobalVFS_Ignore_ExtName != null && config.GlobalVFS_Ignore_ExtName.Length > 0)
@@ -105,6 +103,35 @@ namespace TinaX.VFSKitInternal.Utils
                     config.GlobalVFS_Ignore_ExtName[i] = config.GlobalVFS_Ignore_ExtName[i].ToLower();
                 }
             }
+            #endregion
+
+            //后缀名配置 重复项
+            #region 全局 后缀名 重复项
+            if (config.GlobalVFS_Ignore_ExtName != null && config.GlobalVFS_Ignore_ExtName.Length > 0)
+            {
+                List<string> list = new List<string>(config.GlobalVFS_Ignore_ExtName).Distinct().ToList();
+                if (list.Count != config.GlobalVFS_Ignore_ExtName.Length)
+                    config.GlobalVFS_Ignore_ExtName = list.ToArray();
+            }
+            #endregion
+
+
+            #region 全局 忽略 路径 item
+
+            //补全内部设定
+            if (config.GlobalVFS_Ignore_Path_Item == null)
+                config.GlobalVFS_Ignore_Path_Item = new string[0];
+            List<string> ignore_pathitem_list = new List<string>();
+            foreach (var item in TinaX.VFSKitInternal.InternalVFSConfig.GlobalIgnorePathItem)
+            {
+                if (!config.GlobalVFS_Ignore_Path_Item.Contains(item))
+                {
+                    ignore_pathitem_list.Add(item);
+                }
+            }
+            if (ignore_pathitem_list.Count > 0)
+                ArrayUtil.Combine(ref config.GlobalVFS_Ignore_Path_Item, ignore_pathitem_list.ToArray());
+
             #endregion
 
         }

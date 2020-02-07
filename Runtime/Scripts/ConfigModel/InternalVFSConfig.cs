@@ -15,5 +15,24 @@ namespace TinaX.VFSKitInternal
         {
             ".cs",
         };
+
+        public static string[] GlobalIgnorePathItem =
+        {
+            "Editor",
+        };
+
+        public static string[] GlobalIgnorePathItemLower
+        {
+            get
+            {
+                string[] arr = new string[InternalVFSConfig.GlobalIgnorePathItem.Length];
+                for(var i = 0; i < InternalVFSConfig.GlobalIgnorePathItem.Length; i++)
+                {
+                    arr[i] = InternalVFSConfig.GlobalIgnorePathItem[i].ToLower();
+                }
+                return arr;
+            }
+        }
+
     }
 }
