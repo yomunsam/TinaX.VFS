@@ -9,6 +9,7 @@ using TinaX.VFSKit;
 using TinaX.VFSKitInternal;
 using TinaXEditor.Utils;
 using System.Linq;
+using TinaX.Internal;
 
 namespace TinaXEditor.VFSKit
 {
@@ -40,6 +41,8 @@ namespace TinaXEditor.VFSKit
         private GUIStyle style_title_h2;
         private GUIStyle style_title_h2_center;
         private GUIStyle style_title_h3;
+        private GUIStyle style_text_warning;
+        private GUIStyle style_text_normal;
 
         private Vector2 v2_scrollview_globalConfig = Vector2.zero;
 
@@ -48,6 +51,9 @@ namespace TinaXEditor.VFSKit
 
         bool b_flodout_global_pathItem = false;
         private ReorderableList reorderableList_global_pathItem;
+
+        bool b_flodout_global_ab_detail = false;
+
 
         private Vector2 v2_scrollview_assetGroup = Vector2.zero;
         private string input_createGroupName;
@@ -79,11 +85,7 @@ namespace TinaXEditor.VFSKit
             }
         }
 
-        enum eTest
-        {
-            AA,
-            BB
-        }
+
 
         private void OnEnable()
         {
@@ -97,16 +99,25 @@ namespace TinaXEditor.VFSKit
             style_title_h2 = new GUIStyle(EditorStyles.label);
             style_title_h2.fontStyle = FontStyle.Bold;
             style_title_h2.fontSize = 22;
+            style_title_h2.normal.textColor = XEditorColorDefine.Color_Normal;
             
             style_title_h2_center = new GUIStyle(EditorStyles.label);
             style_title_h2_center.fontStyle = FontStyle.Bold;
             style_title_h2_center.fontSize = 22;
             style_title_h2_center.alignment = TextAnchor.MiddleCenter;
+            style_title_h2_center.normal.textColor = XEditorColorDefine.Color_Normal;
+
 
             style_title_h3 = new GUIStyle(EditorStyles.label);
             style_title_h3.fontStyle = FontStyle.Bold;
             style_title_h3.fontSize = 18;
+            style_title_h3.normal.textColor = XEditorColorDefine.Color_Normal;
 
+            style_text_warning = new GUIStyle(EditorStyles.label);
+            style_text_warning.normal.textColor = XEditorColorDefine.Color_Warning;
+
+            style_text_normal = new GUIStyle(EditorStyles.label);
+            style_text_normal.normal.textColor = XEditorColorDefine.Color_Normal;
 
             img_folder_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/folder.png");
             img_file_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/file.png");
@@ -118,7 +129,7 @@ namespace TinaXEditor.VFSKit
             {
                 EditorGUILayout.BeginVertical();
                 GUILayout.Space(35);
-                GUILayout.Label("TinaX Virtual File System (VFS) config file not ready. Click \"Create\"button to start use VFS.");
+                GUILayout.Label("TinaX Virtual File System (VFS) config file not ready. Click \"Create\"button to start use VFS.", style_text_normal);
                 if (GUILayout.Button("Create"))
                 {
                     mVFSConfig = XConfig.CreateConfigIfNotExists<VFSConfigModel>(mConfigFilePath);
@@ -197,12 +208,13 @@ namespace TinaXEditor.VFSKit
         {
             EditorGUILayout.BeginVertical(GUILayout.MaxWidth(450), GUILayout.MinWidth(Window_Area_GlobalConfig_Min_Weight));
             GUILayout.Label("VFS Config", style_title_h2);
-            EditorGUILayout.Separator();
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
             v2_scrollview_globalConfig = EditorGUILayout.BeginScrollView(v2_scrollview_globalConfig);
             //启用vfs
             mVFSConfig.EnableWebVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableWebVFS);
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorGUILayout.Space();
             //忽略后缀名
             b_flodout_global_extname = EditorGUILayout.Foldout(b_flodout_global_extname, VFSConfigDashboardI18N.GlobalVFS_Ignore_ExtName);
             if (b_flodout_global_extname)
@@ -247,7 +259,7 @@ namespace TinaXEditor.VFSKit
                         string item = itemData.stringValue.ToLower();
                         if (InternalVFSConfig.GlobalIgnoreExtName.Contains(item))
                         {
-                            EditorUtility.DisplayDialog(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_title, string.Format(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_content,item), VFSConfigDashboardI18N.MsgBox_Common_Confirm);
+                            EditorUtility.DisplayDialog(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_title, string.Format(VFSConfigDashboardI18N.Window_Cannot_delete_internal_config_content, item), VFSConfigDashboardI18N.MsgBox_Common_Confirm);
                             return;
                         }
                         ReorderableList.defaultBehaviours.DoRemoveButton(list);
@@ -313,9 +325,21 @@ namespace TinaXEditor.VFSKit
                 reorderableList_global_pathItem.DoLayoutList();
             }
 
-            ////Groups
-            //EditorGUILayout.Space();
-            //GUILayout.Label("Groups", EditorStyles.boldLabel);
+            //AB细节设置
+            //AB文件后缀名
+            b_flodout_global_ab_detail = EditorGUILayout.Foldout(b_flodout_global_ab_detail, VFSConfigDashboardI18N.Window_AB_Detail);
+            if (b_flodout_global_ab_detail)
+            {
+                // ab 包后缀名
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(VFSConfigDashboardI18N.Window_AB_Extension_Name, style_text_normal);
+                mVFSConfig.AssetBundleFileExtension = EditorGUILayout.TextField(mVFSConfig.AssetBundleFileExtension, GUILayout.MinWidth(75),GUILayout.MaxWidth(125));
+                GUILayout.EndHorizontal();
+                if (!mVFSConfig.AssetBundleFileExtension.StartsWith("."))
+                    GUILayout.Label(VFSConfigDashboardI18N.Window_AB_Extension_Name_Tip_startwithdot, style_text_warning);
+            }
+
+
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndVertical();
@@ -373,7 +397,7 @@ namespace TinaXEditor.VFSKit
                                                                          mVFSConfigSerializedObject.FindProperty("Groups"),
                                                                          true,
                                                                          true,
-                                                                         true,
+                                                                         false,
                                                                          true);
 
                     reorderableList_groups.drawElementCallback = (rect, index, selected, focused) =>
@@ -399,6 +423,19 @@ namespace TinaXEditor.VFSKit
                     {
                         GUI.Label(rect, "Groups");
                     };
+                    reorderableList_groups.onRemoveCallback = (list) =>
+                    {
+                        if(list.count <= 1)
+                        {
+                            EditorUtility.DisplayDialog(VFSConfigDashboardI18N.MsgBox_Common_Error, VFSConfigDashboardI18N.Groups_Cannot_Be_Null,VFSConfigDashboardI18N.MsgBox_Common_Confirm);
+                            return;
+                        }
+
+                        if (cur_select_group_index == list.index)
+                            cur_select_group_index = null;
+                        ReorderableList.defaultBehaviours.DoRemoveButton(list);
+                    };
+
                 }
                 reorderableList_groups.DoLayoutList();
 
@@ -437,6 +474,23 @@ namespace TinaXEditor.VFSKit
                 GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
                 mVFSConfig.Groups[cur_select_group_index.Value].GroupName = GUILayout.TextField(mVFSConfig.Groups[cur_select_group_index.Value].GroupName);
                 GUILayout.EndHorizontal();
+
+                #region Group类型
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode, mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
+
+                #endregion
+
+                #region 可扩展Groups
+                mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup = EditorGUILayout.Toggle(VFSConfigDashboardI18N.Window_Group_Extensible, mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup);
+                EditorGUILayout.LabelField(VFSConfigDashboardI18N.Window_Group_Extensible_Tips,EditorStyles.helpBox);
+
+
+                #endregion
+
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+
 
                 #region 文件夹列表
                 //folder list 
@@ -578,12 +632,7 @@ namespace TinaXEditor.VFSKit
                 reorderableList_groups_assetList?.DoLayoutList();
                 #endregion
 
-                #region Group类型
-
-                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-                mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode,mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
-
-                #endregion
+                
 
 
 

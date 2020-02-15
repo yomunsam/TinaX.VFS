@@ -93,6 +93,19 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+        internal static string Groups_Cannot_Be_Null
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "请保留至少一个Group.";
+                else
+                    return "Please keep at least one group in config.";
+            }
+        }
+
+
+
         internal static string Groups_Item_Null_Tips
         {
             get
@@ -215,6 +228,28 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+        internal static string Window_Group_Extensible
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "扩展组：";
+                else
+                    return "Groups for expansion:";
+            }
+        }
+
+        internal static string Window_Group_Extensible_Tips
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "扩展组可以不包含在游戏资源中，它拥有独立的版本管理机制。\n扩展组通常用于制作Mod或者DLC之类的扩展内容。";
+                else
+                    return "Extension groups are allowed not to be included in game resources. They have independent version management mechanism. \nExtension groups are often used to make extended content such as mod or DLC.";
+            }
+        }
+
         internal static string Menu_Build
         {
             get
@@ -234,6 +269,39 @@ namespace TinaXEditor.VFSKit
                     return "完整资源包（母包）";
                 else
                     return "Complete assets package";
+            }
+        }
+
+        internal static string Window_AB_Detail
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "AssetBundle 细节设置";
+                else
+                    return "AssetBundle detail setting";
+            }
+        }
+
+        internal static string Window_AB_Extension_Name
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "AssetBundle 文件扩展名：";
+                else
+                    return "AssetBundle file extension name: ";
+            }
+        }
+
+        internal static string Window_AB_Extension_Name_Tip_startwithdot
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "后缀名请以点号\".\"开始。";
+                else
+                    return "Please start with dot \".\" for file extension.";
             }
         }
 

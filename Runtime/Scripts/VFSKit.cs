@@ -80,7 +80,7 @@ namespace TinaX.VFSKit
                     //检查与之前的组的路径冲突
                     foreach(var path in group.FolderPaths)
                     {
-                        foreach(var _g in mGroups)
+                        foreach(var _g in mGroups) //TODO:这样循环是有问题的
                         {
                             if (_g.CheckFolderConflict(path))
                             {

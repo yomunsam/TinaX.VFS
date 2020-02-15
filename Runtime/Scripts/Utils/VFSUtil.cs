@@ -35,6 +35,7 @@ namespace TinaX.VFSKitInternal.Utils
 
         }
 
+
         /// <summary>
         /// 是否为子路径或相同路径
         /// </summary>
@@ -134,7 +135,129 @@ namespace TinaX.VFSKitInternal.Utils
 
             #endregion
 
+            #region 全局 Assetbundle细节
+            if (config.AssetBundleFileExtension.IsNullOrEmpty() || config.AssetBundleFileExtension.IsNullOrWhiteSpace())
+                config.AssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
+
+            if (!config.AssetBundleFileExtension.StartsWith("."))
+            {
+                config.AssetBundleFileExtension = "." + config.AssetBundleFileExtension;
+            }
+
+            #endregion
+
+            #region 至少包含一个Group
+            if(config.Groups == null || config.Groups.Length == 0)
+            {
+                config.Groups = new VFSGroupOption[]{ VFSGroupOption.New() };
+            }
+            #endregion
+
         }
+
+
+        /// <summary>
+        /// 检查配置 （检查所有项目）, 如果检查通过返回true, 否则返回false
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name=""></param>
+        /// <param name="errorfolders">如果有group内folder相关的错误，则在此处体现</param>
+        /// <returns>if error ,return false</returns>
+        public static bool CheckConfiguration(ref VFSConfigModel config, out VFSErrorCode error, out GroupFolderInfo[] errorfolders)
+        {
+            errorfolders = null;
+
+            #region 没有任何Group?
+            if(config.Groups == null || config.Groups.Length == 0)
+            {
+                error = VFSErrorCode.NoneGroup;
+                return false;
+            } 
+            #endregion
+
+            #region 检查组名称是否重复
+            List<string> temp_list = new List<string>();
+            foreach(var group in config.Groups)
+            {
+                if (temp_list.Contains(group.GroupName))
+                {
+                    //存在重复命名
+                    error = VFSErrorCode.SameGroupName;
+                    return false;
+                }
+                else
+                    temp_list.Add(group.GroupName);
+            }
+
+
+            #endregion
+
+            #region 检查各组的folder配置是否冲突
+            if(CheckConfig_GroupFolder(ref config, out var folders))
+            {
+                errorfolders = folders;
+                error = VFSErrorCode.ConfigureGroupsConflict;
+                return false;
+            }
+
+            #endregion
+
+            error = default;
+            return true;
+        }
+
+
+        /// <summary>
+        /// 配置检查： 检查各组的Folder是否有冲突, 如果有冲突，返回true
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static bool CheckConfig_GroupFolder(ref VFSConfigModel config, out GroupFolderInfo[] folders)
+        {
+            if (config.Groups == null || config.Groups.Length == 0)
+            {
+                folders = null;
+                return false;
+            }
+            List<GroupFolderInfo> list_folders = new List<GroupFolderInfo>();
+
+            for (var i = 0; i < config.Groups.Length; i++)
+            {
+                string group_name = config.Groups[i].GroupName;
+                //检查组内部
+                if(config.Groups[i].CheckFolderConflict(out var paths))
+                {
+                    //有冲突
+                    paths.ForEach(path => list_folders.Add(new GroupFolderInfo() { FolderPath = path, GroupName = group_name }));
+                    folders = list_folders.ToArray();
+                    return true;
+                }
+                
+                //检查当前组与之前的组之间是否存在冲突
+                if(i > 0)
+                {
+                    foreach (var path in config.Groups[i].FolderPaths)
+                    {
+                        for (var j = 0; j < i; j++)
+                        {
+                            var _g_name = config.Groups[i].GroupName;
+                            if (config.Groups[i].CheckFolderConflict(out var result_paths,true))
+                            {
+                                //有冲突
+                                list_folders.Add(new GroupFolderInfo() { GroupName = group_name, FolderPath = path });
+                                result_paths.ForEach(r_path => list_folders.Add(new GroupFolderInfo() { FolderPath = r_path, GroupName = _g_name }));
+                                folders = list_folders.ToArray();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            folders = null;
+            return false;
+
+        }
+
     }
 
 }

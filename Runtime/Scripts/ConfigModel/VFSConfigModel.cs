@@ -14,6 +14,8 @@ namespace TinaX.VFSKit
         public VFSGroupOption[] Groups = { VFSGroupOption.New() };
         public bool EnableWebVFS = false;
 
+        public string AssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
+
         public string[] GlobalVFS_Ignore_ExtName = ArrayUtil.Combine<string>(InternalVFSConfig.GlobalIgnoreExtName,new string[] 
         {
             "exe",

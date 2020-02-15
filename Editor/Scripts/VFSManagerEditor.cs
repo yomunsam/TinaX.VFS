@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,13 +9,23 @@ using TinaX;
 using TinaX.IO;
 using TinaX.VFSKit.Const;
 using TinaX.VFSKitInternal.Utils;
+using TinaXEditor.Const;
+using TinaXEditor.VFSKit.Const;
+using TinaXEditor.VFSKitInternal.I18N;
+using TinaXEditor.VFSKitInternal;
 
 namespace TinaXEditor.VFSKit
 {
     [InitializeOnLoad]
     public static class VFSManagerEditor
     {
+        static VFSProfileEditorJsonModel VFSProfileEditor;
+
         static List<VFSGroup> Groups = new List<VFSGroup>();
+        /// <summary>
+        /// 整个VFS中所有Group整合的FolderPaths, 以斜线“/”结束。
+        /// </summary>
+        static List<string> FolderPaths = new List<string>();
 
         static VFSManagerEditor()
         {
@@ -32,13 +43,69 @@ namespace TinaXEditor.VFSKit
                 VFSUtil.NormalizationConfig(ref mConfig);
             }
 
+            if(!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            {
+                string log_str= string.Empty;
+                //配置文件校验未通过
+                switch (errorCode)
+                {
+                    case VFSErrorCode.ConfigureGroupsConflict:
+                        //资源组规则未通过,log提示出来
+                        log_str = VFSManagerEditorI18N.Log_ConfigureGroupsConflict;
+                        if (folderError != null && folderError.Length > 0)
+                        {
+                            foreach(var f in folderError)
+                            {
+                                log_str += $"\nGroup [{f.GroupName}] , FolderPath: {f.FolderPath}";
+                            }
+                        }
+                        Debug.LogError(log_str);
+                        return; //直接不继续往下执行了
+
+                    case VFSErrorCode.NoneGroup:
+                        //没有配置任何资源组
+                        //这个问题不报Error
+                        return;
+
+                    case VFSErrorCode.SameGroupName:
+                        log_str = VFSManagerEditorI18N.Log_SameGroupName;
+                        Debug.LogError(log_str);
+                        return;
+
+                }
+            }
+
             Groups.Clear();
             if (!mConfig.EnableWebVFS) return;
+
+            //VFS Profile
+            XDirectory.CreateIfNotExists(XEditorConst.EditorProjectSettingRootFolder);
+            var profile_path = Path.Combine(XEditorConst.EditorProjectSettingRootFolder, VFSEditorConst.VFSProfileProjectSettingFileName);
+            if (File.Exists(profile_path))
+            {
+                //load
+                VFSProfileEditor = XConfig.GetJson<VFSProfileEditorJsonModel>(profile_path, AssetLoadType.SystemIO, false);
+            }
+            else
+            {
+                //create profile editor file in "ProjectSetting"
+                VFSProfileEditor = new VFSProfileEditorJsonModel();
+                var json_text = JsonUtility.ToJson(VFSProfileEditor);
+                XConfig.SaveJson(VFSProfileEditor, profile_path, AssetLoadType.SystemIO);
+            }
+
             foreach(var group_opt in mConfig.Groups)
             {
-                Groups.Add(new VFSGroup(group_opt));
+                var _group_obj = new VFSGroup(group_opt);
+                Groups.Add(_group_obj);
+                FolderPaths.AddRange(_group_obj.FolderPaths);
             }
             
+        }
+
+        public static string[] GetAllFolderPaths()
+        {
+            return FolderPaths?.ToArray() ?? System.Array.Empty<string>();
         }
 
         

@@ -11,6 +11,10 @@ namespace TinaX.VFSKitInternal
     /// </summary>
     public static class InternalVFSConfig
     {
+
+        public const string default_AssetBundle_ExtName = ".xab";
+
+
         public static string[] GlobalIgnoreExtName =
         {
             ".cs",
@@ -33,6 +37,7 @@ namespace TinaX.VFSKitInternal
                 return arr;
             }
         }
+
 
     }
 }

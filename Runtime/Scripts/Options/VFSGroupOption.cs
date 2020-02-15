@@ -24,6 +24,10 @@ namespace TinaX.VFSKit
         [Header("Handle Mode")]
         public GroupHandleMode GroupAssetsHandleMode = GroupHandleMode.LocalAndUpdatable;
 
+        [Header("Group For Expansion")]
+        [Tooltip("Extensible group, eg: mod, dlc")]
+        public bool ExpansionGroup = false;
+
         [Header("Ignore subpath in this group's FolderPaths whitelist. | 在当前资源组下的 资源目录 配置中的 忽略子路径")]
         public string[] IgnoreSubPath = { };
 

@@ -19,6 +19,15 @@ namespace TinaX.VFSKit
         /// </summary>
         ConfigureGroupsConflict     = 200,
 
+        /// <summary>
+        /// Same group name in config | 存在相同的配置名
+        /// </summary>
+        SameGroupName               = 201,
+
+        /// <summary>
+        /// No groups are configured | 没有任何Group在配置中
+        /// </summary>
+        NoneGroup                   = 202,
 
     }
 }
