@@ -5,6 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using TinaX.VFSKit;
 using TinaXEditor.VFSKit.Pipeline;
+using UnityEngine;
+using UnityEditor;
+using TinaX;
+using TinaX.IO;
 
 
 namespace TinaXEditor.VFSKit
@@ -22,7 +26,7 @@ namespace TinaXEditor.VFSKit
         public bool EnableTipsGUI { get; set; } = false;
 
 
-
+        //private HashSet<string[]>
 
 
         public VFSBuilder()
@@ -49,9 +53,31 @@ namespace TinaXEditor.VFSKit
              * 2. 整体打包
              */
 
-            List<string> _whiteLists = new List<string>();
-            
+            //获取到所有组的文件白名单目录
+            var _whiteLists_folder = VFSManagerEditor.GetAllFolderPaths();
+            string ab_extension = Config.AssetBundleFileExtension; //没有点开头的后缀名
+            if (ab_extension.StartsWith("."))
+                ab_extension = ab_extension.Substring(1, ab_extension.Length - 1);
+            string[] guids = AssetDatabase.FindAssets("", _whiteLists_folder);
 
+            foreach(var guid in guids)
+            {
+                string cur_asset_path = AssetDatabase.GUIDToAssetPath(guid);
+                if(VFSManagerEditor.QueryAsset(cur_asset_path, Config, out AssetsStatusQueryResult result, true))
+                {
+                    //
+                    var importer = AssetImporter.GetAtPath(cur_asset_path);
+                    if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileName.IsNullOrEmpty())
+                    {
+                        //正式设置AssetBundle
+                        importer.SetAssetBundleNameAndVariant(result.AssetBundleFileName, ab_extension);
+
+
+                    }
+                }
+            }
+
+            AssetDatabase.SaveAssets();
 
         }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TinaX;
+using TinaX.VFSKit;
 
 namespace TinaXEditor.VFSKit
 {
@@ -26,7 +28,8 @@ namespace TinaXEditor.VFSKit
                     if (this.IgnoreByGlobalRule) return false; //被全局规则所忽略
                     if (this.IgnoreByGroupRule) return false; //被组内规则忽略。
                 }
-
+                if (GroupName.IsNullOrEmpty()) return false;
+                
                 return true;
             }
         }
@@ -80,6 +83,11 @@ namespace TinaXEditor.VFSKit
         public bool IgnoreByGlobal_IgnoreExtName_List { get; set; }
 
         public bool IgnoreByGlobal_IgnorePathItem_List { get; set; }
+
+
+        public string AssetBundleFileName { get; set; }
+        public FolderBuildType BuildType { get; set; }
+        public FolderBuildDevelopType DevType { get; set; }
 
     }
 }

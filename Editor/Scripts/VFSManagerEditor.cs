@@ -108,16 +108,17 @@ namespace TinaXEditor.VFSKit
             return FolderPaths?.ToArray() ?? System.Array.Empty<string>();
         }
 
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>
         /// <param name="result"></param>
         /// <param name="simple">如果true，在检查到“不能被VFS管理”的任何一个条件后就停止查询</param>
-        public static void QueryAsset(string path , out AssetsStatusQueryResult result , bool simple = false)
+        /// <returns>如果是“可以被VFS管理”的资源，返回true</returns>
+        public static bool QueryAsset(string path , out AssetsStatusQueryResult result , bool simple = false)
         {
-            VFSManagerEditor.QueryAsset(path, mConfig, out result,simple);   
+            return VFSManagerEditor.QueryAsset(path, mConfig, out result,simple);   
         }
 
         /// <summary>
@@ -127,7 +128,8 @@ namespace TinaXEditor.VFSKit
         /// <param name="config"></param>
         /// <param name="result"></param>
         /// <param name="simple">如果true，在检查到“不能被VFS管理”的任何一个条件后就停止查询</param>
-        public static void QueryAsset(string path, VFSConfigModel config, out AssetsStatusQueryResult result, bool simple = false)
+        /// <returns>如果是“可以被VFS管理”的资源，返回true</returns>
+        public static bool QueryAsset(string path, VFSConfigModel config, out AssetsStatusQueryResult result, bool simple = false)
         {
             result = new AssetsStatusQueryResult();
             result.AssetPath = path;
@@ -135,18 +137,20 @@ namespace TinaXEditor.VFSKit
             if(config == null)
             {
                 Debug.LogError("[EDITOR][TinaX.VFS]Can't Query Asset, because config is invalid.");
-                return;
+                return false;
             }
 
             string[] path_items = path.Split('/');
             string ext = XPath.GetExtension(path, true);
+
+            #region 全局规则判定
             //检查全局规则
             //检查【全局】后缀名
             if (config.GlobalVFS_Ignore_ExtName.Contains(ext))
             {
                 //后缀名在忽略列表中
                 result.IgnoreByGlobal_IgnoreExtName_List = true;
-                if (simple) return;
+                if (simple) return false;
             }
             result.IgnoreByGlobal_IgnoreExtName_List = false;
 
@@ -163,7 +167,7 @@ namespace TinaXEditor.VFSKit
                         {
                             result.IgnoreByGlobal_IgnorePathItem_List = true;
                             if (simple)
-                                return;
+                                return false;
                             else
                                 break;
                         }
@@ -172,6 +176,38 @@ namespace TinaXEditor.VFSKit
             }
             result.IgnoreByGlobal_IgnorePathItem_List = false;
 
+
+            #endregion
+
+            //全局规则对它筛选了一遍，接下来看看它是否属于某个Group
+            foreach(var group in Groups)
+            {
+                if (group.IsAssetPathMatch(path))
+                {
+                    //这里的查询被简化了，有任何不符合的规则就直接break了，所以其实没有获得细节，后期如果有地方需要细节信息看看再折腾吧
+                    result.GroupName = group.GroupName;
+                    result.InWhitelist = true;
+
+                    //查询规则
+                    var ab_name_noExt = group.GetAssetBundleNameOfAsset(path, out var buildType, out var devType);
+                    result.BuildType = buildType;
+                    result.DevType = devType;
+
+                    string assetBundleExtension = config.AssetBundleFileExtension;
+                    if (!assetBundleExtension.StartsWith("."))
+                        assetBundleExtension = "." + assetBundleExtension;
+
+                    result.AssetBundleFileName = ab_name_noExt + assetBundleExtension;
+
+                    break;
+                }
+                else
+                {
+                    result.InWhitelist = false;
+                }
+            }
+
+            return result.ManagedByVFS;
         }
 
 

@@ -163,6 +163,17 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+        internal static string Window_GroupConfig_Title_SpecialFolder
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "资源目录特殊构建规则";
+                else
+                    return "Folder Special Build Rules";
+            }
+        }
+
         internal static string Window_GroupConfig_SelectFolder
         {
             get
@@ -247,6 +258,28 @@ namespace TinaXEditor.VFSKit
                     return "扩展组可以不包含在游戏资源中，它拥有独立的版本管理机制。\n扩展组通常用于制作Mod或者DLC之类的扩展内容。";
                 else
                     return "Extension groups are allowed not to be included in game resources. They have independent version management mechanism. \nExtension groups are often used to make extended content such as mod or DLC.";
+            }
+        }
+
+        internal static string Window_Group_IgnoreSubFolder
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "忽略以下子目录：";
+                else
+                    return "Ignore The Following Subfolders";
+            }
+        }
+
+        internal static string Window_Group_IgnoreSubFolder_MsgBox_NotSubfolder
+        {
+            get
+            {
+                if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
+                    return "您选择的文件夹并不是当前组“白名单文件夹”中配置的任何路径的子目录:\n{0}";
+                else
+                    return "The folder you selected is not a subdirectory of any path configured in the current group \"Whitelist folder paths\":\n{0}";
             }
         }
 

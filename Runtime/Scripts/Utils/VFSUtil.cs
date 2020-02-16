@@ -17,8 +17,8 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static bool IsSubpath(string path1, string path2, bool mutual = false)
         {
-            string p1 = (path1.EndsWith("/") || path1.EndsWith("\\")) ? path1.Substring(0, path1.Length - 1) : path1;
-            string p2 = (path2.EndsWith("/") || path2.EndsWith("\\")) ? path2.Substring(0, path2.Length - 1) : path2;
+            string p1 = (path1.EndsWith("/") || path1.EndsWith("\\")) ? path1.Replace("\\", "/") : path1.Replace("\\", "/") + "/";
+            string p2 = (path2.EndsWith("/") || path2.EndsWith("\\")) ? path2.Replace("\\", "/") : path2.Replace("\\", "/") + "/";
 
             if (p1 == p2) return false;
 
@@ -30,7 +30,7 @@ namespace TinaX.VFSKitInternal.Utils
             else
             {
                 //判断p1是否是p2的子路径
-                return p2.StartsWith(p1);
+                return p1.StartsWith(p2);
             }
 
         }
@@ -45,8 +45,8 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static bool IsSameOrSubPath(string path1, string path2, bool mutual = false)
         {
-            string p1 = (path1.EndsWith("/") || path1.EndsWith("\\")) ? path1.Substring(0, path1.Length - 1) : path1;
-            string p2 = (path2.EndsWith("/") || path2.EndsWith("\\")) ? path2.Substring(0, path2.Length - 1) : path2;
+            string p1 = (path1.EndsWith("/") || path1.EndsWith("\\")) ? path1.Replace("\\", "/") : path1.Replace("\\", "/") + "/";
+            string p2 = (path2.EndsWith("/") || path2.EndsWith("\\")) ? path2.Replace("\\", "/") : path2.Replace("\\", "/") + "/";
 
             if (p1 == p2) return true;
 
@@ -58,7 +58,7 @@ namespace TinaX.VFSKitInternal.Utils
             else
             {
                 //判断p1是否是p2的子路径
-                return p2.StartsWith(p1);
+                return p1.StartsWith(p2);
             }
         }
 

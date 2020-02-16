@@ -34,6 +34,8 @@ namespace TinaX.VFSKit
         /// </summary>
         public List<string> IgnoreExtensionLower { get; private set; } = new List<string>();
 
+        public List<FolderBuildRule> SpecialFolderBuildRules { get; private set; } = new List<FolderBuildRule>();
+        public List<FolderBuildRule> SpecialFolderBuildRulesLower { get; private set; } = new List<FolderBuildRule>();
 
         private VFSGroupOption mOption;
 
@@ -93,6 +95,33 @@ namespace TinaX.VFSKit
             {
                 IgnoreExtensionLower.Add(ext.StartsWith(".") ? ext.ToLower() : "." + ext.ToLower());
             }
+
+            //特殊打包规则
+            foreach(var rule in option.FolderSpecialBuildRules)
+            {
+                bool flag = true;
+                if (rule.DevType == FolderBuildDevelopType.normal && rule.BuildType == FolderBuildType.normal)
+                    flag = false;//这是条没必要的规则
+                if (rule.FolderPath.IsNullOrEmpty() || rule.FolderPath.IsNullOrWhiteSpace())
+                    flag = false;
+
+                string _folder_path = (rule.FolderPath.EndsWith("/")) ? rule.FolderPath : rule.FolderPath + "/";
+                string _folder_lower = _folder_path.ToLower();
+
+                if (!IsSubfolderOfFolderList(_folder_path))
+                    flag = false;
+
+                if (flag)
+                {
+                    var _rule = rule;
+                    _rule.FolderPath = _folder_path;
+                    var lower_rule = rule;
+                    lower_rule.FolderPath = _folder_lower;
+                    SpecialFolderBuildRules.Add(_rule);
+                    SpecialFolderBuildRulesLower.Add(lower_rule);
+
+                }
+            }
         
         }
 
@@ -149,11 +178,58 @@ namespace TinaX.VFSKit
             return true;
         }
 
+
+
         //给定的资源path是否包含在Folder中
         private bool _IsAssetPathMatchFolder(ref string assetPath, string folderPath)
         {
             if (assetPath.Length < folderPath.Length) return false;
             return assetPath.StartsWith(folderPath);
+        }
+
+        /// <summary>
+        /// 【返回值不含AssetBundle后缀！】传入一个 Asset的Path，根据“特殊文件打包规则”推测它的AssetBundle名
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        public string GetAssetBundleNameOfAsset(string assetPath,out FolderBuildType buildType, out FolderBuildDevelopType devType)
+        {
+            string assetPath_lower = assetPath.ToLower();
+            //是否命中特殊目录
+            foreach(var rule in SpecialFolderBuildRulesLower)
+            {
+                if(_IsAssetPathMatchFolder(ref assetPath_lower, rule.FolderPath))
+                {
+                    buildType = rule.BuildType;
+                    devType = rule.DevType;
+                    switch (rule.BuildType)
+                    {
+                        case FolderBuildType.normal:
+                            return assetPath_lower;
+                        case FolderBuildType.sub_dir:
+                            string subs_path = assetPath_lower.Substring(rule.FolderPath.Length, assetPath_lower.Length - rule.FolderPath.Length);
+                            int sub_index = subs_path.IndexOf('/');
+                            if(sub_index == -1)
+                            {
+                                //路径里没有子目录。
+                                return assetPath_lower;
+                            }
+                            else
+                            {
+                                //有子目录，取到子目录那一层
+                                return rule.FolderPath + subs_path.Substring(0, sub_index);
+                            }
+                        case FolderBuildType.whole:
+                            return rule.FolderPath;
+                    }
+
+                }
+            }
+
+            //没有命中
+            buildType = FolderBuildType.normal;
+            devType = FolderBuildDevelopType.normal;
+            return assetPath_lower;
         }
 
 
@@ -236,6 +312,20 @@ namespace TinaX.VFSKit
             return false;
         }
 
+        /// <summary>
+        /// 是否是FolderPathsLower的子目录
+        /// </summary>
+        /// <returns></returns>
+        private bool IsSubfolderOfFolderList(string path)
+        {
+            string path_lower = path.ToLower();
+            foreach(var folder in FolderPathsLower)
+            {
+                if (path_lower.StartsWith(folder))
+                    return true;
+            }
+            return false;
+        }
     }
 }
 

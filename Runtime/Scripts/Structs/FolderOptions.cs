@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace TinaX.VFSKit
 {
-    public struct FolderOptions
+    [Serializable]
+    public struct FolderBuildRule
     {
         public string FolderPath;
-        public List<int> Tags;
+        public FolderBuildType BuildType;
+        public FolderBuildDevelopType DevType;
     }
 }

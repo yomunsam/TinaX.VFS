@@ -7,6 +7,7 @@ using UnityEditor.EditorTools;
 using TinaX;
 using TinaX.VFSKit;
 using TinaX.VFSKitInternal;
+using TinaX.VFSKitInternal.Utils;
 using TinaXEditor.Utils;
 using System.Linq;
 using TinaX.Internal;
@@ -62,7 +63,9 @@ namespace TinaXEditor.VFSKit
         private int? cur_select_group_index;
         private int cur_group_drawing_data_index = -1;
         private ReorderableList reorderableList_groups_folderList;
+        private ReorderableList reorderableList_groups_folderSpecialList;
         private ReorderableList reorderableList_groups_assetList;
+        private ReorderableList reorderableList_groups_ignoreSubfolder;
         private Vector2 v2_scrollview_assetGroupConfig = Vector2.zero;
 
         /// <summary>
@@ -520,8 +523,6 @@ namespace TinaXEditor.VFSKit
                         btn_rect.width = 35;
                         if(GUI.Button(btn_rect, img_folder_icon))
                         {
-                            
-
                             var select_path = EditorUtility.OpenFolderPanel(VFSConfigDashboardI18N.Window_GroupConfig_SelectFolder, "Assets/", "");
                             if (select_path.IsNullOrEmpty()) return;
                             int asset_start_index = select_path.IndexOf("Assets/");
@@ -558,6 +559,98 @@ namespace TinaXEditor.VFSKit
                 reorderableList_groups_folderList?.DoLayoutList();
 
                 #endregion
+
+                EditorGUILayout.Space();
+
+                #region 特殊文件规则
+
+                if(reorderableList_groups_folderSpecialList == null || (cur_select_group_index.Value != cur_group_drawing_data_index))
+                {
+                    reorderableList_groups_folderSpecialList = new ReorderableList(mVFSConfigSerializedObject,
+                                                                            mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("FolderSpecialBuildRules"),
+                                                                            true,
+                                                                            true,
+                                                                            true,
+                                                                            true);
+
+                    reorderableList_groups_folderSpecialList.elementHeightCallback = (index) =>
+                    {
+                        return EditorGUIUtility.singleLineHeight * 4 + 15;
+                    };
+                    reorderableList_groups_folderSpecialList.drawElementCallback = (rect, index, selected, focused) =>
+                    {
+                        SerializedProperty itemData = reorderableList_groups_folderSpecialList.serializedProperty.GetArrayElementAtIndex(index);
+                        SerializedProperty folder_path = itemData.FindPropertyRelative("FolderPath");
+                        SerializedProperty buildType = itemData.FindPropertyRelative("BuildType");
+                        SerializedProperty buildDevType = itemData.FindPropertyRelative("DevType");
+
+
+                        rect.y += 2;
+                        rect.height = EditorGUIUtility.singleLineHeight;
+
+                        Rect label_folder = rect;
+                        label_folder.width = 125;
+                        EditorGUI.LabelField(label_folder, "Folder Path:");
+
+                        var textArea_rect = rect;
+                        textArea_rect.width -= 35;
+                        textArea_rect.y += EditorGUIUtility.singleLineHeight;
+                        //textArea_rect.x += 5;
+                        EditorGUI.PropertyField(textArea_rect, folder_path, GUIContent.none);
+
+
+
+                        var btn_rect = rect;
+                        btn_rect.y -= 0.5f;
+                        btn_rect.y += EditorGUIUtility.singleLineHeight;
+                        btn_rect.x += textArea_rect.width + 2;
+                        btn_rect.width = 35;
+                        if (GUI.Button(btn_rect, img_folder_icon))
+                        {
+                            var select_path = EditorUtility.OpenFolderPanel(VFSConfigDashboardI18N.Window_GroupConfig_SelectFolder, "Assets/", "");
+                            if (select_path.IsNullOrEmpty()) return;
+                            int asset_start_index = select_path.IndexOf("Assets/");
+                            if (asset_start_index > -1)
+                            {
+                                select_path = select_path.Substring(asset_start_index, select_path.Length - asset_start_index);
+                            }
+
+                            folder_path.stringValue = select_path;
+                        }
+
+                        var label_enum_1 = rect;
+                        label_enum_1.y += EditorGUIUtility.singleLineHeight * 2 + 4;
+                        label_enum_1.width = 80;
+                        EditorGUI.LabelField(label_enum_1, "Build Type :");
+
+                        var enum_1_rect = rect;
+                        enum_1_rect.y += EditorGUIUtility.singleLineHeight * 2 + 4;
+                        enum_1_rect.width -= 85;
+                        enum_1_rect.x += 85;
+                        EditorGUI.PropertyField(enum_1_rect, buildType,GUIContent.none);
+
+                        var label_enum_2 = rect;
+                        label_enum_2.y += EditorGUIUtility.singleLineHeight * 3 + 8;
+                        label_enum_2.width = 125;
+                        EditorGUI.LabelField(label_enum_2, "Develop Build Type :");
+
+                        var enum_2_rect = rect;
+                        enum_2_rect.y += EditorGUIUtility.singleLineHeight * 3 + 8;
+                        enum_2_rect.width -= 130;
+                        enum_2_rect.x += 130;
+                        EditorGUI.PropertyField(enum_2_rect, buildDevType, GUIContent.none);
+
+                    };
+                    reorderableList_groups_folderSpecialList.drawHeaderCallback = (rect) =>
+                    {
+                        GUI.Label(rect, VFSConfigDashboardI18N.Window_GroupConfig_Title_SpecialFolder);
+                    };
+                }
+
+                reorderableList_groups_folderSpecialList?.DoLayoutList();
+                #endregion
+
+                EditorGUILayout.Space();
 
                 #region 资源列表
                 if (reorderableList_groups_assetList == null || (cur_select_group_index.Value != cur_group_drawing_data_index))
@@ -632,10 +725,89 @@ namespace TinaXEditor.VFSKit
                 reorderableList_groups_assetList?.DoLayoutList();
                 #endregion
 
-                
+                #region 忽略子目录
+                if (reorderableList_groups_ignoreSubfolder == null || (cur_select_group_index.Value != cur_group_drawing_data_index))
+                {
+                    reorderableList_groups_ignoreSubfolder = new ReorderableList(mVFSConfigSerializedObject,
+                                                                         mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("IgnoreSubPath"),
+                                                                         true,
+                                                                         true,
+                                                                         true,
+                                                                         true);
+                    reorderableList_groups_ignoreSubfolder.drawElementCallback = (rect, index, selected, focused) =>
+                    {
+                        SerializedProperty itemData = reorderableList_groups_ignoreSubfolder.serializedProperty.GetArrayElementAtIndex(index);
+
+                        rect.y += 2;
+                        rect.height = EditorGUIUtility.singleLineHeight;
+                        var textArea_rect = rect;
+                        textArea_rect.width -= 35;
+
+                        EditorGUI.PropertyField(textArea_rect, itemData, GUIContent.none);
+
+                        var btn_rect = rect;
+                        btn_rect.y -= 0.5f;
+                        btn_rect.x += textArea_rect.width + 2;
+                        btn_rect.width = 35;
+                        if (GUI.Button(btn_rect, img_folder_icon))
+                        {
+                            var select_path = EditorUtility.OpenFolderPanel(VFSConfigDashboardI18N.Window_GroupConfig_SelectFolder, "Assets/", "");
+                            if (select_path.IsNullOrEmpty()) return;
+                            int asset_start_index = select_path.IndexOf("Assets/");
+                            if (asset_start_index > -1)
+                            {
+                                select_path = select_path.Substring(asset_start_index, select_path.Length - asset_start_index);
+                            }
+
+                            //检查所选择的目录是否包含在Folder配置中
+                            bool flag = false;
+                            foreach(var folder in mVFSConfig.Groups[cur_select_group_index.Value].FolderPaths)
+                            {
+                                if (VFSUtil.IsSameOrSubPath(select_path, folder, false))
+                                {
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                            if (!flag)
+                            {
+                                EditorUtility.DisplayDialog(VFSConfigDashboardI18N.MsgBox_Common_Error, string.Format(VFSConfigDashboardI18N.Window_Group_IgnoreSubFolder_MsgBox_NotSubfolder,select_path), VFSConfigDashboardI18N.MsgBox_Common_Confirm);
+                                return;
+                            }
+
+                            itemData.stringValue = select_path;
+                        }
+                    };
+                    reorderableList_groups_ignoreSubfolder.drawHeaderCallback = (rect) =>
+                    {
+                        GUI.Label(rect, VFSConfigDashboardI18N.Window_Group_IgnoreSubFolder);
+                    };
+                    reorderableList_groups_ignoreSubfolder.onAddCallback = (list) =>
+                    {
+                        if (list.serializedProperty != null)
+                        {
+                            list.serializedProperty.arraySize++;
+                            list.index = list.serializedProperty.arraySize - 1;
+
+                            SerializedProperty itemData = list.serializedProperty.GetArrayElementAtIndex(list.index);
+                            itemData.stringValue = string.Empty;
+                        }
+                        else
+                        {
+                            ReorderableList.defaultBehaviours.DoAddButton(list);
+                        }
+                    };
+
+                }
+
+                reorderableList_groups_ignoreSubfolder.DoLayoutList();
+
+                #endregion
+
+                #region 忽略后缀名
 
 
-
+                #endregion
 
                 cur_group_drawing_data_index = cur_select_group_index.Value;
                 //mVFSConfigSerializedObject.ApplyModifiedProperties();

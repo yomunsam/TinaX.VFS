@@ -34,6 +34,9 @@ namespace TinaX.VFSKit
         [Header("Ignore extend name. | 忽略的扩展名")]
         public string[] IngnoreExtName = { };
 
+        [Header("Folder Special Build Rules")]
+        public FolderBuildRule[] FolderSpecialBuildRules = { };
+
         /// <summary>
         /// 检查文件夹冲突，并将存在冲突的内容返回，如果没有冲突则返回值的Count = 0
         /// </summary>
