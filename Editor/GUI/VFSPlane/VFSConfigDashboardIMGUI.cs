@@ -11,8 +11,9 @@ using TinaX.VFSKitInternal.Utils;
 using TinaXEditor.Utils;
 using System.Linq;
 using TinaX.Internal;
+using TinaXEditor.VFSKitInternal.I18N;
 
-namespace TinaXEditor.VFSKit
+namespace TinaXEditor.VFSKit.UI
 {
     public class VFSConfigDashboardIMGUI : EditorWindow
     {
@@ -82,7 +83,7 @@ namespace TinaXEditor.VFSKit
                 if(_build_menu == null)
                 {
                     _build_menu = new GenericMenu();
-                    _build_menu.AddItem(new GUIContent(VFSConfigDashboardI18N.Menu_Build_BaseAsset), false, () => { Debug.Log("构建母包 被选择"); });
+                    _build_menu.AddItem(new GUIContent(VFSConfigDashboardI18N.Menu_Build_BaseAsset), false, () => { VFSBuilderIMGUI.OpenUI(); });
                 }
                 return _build_menu;
             }

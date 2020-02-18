@@ -27,6 +27,12 @@ namespace TinaXEditor.VFSKit
         /// </summary>
         static List<string> FolderPaths = new List<string>();
 
+        /// <summary>
+        /// 整个VFS中所有Group整合的AssetPaths
+        /// </summary>
+        static List<string> AssetPaths = new List<string>();
+
+
         static VFSManagerEditor()
         {
             RefreshManager();
@@ -99,7 +105,15 @@ namespace TinaXEditor.VFSKit
                 var _group_obj = new VFSGroup(group_opt);
                 Groups.Add(_group_obj);
                 FolderPaths.AddRange(_group_obj.FolderPaths);
+                foreach(var assetPath in _group_obj.AssetPaths)
+                {
+                    if (!AssetPaths.Contains(assetPath))
+                    {
+                        AssetPaths.Add(assetPath);
+                    }
+                }
             }
+
             
         }
 
@@ -108,6 +122,10 @@ namespace TinaXEditor.VFSKit
             return FolderPaths?.ToArray() ?? System.Array.Empty<string>();
         }
 
+        public static string[] GetAllWithelistAssetsPaths()
+        {
+            return AssetPaths?.ToArray() ?? System.Array.Empty<string>();
+        }
 
         /// <summary>
         /// 

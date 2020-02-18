@@ -10,5 +10,7 @@ namespace TinaXEditor.VFSKit
     {
         TinaX.VFSKit.VFSConfigModel Config { get; }
         bool EnableTipsGUI { get; set; }
+
+        void RefreshAssetBundleSign(bool recordAssetHash = true);
     }
 }

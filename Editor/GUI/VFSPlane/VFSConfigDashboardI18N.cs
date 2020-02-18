@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TinaXEditor.VFSKit
+namespace TinaXEditor.VFSKitInternal.I18N
 {
     internal static class VFSConfigDashboardI18N
     {
