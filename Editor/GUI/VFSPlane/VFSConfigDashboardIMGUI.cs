@@ -17,11 +17,21 @@ namespace TinaXEditor.VFSKit.UI
 {
     public class VFSConfigDashboardIMGUI : EditorWindow
     {
+        private static VFSConfigDashboardIMGUI wnd;
+
         [MenuItem("TinaX/VFS/VFS Dashboard")]
         public static void OpenUI()
         {
-            VFSConfigDashboardIMGUI wnd = GetWindow<VFSConfigDashboardIMGUI>();
-            wnd.titleContent = new GUIContent(VFSConfigDashboardI18N.WindowTitle);
+            if(wnd == null)
+            {
+                wnd = GetWindow<VFSConfigDashboardIMGUI>();
+                wnd.titleContent = new GUIContent(VFSConfigDashboardI18N.WindowTitle);
+            }
+            else
+            {
+                wnd.Show();
+                wnd.Focus();
+            }
         }
 
         private int Window_Min_Weight = Window_Area_GlobalConfig_Min_Weight + Window_Area_GroupList_Min_Weight + Window_Area_GroupConfig_Min_Weight;
@@ -174,6 +184,9 @@ namespace TinaXEditor.VFSKit.UI
 
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
                 {
+                    #region Profile Editor
+
+                    #endregion
                     GUILayout.FlexibleSpace();
 
                     //Build Button
