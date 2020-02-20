@@ -185,7 +185,10 @@ namespace TinaXEditor.VFSKit.UI
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
                 {
                     #region Profile Editor
-
+                    if (GUILayout.Button("Profiles", EditorStyles.toolbarButton, GUILayout.Width(65)))
+                    {
+                        ProfileEditorIMGUI.OpenUI();
+                    }
                     #endregion
                     GUILayout.FlexibleSpace();
 
@@ -219,6 +222,8 @@ namespace TinaXEditor.VFSKit.UI
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             VFSManagerEditor.RefreshManager(true);
+
+            wnd = null;
         }
 
         private void DrawGlobalConfig()

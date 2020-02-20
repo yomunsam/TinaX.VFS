@@ -35,6 +35,11 @@ namespace TinaXEditor.VFSKit.UI
         }
 
 
+        private void OnDestroy()
+        {
+            VFSBuilderIMGUI.wnd = null;
+        }
+
         private void OnGUI()
         {
         }

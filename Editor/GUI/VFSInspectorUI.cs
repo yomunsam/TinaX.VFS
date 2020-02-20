@@ -91,7 +91,7 @@ namespace TinaXEditor.VFSKit.UI
                     mCurSelectedAssetPath = path;
                     
 
-                    if (!IsTypeIgnore(mainAssetType))
+                    if (!IsTypeIgnore(mainAssetType) && path.StartsWith("Assets/"))
                     {
                         if (mCurSelectedAssetPath != mCurShowAssetPath)
                         {
@@ -127,6 +127,14 @@ namespace TinaXEditor.VFSKit.UI
                             GUILayout.Label("AB Path : ", style_txt_bold, GUILayout.MaxWidth(65));
                             EditorGUILayout.LabelField(mCurAssetData.AssetBundleFileName);
                             GUILayout.EndHorizontal();
+
+                            GUILayout.BeginHorizontal();
+                            if (GUILayout.Button(IsChinese?"复制路径":"Copy Path",GUILayout.Width(80)))
+                            {
+                                GUIUtility.systemCopyBuffer = path;
+                            }
+                            GUILayout.EndHorizontal();
+
                         }
                         else
                         {

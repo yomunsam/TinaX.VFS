@@ -19,7 +19,7 @@ namespace TinaXEditor.VFSKit
     [InitializeOnLoad]
     public static class VFSManagerEditor
     {
-        static VFSProfileEditorJsonModel VFSProfileEditor;
+        static VFSProfileModel VFSProfileEditor;
 
         static List<VFSGroup> Groups = new List<VFSGroup>();
         /// <summary>
@@ -90,12 +90,12 @@ namespace TinaXEditor.VFSKit
             if (File.Exists(profile_path))
             {
                 //load
-                VFSProfileEditor = XConfig.GetJson<VFSProfileEditorJsonModel>(profile_path, AssetLoadType.SystemIO, false);
+                VFSProfileEditor = XConfig.GetJson<VFSProfileModel>(profile_path, AssetLoadType.SystemIO, false);
             }
             else
             {
                 //create profile editor file in "ProjectSetting"
-                VFSProfileEditor = new VFSProfileEditorJsonModel();
+                VFSProfileEditor = new VFSProfileModel();
                 var json_text = JsonUtility.ToJson(VFSProfileEditor);
                 XConfig.SaveJson(VFSProfileEditor, profile_path, AssetLoadType.SystemIO);
             }
@@ -229,7 +229,10 @@ namespace TinaXEditor.VFSKit
         }
 
 
-
+        //public static VFSProfileModel.ProfileItem GetProfile(string profileName)
+        //{
+        //    if()
+        //}
 
 
     }
