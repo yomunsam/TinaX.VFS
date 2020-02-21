@@ -228,11 +228,46 @@ namespace TinaXEditor.VFSKit
             return result.ManagedByVFS;
         }
 
+        public static string[] GetGroupNames()
+        {
+            string[] g = new string[Groups.Count];
+            for(var i = 0; i < Groups.Count; i++)
+            {
+                g[i] = Groups[i].GroupName;
+            }
+            return g;
+        }
 
-        //public static VFSProfileModel.ProfileItem GetProfile(string profileName)
-        //{
-        //    if()
-        //}
+        public static bool TryGetGroupHandleMode(string groupName,out GroupHandleMode handleMode)
+        {
+            foreach(var item in Groups)
+            {
+                if(item.GroupName == groupName)
+                {
+                    handleMode = item.HandleMode;
+                    return true;
+                }
+            }
+
+            handleMode = default;
+            return false;
+        }
+
+        public static ProfileRecord GetProfileRecord(string profileName)
+        {
+            if (VFSProfileEditor.TryGetProfille(profileName,out var pr))
+            {
+                return pr;
+            }
+            else
+            {
+                return new ProfileRecord()
+                {
+                    ProfileName = profileName
+                };
+            }
+        }
+
 
 
     }

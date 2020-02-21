@@ -99,7 +99,11 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
-
+        private SerializedProperty sp_enable_vfs;
+        /// <summary>
+        /// vfs 后缀名
+        /// </summary>
+        private SerializedProperty sp_vfs_extension;
 
         private void OnEnable()
         {
@@ -107,6 +111,7 @@ namespace TinaXEditor.VFSKit.UI
             mVFSConfig = XConfig.GetConfig<VFSConfigModel>(mConfigFilePath);
 
             this.minSize = new Vector2(Window_Min_Weight, 600);
+            VFSManagerEditor.RefreshManager(true);
             
 
 
@@ -235,7 +240,11 @@ namespace TinaXEditor.VFSKit.UI
 
             v2_scrollview_globalConfig = EditorGUILayout.BeginScrollView(v2_scrollview_globalConfig);
             //启用vfs
-            mVFSConfig.EnableWebVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableWebVFS);
+            if(sp_enable_vfs == null)
+                sp_enable_vfs = mVFSConfigSerializedObject.FindProperty("EnableWebVFS");
+
+            //mVFSConfig.EnableWebVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableWebVFS);
+            EditorGUILayout.PropertyField(sp_enable_vfs, new GUIContent(VFSConfigDashboardI18N.EnableVFS));
             EditorGUILayout.Space();
             //忽略后缀名
             b_flodout_global_extname = EditorGUILayout.Foldout(b_flodout_global_extname, VFSConfigDashboardI18N.GlobalVFS_Ignore_ExtName);
@@ -352,10 +361,13 @@ namespace TinaXEditor.VFSKit.UI
             b_flodout_global_ab_detail = EditorGUILayout.Foldout(b_flodout_global_ab_detail, VFSConfigDashboardI18N.Window_AB_Detail);
             if (b_flodout_global_ab_detail)
             {
+                if (sp_vfs_extension == null)
+                    sp_vfs_extension = mVFSConfigSerializedObject.FindProperty("AssetBundleFileExtension");
                 // ab 包后缀名
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(VFSConfigDashboardI18N.Window_AB_Extension_Name, style_text_normal);
-                mVFSConfig.AssetBundleFileExtension = EditorGUILayout.TextField(mVFSConfig.AssetBundleFileExtension, GUILayout.MinWidth(75),GUILayout.MaxWidth(125));
+                //EditorGUILayout.PropertyField(sp_vfs_extension, GUILayout.MinWidth(75), GUILayout.MaxWidth(125));
+                sp_vfs_extension.stringValue = EditorGUILayout.TextField(sp_vfs_extension.stringValue, GUILayout.MinWidth(75), GUILayout.MaxWidth(125));
                 GUILayout.EndHorizontal();
                 if (!mVFSConfig.AssetBundleFileExtension.StartsWith("."))
                     GUILayout.Label(VFSConfigDashboardI18N.Window_AB_Extension_Name_Tip_startwithdot, style_text_warning);
@@ -494,18 +506,23 @@ namespace TinaXEditor.VFSKit.UI
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
-                mVFSConfig.Groups[cur_select_group_index.Value].GroupName = GUILayout.TextField(mVFSConfig.Groups[cur_select_group_index.Value].GroupName);
+                SerializedProperty groupName = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("GroupName");
+                EditorGUILayout.PropertyField(groupName, new GUIContent(VFSConfigDashboardI18N.Window_Group_HandleMode));
+                //mVFSConfig.Groups[cur_select_group_index.Value].GroupName = GUILayout.TextField(mVFSConfig.Groups[cur_select_group_index.Value].GroupName);
                 GUILayout.EndHorizontal();
 
                 #region Group类型
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-                mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode, mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
-
+                //mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode, mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
+                SerializedProperty groupAssetsHandleMode =  mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("GroupAssetsHandleMode");
+                EditorGUILayout.PropertyField(groupAssetsHandleMode, new GUIContent(VFSConfigDashboardI18N.Window_Group_HandleMode));
                 #endregion
 
                 #region 可扩展Groups
-                mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup = EditorGUILayout.Toggle(VFSConfigDashboardI18N.Window_Group_Extensible, mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup);
+                SerializedProperty expansionGroup = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExpansionGroup");
+                EditorGUILayout.PropertyField(expansionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extensible));
+                //mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup = EditorGUILayout.Toggle(VFSConfigDashboardI18N.Window_Group_Extensible, mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup);
                 EditorGUILayout.LabelField(VFSConfigDashboardI18N.Window_Group_Extensible_Tips,EditorStyles.helpBox);
 
 

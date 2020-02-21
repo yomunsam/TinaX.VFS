@@ -11,6 +11,9 @@ namespace TinaX.VFSKit
     {
         public string GroupName { get; set; }
 
+
+        public GroupHandleMode HandleMode => mOption.GroupAssetsHandleMode;
+
         /// <summary>
         /// 储存FolderPath， 格式：Assets/xx/xxx/ ，必须以斜线“/”结尾。
         /// </summary>

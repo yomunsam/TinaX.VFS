@@ -7,7 +7,9 @@ using UnityEngine;
 using UnityEditor;
 using TinaX.VFSKit;
 using TinaX;
+using TinaX.Internal;
 using TinaXEditor;
+using TinaXEditor.VFSKitInternal;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -22,10 +24,10 @@ namespace TinaXEditor.VFSKit.UI
             {
                 wnd = GetWindow<ProfileEditorIMGUI>();
                 wnd.titleContent = new GUIContent("VFS Profile");
-                wnd.minSize = new Vector2(364, 599);
-                wnd.maxSize = new Vector2(365, 600);
+                wnd.minSize = new Vector2(424, 599);
+                wnd.maxSize = new Vector2(425, 600);
                 Rect pos = wnd.position;
-                pos.width = 365;
+                pos.width = 425;
                 pos.height = 600;
                 wnd.position = pos;
             }
@@ -69,12 +71,63 @@ namespace TinaXEditor.VFSKit.UI
         }
 
 
+        private static GUIStyle _style_txt_group_item;
+        private static GUIStyle style_txt_group_item
+        {
+            get
+            {
+                if (_style_txt_group_item == null)
+                {
+                    _style_txt_group_item = new GUIStyle(EditorStyles.label);
+                    _style_txt_group_item.normal.textColor = XEditorColorDefine.Color_Normal_Pure;
+                    _style_txt_group_item.fontSize = 13;
+                    _style_txt_group_item.fontStyle = FontStyle.BoldAndItalic;
+                    _style_txt_group_item.padding.left = 5;
+                }
+                return _style_txt_group_item;
+            }
+        }
+
+
+        private static bool? _isChinese;
+        private static bool IsChinese
+        {
+            get
+            {
+                if (_isChinese == null)
+                {
+                    _isChinese = (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified);
+                }
+                return _isChinese.Value;
+            }
+        }
+
         private string[] xprofiles;
         private int select_xprofile;
         private Vector2 v2_body_scrollview;
+        private ProfileRecord mCurProfileRecord;
+
+        private string[] groupNames;
+        private Dictionary<string, GroupHandleMode> groups_handlemode_cache = new Dictionary<string, GroupHandleMode>(); //string: groupName
+
+        /// <summary>
+        /// 编辑缓存 [Profile] -> [Group] -> E_GroupAssetsLocation
+        /// </summary>
+        private Dictionary<string, Dictionary<string, ProfileRecord.E_GroupAssetsLocation>> assetLocation_cache = new Dictionary<string, Dictionary<string, ProfileRecord.E_GroupAssetsLocation>>();
+
 
 
         #endregion
+
+        private void OnEnable()
+        {
+            if(XCoreEditor.GetXProfiles().Length == 0)
+            {
+                XCoreEditor.RefreshXProfile();
+            }
+            refreshXprofilesCacheData();
+
+        }
 
         private void OnGUI()
         {
@@ -82,7 +135,7 @@ namespace TinaXEditor.VFSKit.UI
 
             GUILayout.BeginHorizontal(style_head);
             GUILayout.Label("Profile:",GUILayout.Width(55));
-            if(xprofiles == null)
+            if(xprofiles == null || (select_xprofile -1) > xprofiles.Length)
             {
                 refreshXprofilesCacheData();
             }
@@ -92,7 +145,81 @@ namespace TinaXEditor.VFSKit.UI
 
             GUILayout.BeginVertical(style_body);
             v2_body_scrollview = EditorGUILayout.BeginScrollView(v2_body_scrollview);
-            GUILayout.Label("喵");
+
+            string cur_xprofile_name = xprofiles[select_xprofile];
+
+            //表头
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Group",GUILayout.Width(165));
+            GUILayout.Label("|", GUILayout.Width(10));
+            GUILayout.Label(IsChinese ? "资源存储位置" : "Assets Storage Location",GUILayout.Width(150));
+            GUILayout.Label("|",GUILayout.Width(10));
+            GUILayout.Label("Disable",GUILayout.Width(50));
+
+            EditorGUILayout.EndHorizontal();
+
+            if(mCurProfileRecord == null || xprofiles[select_xprofile] != mCurProfileRecord.ProfileName)
+            {
+                mCurProfileRecord = VFSManagerEditor.GetProfileRecord(xprofiles[select_xprofile]);
+            }
+            if(groupNames == null)
+            {
+                groupNames = VFSManagerEditor.GetGroupNames();
+            }
+
+            foreach(var name in groupNames)
+            {
+                GUILayout.BeginHorizontal();
+                //GroupName
+                GUILayout.Label(name, style_txt_group_item,GUILayout.Width(170));
+                GUILayout.Space(5);
+                //资源存储位置
+                GroupHandleMode handleMode;
+                if (!groups_handlemode_cache.TryGetValue(name,out handleMode))
+                {
+                    if(!VFSManagerEditor.TryGetGroupHandleMode(name, out handleMode))
+                    {
+                        Debug.LogError("Get Group Info Failed: " + name) ;
+                        this.Close();
+                        return;
+                    }
+                    else
+                    {
+                        groups_handlemode_cache.Add(name, handleMode);
+                    }
+                }
+
+                if(handleMode == GroupHandleMode.LocalAndUpdatable || handleMode == GroupHandleMode.LocalOrRemote)
+                {
+                    //可以主动设置资源位置
+                    if (!assetLocation_cache.ContainsKey(xprofiles[select_xprofile]))
+                        assetLocation_cache.Add(cur_xprofile_name, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
+
+                    if (!assetLocation_cache[cur_xprofile_name].ContainsKey(name))
+                        assetLocation_cache[cur_xprofile_name].Add(name, ProfileRecord.E_GroupAssetsLocation.Local);
+
+                    assetLocation_cache[cur_xprofile_name][name] = (ProfileRecord.E_GroupAssetsLocation)EditorGUILayout.EnumPopup(assetLocation_cache[cur_xprofile_name][name],GUILayout.Width(150));
+                }
+                else
+                {
+                    //写死资源位置
+                    if (handleMode == GroupHandleMode.LocalOnly)
+                    {
+                        setAssetLocationCacheValue(cur_xprofile_name, name, ProfileRecord.E_GroupAssetsLocation.Local);
+                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Local.ToString()}]", GUILayout.Width(150));
+                    }
+                    else if (handleMode == GroupHandleMode.RemoteOnly)
+                    {
+                        setAssetLocationCacheValue(cur_xprofile_name, name, ProfileRecord.E_GroupAssetsLocation.Server);
+                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Server.ToString()}]", GUILayout.Width(150));
+                    }
+                }
+
+                //Disable
+                GUILayout.Label("", GUILayout.Width(50));
+
+                GUILayout.EndHorizontal();
+            }
 
 
 
@@ -104,6 +231,21 @@ namespace TinaXEditor.VFSKit.UI
             GUILayout.EndVertical();
         }
 
+        private void OnDisable()
+        {
+            xprofiles = null;
+            mCurProfileRecord = null;
+            select_xprofile = 0;
+            groups_handlemode_cache?.Clear();
+        }
+
+        private void OnLostFocus()
+        {
+            xprofiles = null;
+            mCurProfileRecord = null;
+            select_xprofile = 0;
+            groups_handlemode_cache?.Clear();
+        }
 
         void refreshXprofilesCacheData()
         {
@@ -120,6 +262,20 @@ namespace TinaXEditor.VFSKit.UI
                 }
             }
             select_xprofile = cur_index;
+        }
+
+        private void setAssetLocationCacheValue(string profileName ,string groupName, ProfileRecord.E_GroupAssetsLocation assetsLocation)
+        {
+            if (!assetLocation_cache.ContainsKey(xprofiles[select_xprofile]))
+                assetLocation_cache.Add(profileName, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
+
+            if (assetLocation_cache[profileName].ContainsKey(groupName))
+            {
+                if (assetLocation_cache[profileName][groupName] != assetsLocation)
+                    assetLocation_cache[profileName][groupName] = assetsLocation;
+            }
+            else
+                assetLocation_cache[profileName].Add(groupName, assetsLocation);
         }
 
         private void OnDestroy()
