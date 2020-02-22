@@ -95,8 +95,8 @@ namespace TinaXEditor.VFSKit
             else
             {
                 //create profile editor file in "ProjectSetting"
-                VFSProfileEditor = new VFSProfileModel();
-                var json_text = JsonUtility.ToJson(VFSProfileEditor);
+                initProfileRecord();
+                //var json_text = JsonUtility.ToJson(VFSProfileEditor);
                 XConfig.SaveJson(VFSProfileEditor, profile_path, AssetLoadType.SystemIO);
             }
 
@@ -253,6 +253,11 @@ namespace TinaXEditor.VFSKit
             return false;
         }
 
+        public static List<VFSGroup> GetGroups()    //好像直接拿Groups会少很多事，反正class是引用类型
+        {
+            return Groups;
+        }
+
         public static ProfileRecord GetProfileRecord(string profileName)
         {
             if (VFSProfileEditor.TryGetProfille(profileName,out var pr))
@@ -262,9 +267,47 @@ namespace TinaXEditor.VFSKit
             else
             {
                 return new ProfileRecord()
+                    .SetProfileName(profileName)
+                    .DefaultByGrousp(Groups);
+            }
+        }
+
+
+        public static void AddProfileIfNotExists(ProfileRecord pr)
+        {
+            VFSProfileEditor.AddProfileIfNotExists(pr);
+        }
+
+
+
+        public static void SaveProfileRecord()
+        {
+            if(VFSProfileEditor != null)
+            {
+                VFSProfileEditor.ReadySave();
+                var profile_path = Path.Combine(XEditorConst.EditorProjectSettingRootFolder, VFSEditorConst.VFSProfileProjectSettingFileName);
+                XConfig.SaveJson(VFSProfileEditor, profile_path, AssetLoadType.SystemIO);
+            }
+        }
+
+        /// <summary>
+        /// 初始值
+        /// </summary>
+        private static void initProfileRecord()
+        {
+            if (VFSProfileEditor == null)
+                VFSProfileEditor = new VFSProfileModel();
+            var profiles = XCoreEditor.GetXProfiles();
+            foreach(var profileName in profiles)
+            {
+                if(!VFSProfileEditor.TryGetProfille(profileName, out var pr))
                 {
-                    ProfileName = profileName
-                };
+                    var profile = new ProfileRecord()
+                        .SetProfileName(profileName)
+                        .DefaultByGrousp(Groups);
+                    VFSProfileEditor.AddProfileIfNotExists(profile);
+                }
+                
             }
         }
 

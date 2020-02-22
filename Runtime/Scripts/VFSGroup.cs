@@ -15,6 +15,11 @@ namespace TinaX.VFSKit
         public GroupHandleMode HandleMode => mOption.GroupAssetsHandleMode;
 
         /// <summary>
+        /// 扩展的组
+        /// </summary>
+        public bool ExpansionGroup => mOption.ExpansionGroup;
+
+        /// <summary>
         /// 储存FolderPath， 格式：Assets/xx/xxx/ ，必须以斜线“/”结尾。
         /// </summary>
         public List<string> FolderPaths { get; private set; } = new List<string>();

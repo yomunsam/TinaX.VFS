@@ -11,6 +11,9 @@ namespace TinaXEditor.VFSKitInternal
     {
 
         #region 序列化存储用
+        /// <summary>
+        /// 外部不要直接操作它！！！！
+        /// </summary>
         public ProfileRecord[] Profiles; //存储 序列化
         #endregion
 
@@ -23,6 +26,7 @@ namespace TinaXEditor.VFSKitInternal
             {
                 if(_dict_profiles == null)
                 {
+                    if (Profiles == null) Profiles = new ProfileRecord[0];
                     _dict_profiles = new Dictionary<string, ProfileRecord>();
                     foreach (var item in Profiles)
                     {
@@ -37,6 +41,24 @@ namespace TinaXEditor.VFSKitInternal
         public bool TryGetProfille(string name,out ProfileRecord profile)
         {
             return dict_profiles.TryGetValue(name,out profile);
+        }
+
+        public void AddProfileIfNotExists(ProfileRecord pr)
+        {
+            if (!dict_profiles.ContainsKey(pr.ProfileName))
+            {
+                dict_profiles.Add(pr.ProfileName,pr);
+            }
+        }
+
+        public void ReadySave()
+        {
+            List<ProfileRecord> temp = new List<ProfileRecord>();
+            foreach(var item in dict_profiles)
+            {
+                temp.Add(item.Value);
+            }
+            Profiles = temp.ToArray();
         }
 
         #endregion

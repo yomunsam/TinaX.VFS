@@ -70,6 +70,22 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        private GUIStyle _style_label_center;
+        private GUIStyle style_label_center
+        {
+            get
+            {
+                if (_style_label_center == null)
+                {
+                    _style_label_center = new GUIStyle(EditorStyles.label);
+                    _style_label_center.alignment = TextAnchor.MiddleCenter;
+                }
+                return _style_label_center;
+            }
+        }
+
+        
+
 
         private static GUIStyle _style_txt_group_item;
         private static GUIStyle style_txt_group_item
@@ -107,15 +123,19 @@ namespace TinaXEditor.VFSKit.UI
         private Vector2 v2_body_scrollview;
         private ProfileRecord mCurProfileRecord;
 
-        private string[] groupNames;
-        private Dictionary<string, GroupHandleMode> groups_handlemode_cache = new Dictionary<string, GroupHandleMode>(); //string: groupName
+        //private string[] groupNames;
+        //private Dictionary<string, GroupHandleMode> groups_handlemode_cache = new Dictionary<string, GroupHandleMode>(); //string: groupName
+        private List<VFSGroup> groups;
 
         /// <summary>
         /// 编辑缓存 [Profile] -> [Group] -> E_GroupAssetsLocation
         /// </summary>
         private Dictionary<string, Dictionary<string, ProfileRecord.E_GroupAssetsLocation>> assetLocation_cache = new Dictionary<string, Dictionary<string, ProfileRecord.E_GroupAssetsLocation>>();
 
-
+        /// <summary>
+        /// 编辑缓存：Group是否可以disable [Profile] -> [Group] -> E_GroupAssetsLocation
+        /// </summary>
+        private Dictionary<string, Dictionary<string, bool>> disable_expansionGroup_cache = new Dictionary<string, Dictionary<string, bool>>();
 
         #endregion
 
@@ -143,6 +163,8 @@ namespace TinaXEditor.VFSKit.UI
             select_xprofile = EditorGUILayout.Popup(select_xprofile, xprofiles);
             GUILayout.EndHorizontal();
 
+            #region Group列表
+
             GUILayout.BeginVertical(style_body);
             v2_body_scrollview = EditorGUILayout.BeginScrollView(v2_body_scrollview);
 
@@ -161,62 +183,70 @@ namespace TinaXEditor.VFSKit.UI
             if(mCurProfileRecord == null || xprofiles[select_xprofile] != mCurProfileRecord.ProfileName)
             {
                 mCurProfileRecord = VFSManagerEditor.GetProfileRecord(xprofiles[select_xprofile]);
+                addConfiguredValueToCache();
             }
-            if(groupNames == null)
+            if(groups == null)
             {
-                groupNames = VFSManagerEditor.GetGroupNames();
+                groups = VFSManagerEditor.GetGroups();
+                //groupNames = VFSManagerEditor.GetGroupNames();
             }
 
-            foreach(var name in groupNames)
+            foreach(var group in groups)
             {
                 GUILayout.BeginHorizontal();
                 //GroupName
-                GUILayout.Label(name, style_txt_group_item,GUILayout.Width(170));
+                GUILayout.Label(group.GroupName, style_txt_group_item,GUILayout.Width(170));
                 GUILayout.Space(5);
                 //资源存储位置
-                GroupHandleMode handleMode;
-                if (!groups_handlemode_cache.TryGetValue(name,out handleMode))
-                {
-                    if(!VFSManagerEditor.TryGetGroupHandleMode(name, out handleMode))
-                    {
-                        Debug.LogError("Get Group Info Failed: " + name) ;
-                        this.Close();
-                        return;
-                    }
-                    else
-                    {
-                        groups_handlemode_cache.Add(name, handleMode);
-                    }
-                }
+                GroupHandleMode handleMode = group.HandleMode;
+                
 
                 if(handleMode == GroupHandleMode.LocalAndUpdatable || handleMode == GroupHandleMode.LocalOrRemote)
                 {
                     //可以主动设置资源位置
-                    if (!assetLocation_cache.ContainsKey(xprofiles[select_xprofile]))
+                    if (!assetLocation_cache.ContainsKey(cur_xprofile_name))
                         assetLocation_cache.Add(cur_xprofile_name, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
 
-                    if (!assetLocation_cache[cur_xprofile_name].ContainsKey(name))
-                        assetLocation_cache[cur_xprofile_name].Add(name, ProfileRecord.E_GroupAssetsLocation.Local);
+                    if (!assetLocation_cache[cur_xprofile_name].ContainsKey(group.GroupName))
+                        assetLocation_cache[cur_xprofile_name].Add(group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
 
-                    assetLocation_cache[cur_xprofile_name][name] = (ProfileRecord.E_GroupAssetsLocation)EditorGUILayout.EnumPopup(assetLocation_cache[cur_xprofile_name][name],GUILayout.Width(150));
+                    assetLocation_cache[cur_xprofile_name][group.GroupName] = (ProfileRecord.E_GroupAssetsLocation)EditorGUILayout.EnumPopup(assetLocation_cache[cur_xprofile_name][group.GroupName],GUILayout.Width(150));
+
+                    GUILayout.Space(2);
                 }
                 else
                 {
                     //写死资源位置
                     if (handleMode == GroupHandleMode.LocalOnly)
                     {
-                        setAssetLocationCacheValue(cur_xprofile_name, name, ProfileRecord.E_GroupAssetsLocation.Local);
+                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
                         GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Local.ToString()}]", GUILayout.Width(150));
                     }
                     else if (handleMode == GroupHandleMode.RemoteOnly)
                     {
-                        setAssetLocationCacheValue(cur_xprofile_name, name, ProfileRecord.E_GroupAssetsLocation.Server);
+                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Server);
                         GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Server.ToString()}]", GUILayout.Width(150));
                     }
                 }
 
+                GUILayout.Space(10);
                 //Disable
-                GUILayout.Label("", GUILayout.Width(50));
+                if (group.ExpansionGroup)
+                {
+                    //可以主动设置group disable
+                    if (!disable_expansionGroup_cache.ContainsKey(cur_xprofile_name))
+                        disable_expansionGroup_cache.Add(cur_xprofile_name, new Dictionary<string, bool>());
+
+                    if (!disable_expansionGroup_cache[cur_xprofile_name].ContainsKey(group.GroupName))
+                        disable_expansionGroup_cache[cur_xprofile_name].Add(group.GroupName, false);
+                    GUILayout.Space(10);
+                    disable_expansionGroup_cache[cur_xprofile_name][group.GroupName] = EditorGUILayout.Toggle(disable_expansionGroup_cache[cur_xprofile_name][group.GroupName], GUILayout.Width(50));
+                }
+                else
+                {
+                    GUILayout.Label("[-]", style_label_center,GUILayout.Width(36));
+                    setGroupDisableCacheValue(cur_xprofile_name, group.GroupName, false);
+                }
 
                 GUILayout.EndHorizontal();
             }
@@ -224,9 +254,100 @@ namespace TinaXEditor.VFSKit.UI
 
 
             EditorGUILayout.EndScrollView();
+
+            
+
             GUILayout.EndVertical();
+            #endregion
 
+            #region 保存和重置值的两个按钮
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            
+            //包存cache的值
+            if(GUILayout.Button(IsChinese ? "保存设置" : "Save", GUILayout.Width(100)))
+            {
+                foreach(var item in assetLocation_cache)
+                {
+                    //item.key: profile,
+                    var profile = VFSManagerEditor.GetProfileRecord(item.Key); //因为获取到的是class，所以直接修改它就行了
+                    //item.value 是一个字典，key = groupName, value = value
+                    foreach(var item2 in item.Value)
+                    {
+                        //接下来要在结构体上操作了，所以不能拉过来操作了,只能找到下标之后直接去修改
+                        if(!profile.GroupProfileRecords.Any(gpr => gpr.GroupName == item2.Key))
+                        {
+                            ArrayUtil.Combine(ref profile.GroupProfileRecords, new ProfileRecord.S_GroupProfileRecord[]
+                            {
+                                new ProfileRecord.S_GroupProfileRecord()
+                                {
+                                    GroupName = item2.Key,
+                                }
+                            });
+                        }
+                        
+                        for(var i = 0; i < profile.GroupProfileRecords.Length; i++)
+                        {
+                            if(profile.GroupProfileRecords[i].GroupName == item2.Key)
+                            {
+                                profile.GroupProfileRecords[i].Location = item2.Value;
+                                break;
+                            }
+                        }
 
+                    }
+
+                    VFSManagerEditor.AddProfileIfNotExists(profile);
+                }
+
+                foreach (var item in disable_expansionGroup_cache)
+                {
+                    //item.key: profile,
+                    var profile = VFSManagerEditor.GetProfileRecord(item.Key); //因为获取到的是class，所以直接修改它就行了
+                    //item.value 是一个字典，key = groupName, value = value
+                    foreach (var item2 in item.Value)
+                    {
+                        //接下来要在结构体上操作了，所以不能拉过来操作了,只能找到下标之后直接去修改
+                        if (!profile.GroupProfileRecords.Any(gpr => gpr.GroupName == item2.Key))
+                        {
+                            ArrayUtil.Combine(ref profile.GroupProfileRecords, new ProfileRecord.S_GroupProfileRecord[]
+                            {
+                                new ProfileRecord.S_GroupProfileRecord()
+                                {
+                                    GroupName = item2.Key,
+                                }
+                            });
+                        }
+
+                        for (var i = 0; i < profile.GroupProfileRecords.Length; i++)
+                        {
+                            if (profile.GroupProfileRecords[i].GroupName == item2.Key)
+                            {
+                                profile.GroupProfileRecords[i].DisableGroup = item2.Value;
+                                break;
+                            }
+                        }
+
+                    }
+
+                    VFSManagerEditor.AddProfileIfNotExists(profile);
+                }
+
+                //通知VFSManager保存到disk
+                VFSManagerEditor.SaveProfileRecord();
+            }
+
+            //重置cache的已记录值
+            if(GUILayout.Button(IsChinese ? "重置设置" : "Reset modify", GUILayout.Width(100)))
+            {
+                assetLocation_cache?.Clear();
+                disable_expansionGroup_cache?.Clear();
+                addConfiguredValueToCache();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            #endregion 
+            GUILayout.Space(5);
 
             GUILayout.EndVertical();
         }
@@ -236,7 +357,8 @@ namespace TinaXEditor.VFSKit.UI
             xprofiles = null;
             mCurProfileRecord = null;
             select_xprofile = 0;
-            groups_handlemode_cache?.Clear();
+            groups = null;
+            //groups_handlemode_cache?.Clear();
         }
 
         private void OnLostFocus()
@@ -244,7 +366,8 @@ namespace TinaXEditor.VFSKit.UI
             xprofiles = null;
             mCurProfileRecord = null;
             select_xprofile = 0;
-            groups_handlemode_cache?.Clear();
+            groups = null;
+            //groups_handlemode_cache?.Clear();
         }
 
         void refreshXprofilesCacheData()
@@ -266,7 +389,7 @@ namespace TinaXEditor.VFSKit.UI
 
         private void setAssetLocationCacheValue(string profileName ,string groupName, ProfileRecord.E_GroupAssetsLocation assetsLocation)
         {
-            if (!assetLocation_cache.ContainsKey(xprofiles[select_xprofile]))
+            if (!assetLocation_cache.ContainsKey(profileName))
                 assetLocation_cache.Add(profileName, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
 
             if (assetLocation_cache[profileName].ContainsKey(groupName))
@@ -276,6 +399,64 @@ namespace TinaXEditor.VFSKit.UI
             }
             else
                 assetLocation_cache[profileName].Add(groupName, assetsLocation);
+        }
+
+        private void setGroupDisableCacheValue(string profileName, string groupName, bool diable)
+        {
+            if (!disable_expansionGroup_cache.ContainsKey(profileName))
+                disable_expansionGroup_cache.Add(profileName, new Dictionary<string, bool>());
+
+            if (disable_expansionGroup_cache[profileName].ContainsKey(groupName))
+            {
+                if (disable_expansionGroup_cache[profileName][groupName] != diable)
+                    disable_expansionGroup_cache[profileName][groupName] = diable;
+            }
+            else
+                disable_expansionGroup_cache[profileName].Add(groupName, diable);
+        }
+
+        /// <summary>
+        /// 仅当字典中没有这个key的情况下才赋值
+        /// </summary>
+        /// <param name="profileName"></param>
+        /// <param name="groupName"></param>
+        /// <param name="assetsLocation"></param>
+        private void setAssetLocationCacheIfNoValue(string profileName, string groupName, ProfileRecord.E_GroupAssetsLocation assetsLocation)
+        {
+            if (!assetLocation_cache.ContainsKey(profileName))
+                assetLocation_cache.Add(profileName, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
+
+            if (!assetLocation_cache[profileName].ContainsKey(groupName))
+            {
+                assetLocation_cache[profileName].Add(groupName, assetsLocation);
+            }
+        }
+
+        private void setGroupDisableCacheIfNoValue(string profileName, string groupName, bool diable)
+        {
+            if (!disable_expansionGroup_cache.ContainsKey(profileName))
+                disable_expansionGroup_cache.Add(profileName, new Dictionary<string, bool>());
+
+            if (!disable_expansionGroup_cache[profileName].ContainsKey(groupName))
+            {
+                disable_expansionGroup_cache[profileName].Add(groupName, diable);
+            }
+        }
+
+        /// <summary>
+        /// 将已有的配置值存进cache
+        /// </summary>
+        private void addConfiguredValueToCache()
+        {
+            if(mCurProfileRecord != null)
+            {
+                foreach (var item in mCurProfileRecord.GroupProfileRecords)
+                {
+                    setAssetLocationCacheIfNoValue(mCurProfileRecord.ProfileName, item.GroupName, item.Location);
+                    setGroupDisableCacheIfNoValue(mCurProfileRecord.ProfileName, item.GroupName, item.DisableGroup);
+                }
+            }
+            
         }
 
         private void OnDestroy()
