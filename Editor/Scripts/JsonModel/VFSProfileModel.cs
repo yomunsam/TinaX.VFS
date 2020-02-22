@@ -15,6 +15,8 @@ namespace TinaXEditor.VFSKitInternal
         /// 外部不要直接操作它！！！！
         /// </summary>
         public ProfileRecord[] Profiles; //存储 序列化
+
+
         #endregion
 
 

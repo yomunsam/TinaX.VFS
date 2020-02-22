@@ -3,5 +3,6 @@
     public static class VFSEditorConst
     {
         public static string VFSProfileProjectSettingFileName = "VFSProfiles.json";
+
     }
 }

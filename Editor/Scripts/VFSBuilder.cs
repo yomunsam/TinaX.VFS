@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using TinaX.VFSKit;
 using TinaX.VFSKitInternal;
 using TinaXEditor.VFSKit.Pipeline;
+using TinaXEditor.VFSKitInternal;
 using UnityEngine;
 using UnityEditor;
 using TinaX;
@@ -30,6 +31,9 @@ namespace TinaXEditor.VFSKit
         //private HashSet<string[]>
         private List<FilesHashBook.FileHash> asset_hash_book = new List<FilesHashBook.FileHash>();
 
+        private ProfileRecord curProfile;
+        private string mProfileName;
+        private bool mDevelopMode;
 
         public VFSBuilder()
         {
@@ -47,6 +51,14 @@ namespace TinaXEditor.VFSKit
             return this;
         }
 
+        public IVFSBuilder UseProfile(string profileName)
+        {
+            mProfileName = profileName;
+            curProfile = VFSManagerEditor.GetProfileRecord(profileName);
+            mDevelopMode = XCoreEditor.IsXProfileDevelopMode(mProfileName);
+            return this;
+        }
+
         public void RefreshAssetBundleSign(bool recordAssetHash = true)
         {
             /*
@@ -56,6 +68,7 @@ namespace TinaXEditor.VFSKit
              */
 
             //获取到所有组的文件白名单目录
+            refreshProfileInfos();
             if (EnableTipsGUI) EditorUtility.DisplayProgressBar("VFS Builder", "Handle AssetBundle signs ...", 0f);
 
             var _whiteLists_folder = VFSManagerEditor.GetAllFolderPaths();
@@ -93,20 +106,32 @@ namespace TinaXEditor.VFSKit
                 string cur_asset_path = AssetDatabase.GUIDToAssetPath(guid);
                 if (VFSManagerEditor.QueryAsset(cur_asset_path, Config, out AssetsStatusQueryResult result, true))
                 {
-                    //
-                    var importer = AssetImporter.GetAtPath(cur_asset_path);
-                    if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileName.IsNullOrEmpty())
+                    //查询到了信息，但是并不是所有情况都需要设置assetbundle记录，
+                    bool sign_flag = true;
+                    if (result.DevType == FolderBuildDevelopType.editor_only)
+                        sign_flag = false; //该资源仅在编辑器下被加载，不参与打包。
+
+                    if(result.DevType == FolderBuildDevelopType.develop_mode_only)
                     {
-                        //正式设置AssetBundle
-                        importer.SetAssetBundleNameAndVariant(result.AssetBundleFileName, ab_extension);
-
-                        //记录
-                        if (recordAssetHash)
-                            asset_hash_book.Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path) });
-
-
+                        if (!mDevelopMode)
+                            sign_flag = false; //资源应该仅在develop模式下使用，但是当前Profile的设置并不是develop
                     }
 
+                    if (sign_flag)
+                    {
+                        var importer = AssetImporter.GetAtPath(cur_asset_path);
+                        if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileName.IsNullOrEmpty())
+                        {
+                            //正式设置AssetBundle
+                            importer.SetAssetBundleNameAndVariant(result.AssetBundleFileName, ab_extension);
+
+                            //记录
+                            if (recordAssetHash)
+                                asset_hash_book.Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path) });
+
+
+                        }
+                    }
                 }
 
                 if (EnableTipsGUI)
@@ -137,6 +162,12 @@ namespace TinaXEditor.VFSKit
         }
 
 
+
+        private void refreshProfileInfos()
+        {
+            if (curProfile == null)
+                curProfile = VFSManagerEditor.GetProfileRecord(XCoreEditor.GetCurrentActiveXProfileName());
+        }
 
 
         /// <summary>

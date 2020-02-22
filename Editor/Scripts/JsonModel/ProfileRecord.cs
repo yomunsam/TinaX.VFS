@@ -27,6 +27,8 @@ namespace TinaXEditor.VFSKitInternal
 
         public string ProfileName = string.Empty;
 
+        //public bool DevelopMode = false;
+
         /// <summary>
         /// 资源存储位置
         /// </summary>

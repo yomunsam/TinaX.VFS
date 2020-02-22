@@ -104,6 +104,7 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        #endregion
 
         private static bool? _isChinese;
         private static bool IsChinese
@@ -137,11 +138,11 @@ namespace TinaXEditor.VFSKit.UI
         /// </summary>
         private Dictionary<string, Dictionary<string, bool>> disable_expansionGroup_cache = new Dictionary<string, Dictionary<string, bool>>();
 
-        #endregion
+        
 
         private void OnEnable()
         {
-            if(XCoreEditor.GetXProfiles().Length == 0)
+            if(XCoreEditor.GetXProfileNames().Length == 0)
             {
                 XCoreEditor.RefreshXProfile();
             }
@@ -155,20 +156,34 @@ namespace TinaXEditor.VFSKit.UI
 
             GUILayout.BeginHorizontal(style_head);
             GUILayout.Label("Profile:",GUILayout.Width(55));
-            if(xprofiles == null || (select_xprofile -1) > xprofiles.Length)
+
+
+            if (xprofiles == null || (select_xprofile -1) > xprofiles.Length)
             {
                 refreshXprofilesCacheData();
             }
 
             select_xprofile = EditorGUILayout.Popup(select_xprofile, xprofiles);
             GUILayout.EndHorizontal();
+            
+            //数据
+            string cur_xprofile_name = xprofiles[select_xprofile];
+            if (mCurProfileRecord == null || xprofiles[select_xprofile] != mCurProfileRecord.ProfileName)
+            {
+                mCurProfileRecord = VFSManagerEditor.GetProfileRecord(xprofiles[select_xprofile]);
+                addConfiguredValueToCache();
+            }
+
+            
+
+            
+            
 
             #region Group列表
 
             GUILayout.BeginVertical(style_body);
             v2_body_scrollview = EditorGUILayout.BeginScrollView(v2_body_scrollview);
 
-            string cur_xprofile_name = xprofiles[select_xprofile];
 
             //表头
             EditorGUILayout.BeginHorizontal();
@@ -180,11 +195,7 @@ namespace TinaXEditor.VFSKit.UI
 
             EditorGUILayout.EndHorizontal();
 
-            if(mCurProfileRecord == null || xprofiles[select_xprofile] != mCurProfileRecord.ProfileName)
-            {
-                mCurProfileRecord = VFSManagerEditor.GetProfileRecord(xprofiles[select_xprofile]);
-                addConfiguredValueToCache();
-            }
+            
             if(groups == null)
             {
                 groups = VFSManagerEditor.GetGroups();
@@ -333,6 +344,16 @@ namespace TinaXEditor.VFSKit.UI
                     VFSManagerEditor.AddProfileIfNotExists(profile);
                 }
 
+                //foreach (var item in developMode_cache)
+                //{
+                //    //item.key: profile,
+                //    var profile = VFSManagerEditor.GetProfileRecord(item.Key); //因为获取到的是class，所以直接修改它就行了
+                //    //item.value 是 是否为开发模式的value
+                //    profile.DevelopMode = item.Value;
+                //    VFSManagerEditor.AddProfileIfNotExists(profile);
+                //}
+
+
                 //通知VFSManager保存到disk
                 VFSManagerEditor.SaveProfileRecord();
             }
@@ -372,7 +393,7 @@ namespace TinaXEditor.VFSKit.UI
 
         void refreshXprofilesCacheData()
         {
-            xprofiles = XCoreEditor.GetXProfiles();
+            xprofiles = XCoreEditor.GetXProfileNames();
             //get cur index 
             int cur_index = 0;
             string cur_name = XCoreEditor.GetCurrentActiveXProfileName();
@@ -443,6 +464,8 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        
+
         /// <summary>
         /// 将已有的配置值存进cache
         /// </summary>
@@ -455,6 +478,7 @@ namespace TinaXEditor.VFSKit.UI
                     setAssetLocationCacheIfNoValue(mCurProfileRecord.ProfileName, item.GroupName, item.Location);
                     setGroupDisableCacheIfNoValue(mCurProfileRecord.ProfileName, item.GroupName, item.DisableGroup);
                 }
+                //setDevelopModeCacheIfNoValue(mCurProfileRecord.ProfileName, mCurProfileRecord.DevelopMode);
             }
             
         }

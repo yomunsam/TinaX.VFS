@@ -290,6 +290,8 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+
+
         /// <summary>
         /// 初始值
         /// </summary>
@@ -297,7 +299,7 @@ namespace TinaXEditor.VFSKit
         {
             if (VFSProfileEditor == null)
                 VFSProfileEditor = new VFSProfileModel();
-            var profiles = XCoreEditor.GetXProfiles();
+            var profiles = XCoreEditor.GetXProfileNames();
             foreach(var profileName in profiles)
             {
                 if(!VFSProfileEditor.TryGetProfille(profileName, out var pr))
