@@ -22,7 +22,7 @@ namespace TinaXEditor.VFSKitInternal
         public enum E_GroupAssetsLocation
         {
             Local = 0,
-            Server = 1,
+            Remote = 1,
         }
 
         public string ProfileName = string.Empty;
@@ -51,7 +51,7 @@ namespace TinaXEditor.VFSKitInternal
                         break;
 
                     case GroupHandleMode.RemoteOnly:
-                        t_gr.Location = E_GroupAssetsLocation.Server;
+                        t_gr.Location = E_GroupAssetsLocation.Remote;
                         break;
 
                     default:
@@ -71,6 +71,33 @@ namespace TinaXEditor.VFSKitInternal
             return this;
         }
 
+        public bool IsDisabledGroup(string groupName)
+        {
+            string groupName_Lower = groupName.ToLower();
+            foreach(var record in GroupProfileRecords)
+            {
+                if(groupName_Lower == record.GroupName.ToLower())
+                {
+                    return record.DisableGroup;
+                }
+            }
+            return false;
+        }
+
+        public bool TryGetGroupLocation(string groupName,out E_GroupAssetsLocation location)
+        {
+            var grouplower = groupName.ToLower();
+            foreach (var record in GroupProfileRecords)
+            {
+                if (grouplower == record.GroupName.ToLower())
+                {
+                    location = record.Location;
+                    return true;
+                }
+            }
+            location = default;
+            return false;
+        }
 
     }
 }

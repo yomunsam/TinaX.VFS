@@ -8,6 +8,8 @@ using UnityEngine;
 using TinaX;
 using TinaX.VFSKit;
 using TinaXEditor.VFSKitInternal.I18N;
+using TinaXEditor.VFSKit.Utils;
+
 
 
 namespace TinaXEditor.VFSKit.UI
@@ -83,7 +85,28 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        private GUIStyle _style_preview;
+        private GUIStyle style_preview
+        {
+            get
+            {
+                if (_style_preview == null)
+                {
+                    _style_preview = new GUIStyle(EditorStyles.helpBox);
+                    _style_preview.margin.left = 5;
+                    _style_preview.margin.right = 5;
+                    _style_preview.margin.top = 5;
+                }
+                return _style_preview;
+            }
+        }
 
+        private const string SaveKey_StrictMode = "tinax.vfs.builder.gui.strictMode";
+        private const string SaveKey_CopyToStreamingAssets = "tinax.vfs.builder.gui.copyToStreamingAssets";
+        private const string SaveKey_ClearABAfter = "tinax.vfs.builder.gui.clearABAfter";
+        private const string SaveKey_ClearABBefore = "tinax.vfs.builder.gui.clearABBefore";
+        private const string SaveKey_ClearOutputFolder = "tinax.vfs.builder.gui.clearOutputFolder";
+        private const string SaveKey_ForceRebuild = "tinax.vfs.builder.gui.forceRebuild";
 
         private string[] xprofiles;
         private int select_xprofile;
@@ -92,10 +115,37 @@ namespace TinaXEditor.VFSKit.UI
         private AssetCompressType cur_select_compress = AssetCompressType.LZ4;
         private bool cur_strictMode = false;
         private bool cur_copyToStreamingAssetFolder = false;
+        private bool cur_clearAllABSign = false;
+        private bool cur_clearAllABSignAfterFinish = false;
+        private bool cur_ClearOutputFolder = false;
+        private bool cur_ForceRebuild = false;
+
+        //private string cur_preview_profileName;
+
+        private bool isBuilding = false;
 
         private void OnDestroy()
         {
             VFSBuilderIMGUI.wnd = null;
+
+            #region 保存编辑器选项
+            EditorPrefs.SetBool(SaveKey_StrictMode, cur_strictMode);
+            EditorPrefs.SetBool(SaveKey_CopyToStreamingAssets, cur_copyToStreamingAssetFolder);
+            EditorPrefs.SetBool(SaveKey_ClearABAfter, cur_clearAllABSignAfterFinish);
+            EditorPrefs.SetBool(SaveKey_ClearABBefore, cur_clearAllABSign);
+            EditorPrefs.SetBool(SaveKey_ClearOutputFolder, cur_ClearOutputFolder);
+            EditorPrefs.SetBool(SaveKey_ForceRebuild, cur_ForceRebuild);
+            #endregion
+        }
+
+        private void Awake()
+        {
+            cur_strictMode = EditorPrefs.GetBool(SaveKey_StrictMode, false);
+            cur_copyToStreamingAssetFolder = EditorPrefs.GetBool(SaveKey_CopyToStreamingAssets, false);
+            cur_clearAllABSign = EditorPrefs.GetBool(SaveKey_ClearABBefore, false);
+            cur_clearAllABSignAfterFinish = EditorPrefs.GetBool(SaveKey_ClearABAfter, false);
+            cur_ClearOutputFolder = EditorPrefs.GetBool(SaveKey_ClearOutputFolder, false);
+            cur_ForceRebuild = EditorPrefs.GetBool(SaveKey_ForceRebuild, false);
         }
 
         private void OnGUI()
@@ -138,14 +188,61 @@ namespace TinaXEditor.VFSKit.UI
             EditorGUILayout.EndHorizontal();
             #endregion
             
-            #region 压缩设置
+            #region 复制到StreamingAssets
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(VFSBuilderI18N.CopyToStramingAssetPath, GUILayout.MaxWidth(200));
             cur_copyToStreamingAssetFolder = EditorGUILayout.Toggle(cur_copyToStreamingAssetFolder);
             EditorGUILayout.EndHorizontal();
             #endregion
 
-            GUILayout.Button("Build", style_btn_build);
+            #region 在结束前清理AB标记
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(VFSBuilderI18N.ClearAllABSignBeforeStart);
+            cur_clearAllABSign = EditorGUILayout.Toggle(cur_clearAllABSign);
+            EditorGUILayout.EndHorizontal();
+            GUILayout.Label(VFSBuilderI18N.ClearAllABSignBeforeStart_Tips, EditorStyles.helpBox);
+            #endregion
+
+            #region 在结束后清理AB标记
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(VFSBuilderI18N.ClearAllABSignAfterFinish);
+            cur_clearAllABSignAfterFinish = EditorGUILayout.Toggle(cur_clearAllABSignAfterFinish);
+            EditorGUILayout.EndHorizontal();
+            #endregion
+
+            #region 清理输出目录
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(VFSBuilderI18N.ClearOutputFolders);
+            cur_ClearOutputFolder = EditorGUILayout.Toggle(cur_ClearOutputFolder);
+            EditorGUILayout.EndHorizontal();
+            #endregion
+            
+            #region 强制重构建资源
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(VFSBuilderI18N.ForceRebuild);
+            cur_ForceRebuild = EditorGUILayout.Toggle(cur_ForceRebuild);
+            EditorGUILayout.EndHorizontal();
+            #endregion
+
+            //#region Preview
+            //GUILayout.BeginVertical(style_preview);
+            //GUILayout.Label("Build Priview", EditorStyles.centeredGreyMiniLabel);
+            //GUILayout.Label("Build Group:");
+            //GUILayout.FlexibleSpace();
+            //GUILayout.EndVertical();
+
+            //#endregion
+            EditorGUILayout.Space();
+
+            if(GUILayout.Button("Build", style_btn_build))
+            {
+                runBuild();
+            }
+            if(GUILayout.Button("Clear All AssetBundle Signs"))
+            {
+                VFSEditorUtil.RemoveAllAssetbundleSigns(true);
+            }
+            EditorGUILayout.Space();
             GUILayout.EndVertical();
         }
 
@@ -167,5 +264,38 @@ namespace TinaXEditor.VFSKit.UI
             select_xprofile = cur_index;
         }
 
+        //void refreshProfilePreviewData()
+        //{
+        //    if(cur_preview_profileName == null || cur_preview_profileName!= cur_select_xprofile_name)
+        //    {
+
+        //    }
+        //}
+    
+        void runBuild()
+        {
+            if (isBuilding) return;
+            isBuilding = true;
+
+            VFSManagerEditor.RefreshManager(true);
+            var builder = new VFSBuilder()
+                .UseProfile(cur_select_xprofile_name)
+                .SetConfig(VFSManagerEditor.VFSConfig);
+            builder.EnableTipsGUI = true;
+            builder.CopyToStreamingAssetsFolder = cur_copyToStreamingAssetFolder;
+            builder.ClearAssetBundleSignAfterBuild = cur_clearAllABSignAfterFinish;
+            builder.ClearAssetBundleSignBeforeBuild = cur_clearAllABSign;
+            builder.ForceRebuild = cur_ForceRebuild;
+            builder.ClearOutputFolder = cur_ClearOutputFolder;
+            ShowNotification(new GUIContent("Building"));
+            builder.Build(cur_select_platform,cur_select_compress);
+
+
+            RemoveNotification();
+
+
+            isBuilding = false;
+        }
+    
     }
 }

@@ -235,14 +235,14 @@ namespace TinaXEditor.VFSKit.UI
                     }
                     else if (handleMode == GroupHandleMode.RemoteOnly)
                     {
-                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Server);
-                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Server.ToString()}]", GUILayout.Width(150));
+                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Remote);
+                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Remote.ToString()}]", GUILayout.Width(150));
                     }
                 }
 
                 GUILayout.Space(10);
                 //Disable
-                if (group.ExpansionGroup)
+                if (group.ExtensionGroup)
                 {
                     //可以主动设置group disable
                     if (!disable_expansionGroup_cache.ContainsKey(cur_xprofile_name))

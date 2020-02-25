@@ -40,6 +40,10 @@ namespace TinaXEditor.VFSKit
 
         private static VFSConfigModel mConfig;
 
+        public static VFSConfigModel VFSConfig => mConfig;
+
+        public static System.DateTime LastRefreshManagerTime { get; private set; } = System.DateTime.UtcNow;
+
         public static void RefreshManager(bool Normalization = false)
         {
             mConfig = XConfig.GetConfig<VFSConfigModel>(VFSConst.ConfigFilePath_Resources);
@@ -114,7 +118,7 @@ namespace TinaXEditor.VFSKit
                 }
             }
 
-            
+            LastRefreshManagerTime = System.DateTime.UtcNow;
         }
 
         public static string[] GetAllFolderPaths()
@@ -216,6 +220,7 @@ namespace TinaXEditor.VFSKit
                         assetBundleExtension = "." + assetBundleExtension;
 
                     result.AssetBundleFileName = ab_name_noExt + assetBundleExtension;
+                    result.ExtensionGroup = group.ExtensionGroup;
 
                     break;
                 }
@@ -313,6 +318,18 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+
+
+        #region 编辑器菜单
+
+        [MenuItem("Explor VFS Assts Build Folder",menuItem = "TinaX/VFS/Explor VFS Assts Build Folder",priority = 21)]
+        static void OpenABBuildFolder()
+        {
+            var uri = new System.Uri(VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH);
+            Application.OpenURL(uri.ToString());
+        }
+
+        #endregion
 
 
     }

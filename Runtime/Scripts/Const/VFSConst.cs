@@ -20,6 +20,19 @@ namespace TinaX.VFSKit.Const
 #endif
         };
 
+        public const string ABsHashFileName = "filehashs.json";
+
+        /// <summary>
+        /// vfs 主文件
+        /// </summary>
+        public const string VFS_FOLDER_MAIN = "vfs_root";
+        /// <summary>
+        /// vfs 扩展包
+        /// </summary>
+        public const string VFS_FOLDER_EXTENSION = "vfs_extensions";
+        public const string VFS_FOLDER_DATA = "vfs_data";
+
+        public const string VFS_STREAMINGASSETS_PATH = "Assets/SteamingAssets/TinaX";
 
     }
 }

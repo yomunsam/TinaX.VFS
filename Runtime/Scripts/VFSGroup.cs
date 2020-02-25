@@ -17,7 +17,7 @@ namespace TinaX.VFSKit
         /// <summary>
         /// 扩展的组
         /// </summary>
-        public bool ExpansionGroup => mOption.ExpansionGroup;
+        public bool ExtensionGroup => mOption.ExtensionGroup;
 
         /// <summary>
         /// 储存FolderPath， 格式：Assets/xx/xxx/ ，必须以斜线“/”结尾。
@@ -240,6 +240,15 @@ namespace TinaX.VFSKit
             return assetPath_lower;
         }
 
+        /// <summary>
+        /// 【返回值不含AssetBundle后缀！】传入一个 Asset的Path，根据“特殊文件打包规则”推测它的AssetBundle名
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        public string GetAssetBundleNameOfAsset(string assetPath)
+        {
+            return this.GetAssetBundleNameOfAsset(assetPath, out _, out _);
+        }
 
         /// <summary>
         /// 检查组内的文件夹冲突，并将存在冲突的内容返回，如果没有冲突则返回值的Count = 0

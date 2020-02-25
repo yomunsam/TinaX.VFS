@@ -89,5 +89,7 @@ namespace TinaXEditor.VFSKit
         public FolderBuildType BuildType { get; set; }
         public FolderBuildDevelopType DevType { get; set; }
 
+        public bool ExtensionGroup { get; set; }
+
     }
 }

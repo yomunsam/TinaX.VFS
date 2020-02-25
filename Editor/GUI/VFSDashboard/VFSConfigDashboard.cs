@@ -18,8 +18,8 @@
 //             wnd.titleContent = new GUIContent(VFSConfigDashboardI18N.WindowTitle);
 //         }
 
-//         const string UXML_Path = @"Packages/io.nekonya.tinax.vfs/Editor/GUI/VFSPlane/VFSConfigDashboard.uxml";
-//         const string USS_Path = "Packages/io.nekonya.tinax.vfs/Editor/GUI/VFSPlane/VFSConfigDashboard.uss";
+//         const string UXML_Path = @"Packages/io.nekonya.tinax.vfs/Editor/GUI/VFSDashboard/VFSConfigDashboard.uxml";
+//         const string USS_Path = "Packages/io.nekonya.tinax.vfs/Editor/GUI/VFSDashboard/VFSConfigDashboard.uss";
 
 
 //         public void OnEnable()

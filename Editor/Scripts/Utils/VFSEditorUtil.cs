@@ -4,6 +4,10 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using TinaX;
+using System.IO;
+using TinaX.IO;
+using TinaXEditor.VFSKit.Const;
+using TinaX.VFSKit.Const;
 
 namespace TinaXEditor.VFSKit.Utils
 {
@@ -25,6 +29,15 @@ namespace TinaXEditor.VFSKit.Utils
             return true;
         }
 
+        internal static void InitVFSFoldersInStreamingAssets()
+        {
+            string project_root_path = Directory.GetCurrentDirectory();
+            //tinax
+            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH));
+            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_MAIN));
+            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_DATA));
+            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_EXTENSION));
+        }
 
         public static void RemoveAllAssetbundleSigns(bool showEditorGUI = true)
         {

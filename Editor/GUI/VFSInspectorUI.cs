@@ -80,6 +80,7 @@ namespace TinaXEditor.VFSKit.UI
         private static string mCurShowAssetPath;
         private static string mCurSelectedAssetPath;
         private static AssetsStatusQueryResult mCurAssetData;
+        private static DateTime mCurAssetDataTime; //获取Asset查询结果时，VFSManager的刷新时间
 
         private static void OnPostHeaderGUI(Editor editor)
         {
@@ -93,11 +94,12 @@ namespace TinaXEditor.VFSKit.UI
 
                     if (!IsTypeIgnore(mainAssetType) && path.StartsWith("Assets/"))
                     {
-                        if (mCurSelectedAssetPath != mCurShowAssetPath)
+                        if (mCurSelectedAssetPath != mCurShowAssetPath || mCurAssetDataTime != VFSManagerEditor.LastRefreshManagerTime)
                         {
                             //获取数据
                             VFSManagerEditor.QueryAsset(path, out mCurAssetData, false);
                             mCurShowAssetPath = mCurSelectedAssetPath;
+                            mCurAssetDataTime = VFSManagerEditor.LastRefreshManagerTime;
                         }
 
                         GUILayout.Space(10);

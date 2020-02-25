@@ -19,7 +19,7 @@ namespace TinaXEditor.VFSKit.UI
     {
         private static VFSConfigDashboardIMGUI wnd;
 
-        [MenuItem("TinaX/VFS/VFS Dashboard")]
+        [MenuItem("TinaX/VFS/VFS Dashboard",priority = 10)]
         public static void OpenUI()
         {
             if(wnd == null)
@@ -93,7 +93,13 @@ namespace TinaXEditor.VFSKit.UI
                 if(_build_menu == null)
                 {
                     _build_menu = new GenericMenu();
-                    _build_menu.AddItem(new GUIContent(VFSConfigDashboardI18N.Menu_Build_BaseAsset), false, () => { VFSBuilderIMGUI.OpenUI(); });
+                    _build_menu.AddItem(
+                        new GUIContent(VFSConfigDashboardI18N.Menu_Build_BaseAsset),
+                        false,
+                        () => { 
+                            VFSManagerEditor.RefreshManager(true); 
+                            VFSBuilderIMGUI.OpenUI(); 
+                        });
                 }
                 return _build_menu;
             }
@@ -192,6 +198,7 @@ namespace TinaXEditor.VFSKit.UI
                     #region Profile Editor
                     if (GUILayout.Button("Profiles", EditorStyles.toolbarButton, GUILayout.Width(65)))
                     {
+                        VFSManagerEditor.RefreshManager(true);
                         ProfileEditorIMGUI.OpenUI();
                     }
                     #endregion
@@ -407,11 +414,12 @@ namespace TinaXEditor.VFSKit.UI
                 List<VFSGroupOption> gs_temp = new List<VFSGroupOption>(mVFSConfig.Groups);
                 gs_temp.Add(new VFSGroupOption() { GroupName = input_createGroupName });
                 mVFSConfig.Groups = gs_temp.ToArray();
+                //mVFSConfigSerializedObject = new SerializedObject(mVFSConfig);
 
                 mVFSConfigSerializedObject.UpdateIfRequiredOrScript();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-
+                VFSManagerEditor.RefreshManager(true);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -468,6 +476,10 @@ namespace TinaXEditor.VFSKit.UI
                         if (cur_select_group_index == list.index)
                             cur_select_group_index = null;
                         ReorderableList.defaultBehaviours.DoRemoveButton(list);
+
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                        VFSManagerEditor.RefreshManager(true);
                     };
 
                 }
@@ -520,8 +532,8 @@ namespace TinaXEditor.VFSKit.UI
                 #endregion
 
                 #region 可扩展Groups
-                SerializedProperty expansionGroup = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExpansionGroup");
-                EditorGUILayout.PropertyField(expansionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extensible));
+                SerializedProperty extensionGroup = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExtensionGroup");
+                EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extensible));
                 //mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup = EditorGUILayout.Toggle(VFSConfigDashboardI18N.Window_Group_Extensible, mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup);
                 EditorGUILayout.LabelField(VFSConfigDashboardI18N.Window_Group_Extensible_Tips,EditorStyles.helpBox);
 
