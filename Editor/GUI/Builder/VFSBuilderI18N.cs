@@ -106,5 +106,14 @@ namespace TinaXEditor.VFSKitInternal.I18N
                 return "Force Rebuild Assets: ";
             }
         }
+        
+        internal static string SwitchProfile
+        {
+            get
+            {
+                if (IsChinese) return "切换";
+                return "Switch ";
+            }
+        }
     }
 }

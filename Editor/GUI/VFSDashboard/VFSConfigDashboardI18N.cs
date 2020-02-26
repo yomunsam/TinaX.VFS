@@ -4,6 +4,20 @@ namespace TinaXEditor.VFSKitInternal.I18N
 {
     internal static class VFSConfigDashboardI18N
     {
+
+        private static bool? _isChinese;
+        private static bool IsChinese
+        {
+            get
+            {
+                if (_isChinese == null)
+                {
+                    _isChinese = (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified);
+                }
+                return _isChinese.Value;
+            }
+        }
+
         internal static string WindowTitle
         {
             get
@@ -335,6 +349,42 @@ namespace TinaXEditor.VFSKitInternal.I18N
                     return "后缀名请以点号\".\"开始。";
                 else
                     return "Please start with dot \".\" for file extension.";
+            }
+        }
+        
+        internal static string Toolbar_FileServer_NotSupport
+        {
+            get
+            {
+                if (IsChinese) return "文件服务器不支持";
+                return "File Server Not Support";
+            }
+        }
+        
+        internal static string Toolbar_FileServer_Running
+        {
+            get
+            {
+                if (IsChinese) return "文件服务器已启动";
+                return "File Server Running";
+            }
+        }
+        
+        internal static string Toolbar_FileServer_Stopped
+        {
+            get
+            {
+                if (IsChinese) return "文件服务器未启动";
+                return "File Server Stopped";
+            }
+        }
+
+        internal static string Toolbar_FileServer_OpenUI
+        {
+            get
+            {
+                if (IsChinese) return "管理文件服务器";
+                return "Manage File Server";
             }
         }
 

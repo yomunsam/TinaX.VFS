@@ -9,6 +9,7 @@ using TinaX.VFSKit.Exceptions;
 using TinaX.VFSKitInternal;
 using System;
 using UnityEngine;
+using TinaX.VFSKitInternal.Utils;
 
 namespace TinaX.VFSKit
 {
@@ -28,6 +29,8 @@ namespace TinaX.VFSKit
         /// </summary>
         private List<string> mWhitelistFolderPaths = new List<string>();
 
+        private VFSException mStartException;
+
         public VFSKit()
         {
 
@@ -43,58 +46,26 @@ namespace TinaX.VFSKit
             mConfig = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
             if(mConfig == null)
             {
-                throw new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() +"\nload path:" + ConfigPath,VFSErrorCode.LoadConfigFailed);
+                mStartException = new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
+                return false;
+            }
+
+            
+
+            if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            {
+                mStartException = new VFSException("VFS Config Error:", errorCode);
+                return false;
             }
 
             // init configs data.
             mGroups.Clear();
-            if(mConfig.Groups != null)
+            if (mConfig.Groups != null)
             {
-                foreach(var groupOption in mConfig.Groups)
+                foreach (var groupOption in mConfig.Groups)
                 {
                     mGroups.Add(new VFSGroup(groupOption));
                 }
-            }
-
-            //check groups config;
-            for(var i = 0; i < mGroups.Count; i ++)
-            {
-                var group = mGroups[i];
-                //检查文件夹路径冲突
-                if(i == 0)
-                {
-                    //检查自身
-                    if(group.CheckFolderConflict(out var paths))
-                    {
-                        throw new VFSException($"VFS Config Error : Groups's folderPaths configure conflict.\nGroup \"{group.GroupName}\" - FolderPath:{paths.FirstOrDefault()}", VFSErrorCode.ConfigureGroupsConflict);
-                    }
-                }
-                else
-                {
-                    //检查自身
-                    if (group.CheckFolderConflict(out var paths))
-                    {
-                        throw new VFSException($"VFS Config Error : Groups's folderPaths configure conflict.\nGroup \"{group.GroupName}\" - FolderPath:{paths.FirstOrDefault()}", VFSErrorCode.ConfigureGroupsConflict);
-                    }
-
-                    //检查与之前的组的路径冲突
-                    foreach(var path in group.FolderPaths)
-                    {
-                        foreach(var _g in mGroups) //TODO:这样循环是有问题的
-                        {
-                            if (_g.CheckFolderConflict(path))
-                            {
-                                throw new VFSException($"VFS Config Error: Groups's folderPath configure conflict.\nGroup: \"{group.GroupName}\" - FolderPath:{path}  | Group:\"{_g.GroupName}\"");
-                            }
-                        }
-                    }
-                }
-                //把当前group的folder 加入到全局的list 
-                foreach(var path in group.FolderPaths)
-                {
-                    mWhitelistFolderPaths.Add(path.EndsWith("/") ? path : path + "/");
-                }
-
             }
 
             await Task.Delay(0);
@@ -122,5 +93,12 @@ namespace TinaX.VFSKit
         {
             throw new NotImplementedException();
         }
+
+
+        public VFSException GetStartException()
+        {
+            return mStartException;
+        }
+
     }
 }

@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace TinaX.VFSKit.Const
+﻿namespace TinaX.VFSKit.Const
 {
     public static class VFSConst
     {
@@ -33,6 +29,8 @@ namespace TinaX.VFSKit.Const
         public const string VFS_FOLDER_DATA = "vfs_data";
 
         public const string VFS_STREAMINGASSETS_PATH = "Assets/SteamingAssets/TinaX";
+
+        public const string AssetsManifestFileName = "VFSManifest.json";
 
     }
 }

@@ -19,6 +19,11 @@ namespace TinaX.VFSKit
             return Task.FromResult(true);
         }
 
+        public XException GetInitException()
+        {
+            return null;
+        }
+
         public void OnServiceRegister()
         {
             XCore.GetMainInstance()?.BindSingletonService<IVFS, IAssetService, VFSKit>().SetAlias<IVFSInternal>();
@@ -27,6 +32,11 @@ namespace TinaX.VFSKit
         public Task<bool> OnStart()
         {
             return XCore.GetMainInstance()?.GetService<IVFSInternal>().Start();
+        }
+
+        public XException GetStartException()
+        {
+            return XCore.GetMainInstance()?.GetService<IVFSInternal>().GetStartException();
         }
 
         public Task OnClose()

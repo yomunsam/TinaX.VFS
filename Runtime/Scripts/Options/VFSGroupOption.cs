@@ -28,6 +28,8 @@ namespace TinaX.VFSKit
         [Tooltip("Extension group, eg: mod, dlc")]
         public bool ExtensionGroup = false;
 
+        public long Extension_VFSPackageMinVersion = 0; //如果是扩展组的话，扩展组所依赖的最低版本的“母资源包”的版本号。
+
         [Header("Ignore subpath in this group's FolderPaths whitelist. | 在当前资源组下的 资源目录 配置中的 忽略子路径")]
         public string[] IgnoreSubPath = { };
 

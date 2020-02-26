@@ -33,10 +33,11 @@ namespace TinaXEditor.VFSKit.Utils
         {
             string project_root_path = Directory.GetCurrentDirectory();
             //tinax
+            XDirectory.DeleteIfExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH));
             XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH));
-            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_MAIN));
-            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_DATA));
-            XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_EXTENSION));
+            //XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_MAIN));
+            //XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_DATA));
+            //XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH,VFSConst.VFS_FOLDER_EXTENSION));
         }
 
         public static void RemoveAllAssetbundleSigns(bool showEditorGUI = true)

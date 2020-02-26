@@ -295,7 +295,10 @@ namespace TinaXEditor.VFSKit
             }
         }
 
-
+        public static string GetEditorFileServerRootPath()
+        {
+            return VFSEditorConst.PROJECT_VFS_FILES_SERVER_FOLDER_PATH;
+        }
 
         /// <summary>
         /// 初始值

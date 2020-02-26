@@ -11,6 +11,11 @@ namespace TinaXEditor.VFSKit.Const
         /// 在工程目录下存放VFS打包文件的地方
         /// </summary>
         public static string PROJECT_VFS_FILES_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Build");
+        
+        /// <summary>
+        /// 调试文件服务器的文件根目录
+        /// </summary>
+        public static string PROJECT_VFS_FILES_SERVER_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectLibraryRootFolder, "VFS_FileServer");
         public static string PROJECT_VFS_FILES_FOLDER_MAIN => VFSConst.VFS_FOLDER_MAIN;
         /// <summary>
         /// 扩展包

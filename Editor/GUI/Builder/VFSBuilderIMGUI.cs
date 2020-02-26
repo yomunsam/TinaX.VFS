@@ -9,7 +9,7 @@ using TinaX;
 using TinaX.VFSKit;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKit.Utils;
-
+using TinaXEditor.Const;
 
 
 namespace TinaXEditor.VFSKit.UI
@@ -85,19 +85,17 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
-        private GUIStyle _style_preview;
-        private GUIStyle style_preview
+        private GUIStyle _style_warning;
+        private GUIStyle style_warning
         {
             get
             {
-                if (_style_preview == null)
+                if (_style_warning == null)
                 {
-                    _style_preview = new GUIStyle(EditorStyles.helpBox);
-                    _style_preview.margin.left = 5;
-                    _style_preview.margin.right = 5;
-                    _style_preview.margin.top = 5;
+                    _style_warning = new GUIStyle(EditorStyles.label);
+                    _style_warning.normal.textColor = TinaX.Internal.XEditorColorDefine.Color_Warning;
                 }
-                return _style_preview;
+                return _style_warning;
             }
         }
 
@@ -111,6 +109,8 @@ namespace TinaXEditor.VFSKit.UI
         private string[] xprofiles;
         private int select_xprofile;
         private string cur_select_xprofile_name;
+        private bool mDevelopMode;
+
         private XRuntimePlatform cur_select_platform;
         private AssetCompressType cur_select_compress = AssetCompressType.LZ4;
         private bool cur_strictMode = false;
@@ -119,6 +119,7 @@ namespace TinaXEditor.VFSKit.UI
         private bool cur_clearAllABSignAfterFinish = false;
         private bool cur_ClearOutputFolder = false;
         private bool cur_ForceRebuild = false;
+
 
         //private string cur_preview_profileName;
 
@@ -153,19 +154,31 @@ namespace TinaXEditor.VFSKit.UI
             GUILayout.BeginVertical(style_body);
 
             #region Profile 选择
-            GUILayout.BeginHorizontal(style_profile_selector);
-            GUILayout.Label("Profile:", GUILayout.Width(55));
-
 
             if (xprofiles == null || (select_xprofile - 1) > xprofiles.Length)
             {
                 refreshXprofilesCacheData();
             }
-
-            select_xprofile = EditorGUILayout.Popup(select_xprofile, xprofiles);
+            if (mDevelopMode)
+            {
+                GUILayout.Label("[Develop Mode]", style_warning);
+            }
+            GUILayout.BeginHorizontal(style_profile_selector);
+            GUILayout.Label("Profile:", GUILayout.Width(55));
+            
+            //select_xprofile = EditorGUILayout.Popup(select_xprofile, xprofiles);
+            GUILayout.Label(xprofiles[select_xprofile]);
+            if (GUILayout.Button(VFSBuilderI18N.SwitchProfile, GUILayout.Width(50)))
+            {
+                SettingsService.OpenProjectSettings(XEditorConst.ProjectSetting_CorePath);
+            }
             GUILayout.EndHorizontal();
+            
             #endregion
-            cur_select_xprofile_name = xprofiles[select_xprofile];
+            if(xprofiles != null && xprofiles.Length > 0)
+            {
+                cur_select_xprofile_name = xprofiles[select_xprofile];
+            }
 
             #region 平台选择
             EditorGUILayout.BeginHorizontal();
@@ -246,6 +259,21 @@ namespace TinaXEditor.VFSKit.UI
             GUILayout.EndVertical();
         }
 
+        private void OnLostFocus()
+        {
+            xprofiles = null;
+            select_xprofile = 0;
+            cur_select_xprofile_name = null;
+            mDevelopMode = false;
+        }
+
+        private void OnFocus()
+        {
+            xprofiles = null;
+            select_xprofile = 0;
+            cur_select_xprofile_name = null;
+            mDevelopMode = false;
+        }
 
         void refreshXprofilesCacheData()
         {
@@ -262,6 +290,8 @@ namespace TinaXEditor.VFSKit.UI
                 }
             }
             select_xprofile = cur_index;
+
+            mDevelopMode = XCoreEditor.IsXProfileDevelopMode(xprofiles[select_xprofile]);
         }
 
         //void refreshProfilePreviewData()
@@ -271,31 +301,46 @@ namespace TinaXEditor.VFSKit.UI
 
         //    }
         //}
-    
+
+        private void Update()
+        {
+            
+        }
+
         void runBuild()
         {
             if (isBuilding) return;
             isBuilding = true;
 
-            VFSManagerEditor.RefreshManager(true);
-            var builder = new VFSBuilder()
-                .UseProfile(cur_select_xprofile_name)
-                .SetConfig(VFSManagerEditor.VFSConfig);
-            builder.EnableTipsGUI = true;
-            builder.CopyToStreamingAssetsFolder = cur_copyToStreamingAssetFolder;
-            builder.ClearAssetBundleSignAfterBuild = cur_clearAllABSignAfterFinish;
-            builder.ClearAssetBundleSignBeforeBuild = cur_clearAllABSign;
-            builder.ForceRebuild = cur_ForceRebuild;
-            builder.ClearOutputFolder = cur_ClearOutputFolder;
-            ShowNotification(new GUIContent("Building"));
-            builder.Build(cur_select_platform,cur_select_compress);
+            try
+            {
+                VFSManagerEditor.RefreshManager(true);
+                var builder = new VFSBuilder()
+                    .UseProfile(cur_select_xprofile_name)
+                    .SetConfig(VFSManagerEditor.VFSConfig);
+                builder.EnableTipsGUI = true;
+                builder.CopyToStreamingAssetsFolder = cur_copyToStreamingAssetFolder;
+                builder.ClearAssetBundleSignAfterBuild = cur_clearAllABSignAfterFinish;
+                builder.ClearAssetBundleSignBeforeBuild = cur_clearAllABSign;
+                builder.ForceRebuild = cur_ForceRebuild;
+                builder.ClearOutputFolder = cur_ClearOutputFolder;
+                builder.Build(cur_select_platform, cur_select_compress);
 
 
-            RemoveNotification();
+                this.ShowNotification(new GUIContent("Build Finish"));
+                isBuilding = false;
 
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                isBuilding = false;
+            }
+            
 
-            isBuilding = false;
         }
+
+        
     
     }
 }

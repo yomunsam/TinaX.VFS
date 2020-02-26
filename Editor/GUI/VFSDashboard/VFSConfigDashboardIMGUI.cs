@@ -12,6 +12,7 @@ using TinaXEditor.Utils;
 using System.Linq;
 using TinaX.Internal;
 using TinaXEditor.VFSKitInternal.I18N;
+using TinaXEditor.VFSKit.FileServer;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -203,6 +204,26 @@ namespace TinaXEditor.VFSKit.UI
                     }
                     #endregion
                     GUILayout.FlexibleSpace();
+
+                    #region file server
+                    if (!FileServerEditorInstance.IsSupported)
+                    {
+                        GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_NotSupport, EditorStyles.toolbarTextField);
+                    }
+                    else
+                    {
+                        if (FileServerEditorInstance.IsServerRunning)
+                            GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_Running, EditorStyles.toolbarTextField);
+                        else
+                            GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_Stopped, EditorStyles.toolbarTextField);
+
+                        if (GUILayout.Button(VFSConfigDashboardI18N.Toolbar_FileServer_OpenUI, EditorStyles.toolbarButton))
+                        {
+                            FileServerGUI.OpenUI();
+                        }
+                    }
+                    #endregion
+                    EditorGUILayout.Space();
 
                     //Build Button
                     if (GUILayout.Button(VFSConfigDashboardI18N.Menu_Build, EditorStyles.toolbarPopup, GUILayout.Width(85)))

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TinaX.VFSKit.Exceptions;
 
 namespace TinaX.VFSKitInternal
 {
@@ -7,6 +8,7 @@ namespace TinaX.VFSKitInternal
         Task<bool> Start();
 
         Task OnServiceClose();
+        VFSException GetStartException();
     }
 }
 
