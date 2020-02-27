@@ -13,6 +13,7 @@ using System.Linq;
 using TinaX.Internal;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKit.FileServer;
+using TinaXEditor.VFSKit.Versions;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -224,6 +225,12 @@ namespace TinaXEditor.VFSKit.UI
                     }
                     #endregion
                     EditorGUILayout.Space();
+                    #region 版本管理器
+                    if (GUILayout.Button(VFSConfigDashboardI18N.Toolbar_VersionMgr, EditorStyles.toolbarButton))
+                    {
+                        VersionManagerGUI.OpenUI();
+                    }
+                    #endregion
 
                     //Build Button
                     if (GUILayout.Button(VFSConfigDashboardI18N.Menu_Build, EditorStyles.toolbarPopup, GUILayout.Width(85)))

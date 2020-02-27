@@ -24,11 +24,11 @@ namespace TinaXEditor.VFSKit.Const
         /// <summary>
         /// 云端资源
         /// </summary>
-        public static string PROJECT_VFS_FILE_FOLDER_REMOTE = "vfs_remote";
+        public const string PROJECT_VFS_FILE_FOLDER_REMOTE = "vfs_remote";
         public static string PROJECT_VFS_FILE_FOLDER_DATA = VFSConst.VFS_FOLDER_EXTENSION;
 
-        public static string VFS_Version_Record_File_Name = "VFSVersion.json";
-        public static string VFS_VERSION_RECORD_FILE_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_FILE_PATH, "Data", VFS_Version_Record_File_Name);
+        public const string VFS_Version_Record_File_Name = "VFSVersion.json";
+        public static string VFS_VERSION_RECORD_FILE_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Data", VFS_Version_Record_File_Name);
         public static string VFS_VERSION_RECORD_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Version");
         public static string VFS_VERSION_RECORD_Data_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "Data");
 

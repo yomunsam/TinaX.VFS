@@ -396,6 +396,15 @@ namespace TinaXEditor.VFSKitInternal.I18N
                 return "Manage File Server";
             }
         }
+        
+        internal static string Toolbar_VersionMgr
+        {
+            get
+            {
+                if (IsChinese) return "°æ±¾¹ÜÀíÆ÷";
+                return "Versions Manager";
+            }
+        }
 
     }
 }

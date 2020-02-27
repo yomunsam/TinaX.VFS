@@ -32,6 +32,48 @@ namespace TinaXEditor.VFSKit.Versions
 
         public VersionRecord[] VersionRecords;
 
+
+        private List<VersionRecord> _list_records;
+
+        private List<VersionRecord> mList_records
+        {
+            get
+            {
+                if(_list_records == null)
+                {
+                    _list_records = new List<VersionRecord>();
+                    if (VersionRecords != null) _list_records.AddRange(VersionRecords);
+
+                    SortRecordsList(ref _list_records);
+                }
+                return _list_records;
+            }
+        }
+
+        public List<VersionRecord> VersionRecords_ReadWrite => mList_records;
+
+        public VersionRecord? GetMaxVersion()
+        {
+            if (mList_records.Count > 0)
+            {
+                return mList_records[mList_records.Count - 1];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void ReadySave()
+        {
+            VersionRecords = mList_records.ToArray();
+        }
+
+        private void SortRecordsList(ref List<VersionRecord> list)
+        {
+            list.Sort((x, y) => x.versionCode.CompareTo(y.versionCode));
+        }
+
     }
 
     public struct VersionRecord

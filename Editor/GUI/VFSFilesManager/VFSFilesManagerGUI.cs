@@ -26,6 +26,11 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        private void OnDestroy()
+        {
+            wnd = null;
+        }
+
         string[] vfs_folders;
 
         private void OnGUI()

@@ -19,6 +19,8 @@ namespace TinaXEditor.VFSKit.Versions
 
         private string mVersionMainFilePath = VFSEditorConst.VFS_VERSION_RECORD_FILE_PATH; //主文件
 
+        private const string DefaultBranchName = "master";
+
         private VersionsModel mVersionMainData;
         private Dictionary<string, VersionBranch> mDict_Branches = new Dictionary<string, VersionBranch>(); //string: branch name
 
@@ -54,7 +56,7 @@ namespace TinaXEditor.VFSKit.Versions
 
             if(mVersionMainData.branches == null || mVersionMainData.branches.Length == 0)
             {
-                mVersionMainData.branches = new string[] { "master" };
+                mVersionMainData.branches = new string[] { DefaultBranchName };
             }
 
             //各个分支的配置文件
@@ -96,13 +98,110 @@ namespace TinaXEditor.VFSKit.Versions
                     obj.BranchName = branchName;
                     obj.BType = VersionBranch.BranchType.MainPackage;
 
-                    XConfig.SaveJson(obj, branchIndexFilePath, AssetLoadType.SystemIO);
+                    mDict_Branches.Add(branchName, obj);
+                    SaveBranchFile(ref obj);
                 }
             }
 
             #endregion
         }
 
+
+        public string[] GetBranchNames()
+        {
+            return mVersionMainData.Branches_ReadWrite.ToArray();
+        }
+
+        public bool IsBranchExists(string branchName)
+        {
+            string blower = branchName.ToLower();
+            return mVersionMainData.Branches_ReadWrite.Any(b => b.ToLower() == blower);
+        }
+
+        public bool AddBranch(string branchName,VersionBranch.BranchType type,string desc = null, string extGroupName = null)
+        {
+            if (!branchName.IsValidFileName()) return false;
+            if (this.IsBranchExists(branchName)) return false;
+            if (type == VersionBranch.BranchType.ExtensionGroup && extGroupName.IsNullOrEmpty()) return false;
+            mVersionMainData.Branches_ReadWrite.Add(branchName);
+            var branch = new VersionBranch();
+            branch.BranchName = branchName;
+            branch.BType = type;
+            branch.Desc = desc;
+            branch.ExtensionGroupName = extGroupName;
+
+            if (mDict_Branches.ContainsKey(branchName))
+            {
+                mDict_Branches[branchName] = branch;
+            }
+            else
+            {
+                mDict_Branches.Add(branchName, branch);
+            }
+            SaveBranchFile(ref branch);
+            return true;
+        }
+
+        public long GetMaxVersion(string branchName,out string versionName, out string versionDesc)
+        {
+            if (mDict_Branches.ContainsKey(branchName))
+            {
+                var vr = mDict_Branches[branchName].GetMaxVersion();
+                if(vr != null)
+                {
+                    versionName = vr.Value.versionName;
+                    versionDesc = vr.Value.desc;
+                    return vr.Value.versionCode;
+                }
+                else
+                {
+                    versionName = string.Empty;
+                    versionDesc = string.Empty;
+                    return -1;
+                }
+            }
+            else
+            {
+                versionName = string.Empty;
+                versionDesc = string.Empty;
+                return -1;
+            }
+        }
+
+        public long GetMaxVersion(string branchName) => this.GetMaxVersion(branchName, out _, out _);
+        public long GetMaxVersion(string branchName, out string versionName) => this.GetMaxVersion(branchName, out versionName, out _);
+
+        public bool TryGetVersionBranch(string name, out VersionBranch branch)
+        {
+            return mDict_Branches.TryGetValue(name, out branch);
+        }
+
+
+        public VersionRecord? GetMaxVersionRecord(string branchName)
+        {
+            if (mDict_Branches.ContainsKey(branchName))
+            {
+                return mDict_Branches[branchName].GetMaxVersion();
+                
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void SaveVersionMainData(ref VersionsModel data , string path)
+        {
+            data.ReadySave();
+            XConfig.SaveJson(data, path, AssetLoadType.SystemIO);
+        }
+
+        private void SaveBranchFile(ref VersionBranch data)
+        {
+            string branch_path = Path.Combine(mVersionData_BranchIndex_FolderPath, data.BranchName + ".json");
+            data.ReadySave();
+            XConfig.SaveJson(data, branch_path, AssetLoadType.SystemIO);
+        }
 
 
         private void createDefaultIfBranchNotExists(string branchName, VersionBranch.BranchType branchType)
