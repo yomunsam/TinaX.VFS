@@ -533,29 +533,33 @@ namespace TinaXEditor.VFSKit.UI
             }
             else
             {
+                SerializedProperty group_root_property = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value);
+
                 v2_scrollview_assetGroupConfig = GUILayout.BeginScrollView(v2_scrollview_assetGroupConfig);
                 //Group Name
                 GUILayout.Label(mVFSConfig.Groups[cur_select_group_index.Value].GroupName, style_title_h3);
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
-                SerializedProperty groupName = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("GroupName");
-                EditorGUILayout.PropertyField(groupName, new GUIContent(VFSConfigDashboardI18N.Window_Group_HandleMode));
-                //mVFSConfig.Groups[cur_select_group_index.Value].GroupName = GUILayout.TextField(mVFSConfig.Groups[cur_select_group_index.Value].GroupName);
+                SerializedProperty groupName = group_root_property.FindPropertyRelative("GroupName");
+                EditorGUILayout.PropertyField(groupName, new GUIContent( ));
                 GUILayout.EndHorizontal();
 
                 #region Group类型
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
-                //mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode = (GroupHandleMode)EditorGUILayout.EnumPopup(VFSConfigDashboardI18N.Window_Group_HandleMode, mVFSConfig.Groups[cur_select_group_index.Value].GroupAssetsHandleMode);
-                SerializedProperty groupAssetsHandleMode =  mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("GroupAssetsHandleMode");
+                SerializedProperty groupAssetsHandleMode = group_root_property.FindPropertyRelative("GroupAssetsHandleMode");
                 EditorGUILayout.PropertyField(groupAssetsHandleMode, new GUIContent(VFSConfigDashboardI18N.Window_Group_HandleMode));
+                #endregion
+
+                #region 混淆目录结构
+                SerializedProperty obfuscateDirectoryStructure = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ObfuscateDirectoryStructure");
+                EditorGUILayout.PropertyField(obfuscateDirectoryStructure, new GUIContent(VFSConfigDashboardI18N.Window_Group_ObfuscateDirectoryStructure));
                 #endregion
 
                 #region 可扩展Groups
                 SerializedProperty extensionGroup = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExtensionGroup");
-                EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extensible));
-                //mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup = EditorGUILayout.Toggle(VFSConfigDashboardI18N.Window_Group_Extensible, mVFSConfig.Groups[cur_select_group_index.Value].ExpansionGroup);
+                EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extension));
                 EditorGUILayout.LabelField(VFSConfigDashboardI18N.Window_Group_Extensible_Tips,EditorStyles.helpBox);
 
 

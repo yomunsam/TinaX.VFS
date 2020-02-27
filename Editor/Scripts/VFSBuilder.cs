@@ -44,7 +44,7 @@ namespace TinaXEditor.VFSKit
         public bool ClearOutputFolder { get; set; } = false;
 
         //private HashSet<string[]>
-        private List<FilesHashBook.FileHash> asset_hash_book = new List<FilesHashBook.FileHash>();
+        private List<FilesHashBook.FileHash> asset_hash_book = new List<FilesHashBook.FileHash>(); //记录的是unity工程里原始的asset，而不是打包后的ab
 
         private ProfileRecord curProfile;
         private string mProfileName;
@@ -150,10 +150,10 @@ namespace TinaXEditor.VFSKit
                     if (sign_flag)
                     {
                         var importer = AssetImporter.GetAtPath(cur_asset_path);
-                        if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileName.IsNullOrEmpty())
+                        if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileNameWithoutExtension.IsNullOrEmpty())
                         {
                             //正式设置AssetBundle
-                            importer.SetAssetBundleNameAndVariant(result.AssetBundleFileName, ab_extension);
+                            importer.SetAssetBundleNameAndVariant(result.AssetBundleFileNameWithoutExtension, ab_extension);
 
                             //记录
                             asset_hash_book.Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path,true) });
@@ -304,14 +304,20 @@ namespace TinaXEditor.VFSKit
             List<VFSGroup> groups = VFSManagerEditor.GetGroups();
             string remote_files_root_path = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_REMOTE);
             string local_files_root_path = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILES_FOLDER_MAIN);
+            string extensionGroup_files_root_path = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILES_FOLDER_EXTENSION);
+
+            XDirectory.DeleteIfExists(remote_files_root_path, true);
+            XDirectory.DeleteIfExists(local_files_root_path, true);
+            XDirectory.DeleteIfExists(extensionGroup_files_root_path, true);
+
             foreach (var group in groups)
             {
                 //扩展组的判断
                 if (group.ExtensionGroup)
                 {
                     #region 处理扩展组
-                    string extension_group_root_path = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILES_FOLDER_EXTENSION, group.GroupName.ToLower());
-                    bool moved = MoveAssetBundleFilesByGroup(group, build_root_path, extension_group_root_path);
+                    string extension_group_root_path = Path.Combine(extensionGroup_files_root_path, group.GroupName.ToLower());
+                    bool moved = CopyAssetBundleFilesByGroup(group, build_root_path, extension_group_root_path);
                     if (moved)
                     {
                         //需要给组生成独立的manifest
@@ -346,12 +352,12 @@ namespace TinaXEditor.VFSKit
                     if (moveToRemote)
                     {
                         XDirectory.CreateIfNotExists(remote_files_root_path);
-                        MoveAssetBundleFilesByGroup(group, build_root_path, remote_files_root_path);
+                        CopyAssetBundleFilesByGroup(group, build_root_path, remote_files_root_path);
                     }
                     else if (moveToLocal)
                     {
                         XDirectory.CreateIfNotExists(local_files_root_path);
-                        MoveAssetBundleFilesByGroup(group, build_root_path, local_files_root_path);
+                        CopyAssetBundleFilesByGroup(group, build_root_path, local_files_root_path);
                     }
 
                     
@@ -413,43 +419,114 @@ namespace TinaXEditor.VFSKit
         }
 
 
+        ///// <summary>
+        ///// 根据Group的配置，把构建好的AssetBundle文件中的相关文件移动到指定的地方
+        ///// </summary>
+        ///// <param name="group"></param>
+        ///// <param name="build_ab_path"></param>
+        ///// <returns></returns>
+        //private bool MoveAssetBundleFilesByGroup(VFSGroup group, string build_ab_path,string target_root_path)
+        //{
+        //    bool flag_moved = false;
+        //    string extension = Config.AssetBundleFileExtension;
+        //    if (!extension.StartsWith("."))
+        //        extension = "." + extension;
+        //    foreach(var folder in group.FolderPathsLower)
+        //    {
+        //        string full_folder_path = Path.Combine(build_ab_path, folder);
+        //        if (Directory.Exists(full_folder_path))
+        //        {
+        //            string target_path = Path.Combine(target_root_path, folder);
+        //            XDirectory.DeleteIfExists(target_path);
+        //            XDirectory.CopyDir(full_folder_path, target_path);
+        //            Directory.Delete(full_folder_path,true);
+        //            flag_moved = true;
+        //        }
+        //    }
+        //    foreach(var asset in group.AssetPathsLower)
+        //    {
+        //        string ab_name = group.GetAssetBundleNameOfAsset(asset) + extension;
+        //        string ab_full_name = Path.Combine(build_ab_path, ab_name);
+        //        string move_target_name = Path.Combine(target_root_path, ab_name);
+        //        if (File.Exists(ab_full_name))
+        //        {
+        //            if (File.Exists(move_target_name))
+        //                File.Delete(move_target_name);
+
+        //            XFile.DeleteIfExists(move_target_name);
+        //            File.Move(ab_full_name, move_target_name);
+        //            flag_moved = true;
+        //        }
+        //    }
+
+        //    return flag_moved;
+        //}
+
         /// <summary>
-        /// 根据Group的配置，把构建好的AssetBundle文件中的相关文件移动到指定的地方
+        /// 根据Group的配置，把构建好的AssetBundle文件中的相关文件复制到指定的地方
         /// </summary>
         /// <param name="group"></param>
         /// <param name="build_ab_path"></param>
         /// <returns></returns>
-        private bool MoveAssetBundleFilesByGroup(VFSGroup group, string build_ab_path,string target_root_path)
+        private bool CopyAssetBundleFilesByGroup(VFSGroup group, string build_ab_path, string target_root_path)
         {
             bool flag_moved = false;
             string extension = Config.AssetBundleFileExtension;
             if (!extension.StartsWith("."))
                 extension = "." + extension;
-            foreach(var folder in group.FolderPathsLower)
+
+            List<string> folders_in_this_group = new List<string>();
+            foreach(var item in group.FolderPaths)
             {
-                string full_folder_path = Path.Combine(build_ab_path, folder);
-                if (Directory.Exists(full_folder_path))
+                if (IsAssetFolderExists(item))
                 {
-                    string target_path = Path.Combine(target_root_path, folder);
-                    XDirectory.DeleteIfExists(target_path);
-                    XDirectory.CopyDir(full_folder_path, target_path);
-                    Directory.Delete(full_folder_path,true);
-                    flag_moved = true;
+                    if (item.EndsWith("/"))
+                        folders_in_this_group.Add(item.Substring(0, item.Length - 1));
+                    else
+                        folders_in_this_group.Add(item);
                 }
             }
-            foreach(var asset in group.FolderPathsLower)
-            {
-                string ab_name = group.GetAssetBundleNameOfAsset(asset) + extension;
-                string ab_full_name = Path.Combine(build_ab_path, ab_name);
-                string move_target_name = Path.Combine(target_root_path, ab_name);
-                if (File.Exists(ab_full_name))
-                {
-                    if (File.Exists(move_target_name))
-                        File.Delete(move_target_name);
 
-                    XFile.DeleteIfExists(move_target_name);
-                    File.Move(ab_full_name, move_target_name);
-                    flag_moved = true;
+            string[] guids = AssetDatabase.FindAssets("", folders_in_this_group.ToArray());
+            List<string> asset_guids = new List<string>();
+            foreach(var item in group.AssetPaths)
+            {
+                string myGuid = AssetDatabase.AssetPathToGUID(item);
+                if (!myGuid.IsNullOrEmpty())
+                {
+                    asset_guids.Add(myGuid);
+                }
+            }
+            if (asset_guids.Count > 0)
+                ArrayUtil.Combine(ref guids, asset_guids.ToArray());
+
+            if(guids != null && guids.Length > 0)
+            {
+                foreach(var guid in guids)
+                {
+                    string asset_path = AssetDatabase.GUIDToAssetPath(guid);
+                    
+                    if (!XPath.IsFolder(asset_path))
+                    {
+                        string ab_file_name = group.GetAssetBundleNameOfAsset(asset_path);
+                        if (!ab_file_name.IsNullOrEmpty())
+                        {
+                            ab_file_name += extension;
+                            string ab_path = Path.Combine(build_ab_path, ab_file_name);
+                            if (File.Exists(ab_path))
+                            {
+                                string target_path = Path.Combine(target_root_path, ab_file_name);
+                                if (File.Exists(target_path))
+                                {
+                                    File.Delete(target_path);
+                                }
+                                XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                                File.Copy(ab_path, target_path);
+                                flag_moved = true;
+                            }
+                        }
+                    }
+                    
                 }
             }
 

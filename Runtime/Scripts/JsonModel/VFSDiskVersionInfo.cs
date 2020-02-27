@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TinaX.VFSKit.Version
+namespace TinaX.VFSKit.Versions
 {
     [Serializable]
     public class VFSDiskVersionInfo

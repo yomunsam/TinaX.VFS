@@ -20,6 +20,11 @@ namespace TinaX.VFSKit
         public bool ExtensionGroup => mOption.ExtensionGroup;
 
         /// <summary>
+        /// Obfuscate Directory Structure 混淆目录结构
+        /// </summary>
+        public bool ObfuscateDirectoryStructure => mOption.ObfuscateDirectoryStructure;
+
+        /// <summary>
         /// 储存FolderPath， 格式：Assets/xx/xxx/ ，必须以斜线“/”结尾。
         /// </summary>
         public List<string> FolderPaths { get; private set; } = new List<string>();
@@ -213,22 +218,26 @@ namespace TinaX.VFSKit
                     switch (rule.BuildType)
                     {
                         case FolderBuildType.normal:
-                            return assetPath_lower;
+                            //return assetPath_lower;
+                            return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(assetPath_lower) : assetPath_lower;
                         case FolderBuildType.sub_dir:
                             string subs_path = assetPath_lower.Substring(rule.FolderPath.Length, assetPath_lower.Length - rule.FolderPath.Length);
                             int sub_index = subs_path.IndexOf('/');
                             if(sub_index == -1)
                             {
                                 //路径里没有子目录。
-                                return assetPath_lower;
+                                return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(assetPath_lower) : assetPath_lower;
+                                //return assetPath_lower;
                             }
                             else
                             {
                                 //有子目录，取到子目录那一层
-                                return rule.FolderPath + subs_path.Substring(0, sub_index);
+                                //return rule.FolderPath + subs_path.Substring(0, sub_index);
+                                return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(rule.FolderPath + subs_path.Substring(0, sub_index)) : (rule.FolderPath + subs_path.Substring(0, sub_index));
                             }
                         case FolderBuildType.whole:
-                            return rule.FolderPath;
+                            //return rule.FolderPath;
+                            return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(rule.FolderPath) : rule.FolderPath;
                     }
 
                 }
@@ -237,7 +246,7 @@ namespace TinaX.VFSKit
             //没有命中
             buildType = FolderBuildType.normal;
             devType = FolderBuildDevelopType.normal;
-            return assetPath_lower;
+            return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(assetPath_lower) : assetPath_lower;
         }
 
         /// <summary>
@@ -342,6 +351,12 @@ namespace TinaX.VFSKit
                     return true;
             }
             return false;
+        }
+
+        private string GetObfuscatedAssetBundleName(string sourceAssetbundleName)
+        {
+            string md5 = sourceAssetbundleName.GetMD5(true, true);
+            return md5.Substring(0, 2) + "/" + md5;
         }
     }
 }

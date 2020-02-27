@@ -13,6 +13,8 @@ using TinaXEditor.Const;
 using TinaXEditor.VFSKit.Const;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKitInternal;
+using TinaXEditor.VFSKit.Versions;
+using TinaX.VFSKit.Versions;
 
 namespace TinaXEditor.VFSKit
 {
@@ -32,6 +34,16 @@ namespace TinaXEditor.VFSKit
         /// </summary>
         static List<string> AssetPaths = new List<string>();
 
+        private static VFSVersionsManagerEditor _versionMgr;
+
+        public static VFSVersionsManagerEditor VersionManager
+        {
+            get
+            {
+                if (_versionMgr == null) _versionMgr = new VFSVersionsManagerEditor();
+                return _versionMgr;
+            }
+        }
 
         static VFSManagerEditor()
         {
@@ -220,6 +232,7 @@ namespace TinaXEditor.VFSKit
                         assetBundleExtension = "." + assetBundleExtension;
 
                     result.AssetBundleFileName = ab_name_noExt + assetBundleExtension;
+                    result.AssetBundleFileNameWithoutExtension = ab_name_noExt;
                     result.ExtensionGroup = group.ExtensionGroup;
 
                     break;

@@ -252,15 +252,24 @@ namespace TinaXEditor.VFSKitInternal.I18N
                     return "Group handle type：";
             }
         }
-
-        internal static string Window_Group_Extensible
+        
+        internal static string Window_Group_ObfuscateDirectoryStructure
         {
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "扩展组：";
+                    return "混淆目录结构";
                 else
-                    return "Groups for expansion:";
+                    return "Obfuscate Directory Structure";
+            }
+        }
+
+        internal static string Window_Group_Extension
+        {
+            get
+            {
+                if (IsChinese) return "扩展组：";
+                return "Extension Group: ";
             }
         }
 

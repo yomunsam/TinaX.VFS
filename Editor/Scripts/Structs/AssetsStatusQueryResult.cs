@@ -86,6 +86,7 @@ namespace TinaXEditor.VFSKit
 
 
         public string AssetBundleFileName { get; set; }
+        public string AssetBundleFileNameWithoutExtension { get; set; }
         public FolderBuildType BuildType { get; set; }
         public FolderBuildDevelopType DevType { get; set; }
 

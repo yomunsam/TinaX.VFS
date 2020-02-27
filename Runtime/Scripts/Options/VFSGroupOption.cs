@@ -15,16 +15,21 @@ namespace TinaX.VFSKit
 
         public string GroupName = "common";
 
+        /// <summary>
+        /// Obfuscate Directory Structure | 混淆目录结构
+        /// </summary>
+        public bool ObfuscateDirectoryStructure = false;
+
         [Header("Asset folders in this group | 当前资源组下包含的资源目录.")]
         public string[] FolderPaths = { };
 
         [Header("Asset file in this group | 当前资源组下的资源文件.")]
         public string[] AssetPaths = { };
 
-        [Header("Handle Mode")]
+        //[Header("Handle Mode")]
         public GroupHandleMode GroupAssetsHandleMode = GroupHandleMode.LocalAndUpdatable;
 
-        [Header("Group For Expansion")]
+        //[Header("Extension Group：")]
         [Tooltip("Extension group, eg: mod, dlc")]
         public bool ExtensionGroup = false;
 
