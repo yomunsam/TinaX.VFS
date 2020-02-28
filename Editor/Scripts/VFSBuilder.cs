@@ -45,6 +45,7 @@ namespace TinaXEditor.VFSKit
 
         //private HashSet<string[]>
         private List<FilesHashBook.FileHash> asset_hash_book = new List<FilesHashBook.FileHash>(); //记录的是unity工程里原始的asset，而不是打包后的ab
+        private Dictionary<string, List<FilesHashBook.FileHash>> dict_asset_hash_book = new Dictionary<string, List<FilesHashBook.FileHash>>(); //和上面一样存储的是原始asset, 不过这里是针对扩展组的，key的组名
 
         private ProfileRecord curProfile;
         private string mProfileName;
@@ -120,10 +121,12 @@ namespace TinaXEditor.VFSKit
             }
             if (asset_guids.Count > 0)
                 ArrayUtil.Combine(ref guids, asset_guids.ToArray());
+            ArrayUtil.RemoveDuplicationElements(ref guids);
             asset_paths = null;
             asset_guids = null;
 
             asset_hash_book.Clear();
+            dict_asset_hash_book.Clear();
             int counter = 0;
             int counter_t = 0;
             int totalLength = guids.Length;
@@ -156,7 +159,17 @@ namespace TinaXEditor.VFSKit
                             importer.SetAssetBundleNameAndVariant(result.AssetBundleFileNameWithoutExtension, ab_extension);
 
                             //记录
-                            asset_hash_book.Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path,true) });
+                            if (result.ExtensionGroup)
+                            {
+                                //记录到字典里
+                                if (!dict_asset_hash_book.ContainsKey(result.GroupName))
+                                    dict_asset_hash_book.Add(result.GroupName, new List<FilesHashBook.FileHash>());
+                                dict_asset_hash_book[result.GroupName].Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path, true) });
+                            }
+                            else
+                            {
+                                asset_hash_book.Add(new FilesHashBook.FileHash() { p = cur_asset_path, h = XFile.GetMD5(cur_asset_path, true) });
+                            }
 
                         }
                     }
@@ -283,7 +296,8 @@ namespace TinaXEditor.VFSKit
             mAssetBundleManifest = ab_mainifest.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
             #endregion
 
-            HandleVFSFiles(output_root_path, output_temp_path);
+            HandleVFSFiles(output_root_path, output_temp_path, platform);
+            SaveAssetHashFiles(Path.Combine(output_root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA));
 
             if (CopyToStreamingAssetsFolder)
                 CopyToStreamingAssets(output_root_path);
@@ -299,7 +313,7 @@ namespace TinaXEditor.VFSKit
         /// </summary>
         /// <param name="root_path">存放一系列VFS目录的根目录</param>
         /// <param name="build_root_path">Unity的Build结果输出目录</param>
-        public void HandleVFSFiles(string root_path, string build_root_path)
+        public void HandleVFSFiles(string root_path, string build_root_path,XRuntimePlatform platform)
         {
             List<VFSGroup> groups = VFSManagerEditor.GetGroups();
             string remote_files_root_path = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_REMOTE);
@@ -322,6 +336,7 @@ namespace TinaXEditor.VFSKit
                     {
                         //需要给组生成独立的manifest
                         MakeVFSManifestByFolder(extension_group_root_path);
+                        SaveExtensionGroupInfo(extension_group_root_path, group.GroupName, platform, group.ExtensionGroup_MainPackageVersionLimit);
                     }
 
                     #endregion
@@ -368,6 +383,28 @@ namespace TinaXEditor.VFSKit
             MakeVFSManifestByFolders(new string[] { local_files_root_path, remote_files_root_path }, local_files_root_path);
         }
 
+        private void SaveAssetHashFiles(string data_path)
+        {
+            XDirectory.CreateIfNotExists(data_path);
+            //mainPackage
+            string mainPackageHashPath = Path.Combine(data_path, VFSConst.AssetsHashFileName);
+            var main_obj = new FilesHashBook();
+            main_obj.Files = asset_hash_book.ToArray();
+            XConfig.SaveJson(main_obj, mainPackageHashPath, AssetLoadType.SystemIO);
+
+            string extGroupHashFolderPath = Path.Combine(data_path, VFSConst.ExtensionGroupAssetsHashFolderName);
+            XDirectory.DeleteIfExists(extGroupHashFolderPath,true);
+            Directory.CreateDirectory(extGroupHashFolderPath);
+            //各个扩展组
+            foreach(var item in dict_asset_hash_book)
+            {
+                string g_path = Path.Combine(extGroupHashFolderPath, item.Key + ".json");
+                var obj = new FilesHashBook();
+                obj.Files = item.Value.ToArray();
+                XConfig.SaveJson(obj, g_path, AssetLoadType.SystemIO);
+            }
+
+        }
 
         /// <summary>
         /// 
@@ -385,6 +422,17 @@ namespace TinaXEditor.VFSKit
             }
 
         }
+
+        private void SaveExtensionGroupInfo(string group_path, string group_name, XRuntimePlatform platform , long mainPackageVersionLimit)
+        {
+            string file_path = Path.Combine(group_path, VFSConst.VFS_Data_ExtensionGroupInfo_FileName);
+            var obj = new ExtensionGroupInfo();
+            obj.Platform = platform;
+            obj.GroupName = group_name;
+            obj.MainPackageVersionLimit = mainPackageVersionLimit;
+            XConfig.SaveJson(obj, file_path, AssetLoadType.SystemIO);
+        }
+
         private void refreshProfileInfos()
         {
             if (curProfile == null)

@@ -24,6 +24,8 @@ namespace TinaX.VFSKit
         /// </summary>
         public bool ObfuscateDirectoryStructure => mOption.ObfuscateDirectoryStructure;
 
+        public long ExtensionGroup_MainPackageVersionLimit => mOption.Extension_VFSPackageMinVersion;
+
         /// <summary>
         /// 储存FolderPath， 格式：Assets/xx/xxx/ ，必须以斜线“/”结尾。
         /// </summary>

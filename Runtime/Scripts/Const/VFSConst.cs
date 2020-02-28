@@ -18,6 +18,9 @@
 
         public const string ABsHashFileName = "filehashs.json";
 
+        public static readonly string AssetsHashFileName = "assets_hash.json";
+        public static readonly string ExtensionGroupAssetsHashFolderName = "ExtensionGroupAssetsHash";
+
         /// <summary>
         /// vfs 主文件
         /// </summary>
@@ -31,6 +34,11 @@
         public const string VFS_STREAMINGASSETS_PATH = "Assets/SteamingAssets/TinaX";
 
         public const string AssetsManifestFileName = "VFSManifest.json";
+
+        /// <summary>
+        /// 放在扩展组根目录下，表示扩展组信息的文件
+        /// </summary>
+        public static readonly string VFS_Data_ExtensionGroupInfo_FileName = "GroupInfo.json";
 
     }
 }

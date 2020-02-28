@@ -256,6 +256,19 @@ namespace TinaXEditor.VFSKit
             return g;
         }
 
+        public static string[] GetExtensionGroupNames()
+        {
+            List<string> names = new List<string>();
+            foreach(var item in Groups)
+            {
+                if (item.ExtensionGroup)
+                {
+                    names.Add(item.GroupName);
+                }
+            }
+            return names.ToArray();
+        }
+
         public static bool TryGetGroupHandleMode(string groupName,out GroupHandleMode handleMode)
         {
             foreach(var item in Groups)

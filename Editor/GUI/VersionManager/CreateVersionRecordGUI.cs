@@ -57,6 +57,8 @@ namespace TinaXEditor.VFSKit.Versions
         public string[] mBranchNamse;
         public int mSelect_Branch_Index;
 
+
+
         private void OnEnable()
         {
             if (!BranchName.IsNullOrEmpty())
@@ -118,7 +120,10 @@ namespace TinaXEditor.VFSKit.Versions
             EditorGUILayout.EndVertical();
         }
 
-
+        private void OnDestroy()
+        {
+            wnd = null;
+        }
 
     }
 }

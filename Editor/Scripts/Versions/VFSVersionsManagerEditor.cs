@@ -13,13 +13,13 @@ namespace TinaXEditor.VFSKit.Versions
 {
     public class VFSVersionsManagerEditor
     {
-        private string mVersionRootFolderPath = VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH;  //根目录
-        private string mVersionDataFolderPath = VFSEditorConst.VFS_VERSION_RECORD_Data_FOLDER_PATH; //Data目录
-        private string mVersionData_BranchIndex_FolderPath;
+        private readonly string mVersionRootFolderPath = VFSEditorConst.VFS_VERSION_RECORD_ROOT_FOLDER_PATH;  //根目录
+        private readonly string mVersionDataFolderPath = VFSEditorConst.VFS_VERSION_RECORD_Data_FOLDER_PATH; //Data目录
+        private readonly string mVersionData_BranchIndex_FolderPath;
 
-        private string mVersionMainFilePath = VFSEditorConst.VFS_VERSION_RECORD_FILE_PATH; //主文件
+        private readonly string mVersionMainFilePath = VFSEditorConst.VFS_VERSION_RECORD_FILE_PATH; //主文件
 
-        private const string DefaultBranchName = "master";
+        //private const string DefaultBranchName = "master";
 
         private VersionsModel mVersionMainData;
         private Dictionary<string, VersionBranch> mDict_Branches = new Dictionary<string, VersionBranch>(); //string: branch name
@@ -54,9 +54,9 @@ namespace TinaXEditor.VFSKit.Versions
                 mVersionMainData = new VersionsModel();
             }
 
-            if(mVersionMainData.branches == null || mVersionMainData.branches.Length == 0)
+            if(mVersionMainData.branches == null)
             {
-                mVersionMainData.branches = new string[] { DefaultBranchName };
+                mVersionMainData.branches = new string[0];
             }
 
             //各个分支的配置文件
@@ -118,7 +118,7 @@ namespace TinaXEditor.VFSKit.Versions
             return mVersionMainData.Branches_ReadWrite.Any(b => b.ToLower() == blower);
         }
 
-        public bool AddBranch(string branchName,VersionBranch.BranchType type,string desc = null, string extGroupName = null)
+        public bool AddBranch(string branchName, VersionBranch.BranchType type, XRuntimePlatform platform, string desc = null, string extGroupName = null)
         {
             if (!branchName.IsValidFileName()) return false;
             if (this.IsBranchExists(branchName)) return false;
@@ -129,6 +129,7 @@ namespace TinaXEditor.VFSKit.Versions
             branch.BType = type;
             branch.Desc = desc;
             branch.ExtensionGroupName = extGroupName;
+            branch.Platform = platform;
 
             if (mDict_Branches.ContainsKey(branchName))
             {
@@ -138,6 +139,7 @@ namespace TinaXEditor.VFSKit.Versions
             {
                 mDict_Branches.Add(branchName, branch);
             }
+            SaveVersionMainData(ref mVersionMainData, mVersionMainFilePath);
             SaveBranchFile(ref branch);
             return true;
         }
@@ -189,6 +191,7 @@ namespace TinaXEditor.VFSKit.Versions
                 return null;
             }
         }
+
 
         private void SaveVersionMainData(ref VersionsModel data , string path)
         {

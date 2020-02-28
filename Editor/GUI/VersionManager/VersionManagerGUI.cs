@@ -144,9 +144,25 @@ namespace TinaXEditor.VFSKit.Versions
 
         private VersionBranch mSelectedBranchObj;
 
+
         private void OnEnable()
         {
+            mBranchNames = VFSManagerEditor.VersionManager.GetBranchNames();
+            mSelectBranchName = string.Empty;
+            mSelectedBranchObj = null;
+        }
 
+        private void OnFocus()
+        {
+            if(mBranchNames == null || mBranchNames.Length == 0)
+            {
+                mBranchNames = VFSManagerEditor.VersionManager.GetBranchNames();
+                if(mBranchNames == null || mBranchNames.Length == 0)
+                {
+                    mSelectBranchName = string.Empty;
+                    mSelectedBranchObj = null;
+                }
+            }
         }
 
         private void OnGUI()
@@ -160,15 +176,16 @@ namespace TinaXEditor.VFSKit.Versions
             //标题
             EditorGUILayout.LabelField(IsChinese ? "版本分支" : "Version branches");
             EditorGUILayout.BeginVertical(style_branchList);
-            if (mBranchNames == null || mBranchNames.Length == 0)
-            {
-                mSelectBranchName = string.Empty;
-                mBranchNames = VFSManagerEditor.VersionManager.GetBranchNames();
-            }
+            
             if (mBranchNames == null || mBranchNames.Length == 0)
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(IsChinese ? "出错：没有获取到分支信息" : "Error: Get branches failed.");
+                GUILayout.Label(IsChinese ? "没有分支信息" : "No branch info.", style_common_list_center_tips_label);
+                if(GUILayout.Button(IsChinese?"创建新分支":"Create One"))
+                {
+                    CreateBranchGUI.OpenUI();
+                }
+                GUILayout.FlexibleSpace();
             }
             else
             {
@@ -199,6 +216,20 @@ namespace TinaXEditor.VFSKit.Versions
                 }
 
                 EditorGUILayout.EndScrollView();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Create",GUILayout.Width(65)))
+                {
+                    CreateBranchGUI.OpenUI();
+                }
+                if(mSelectBranchName != null && mSelectedBranchObj!= null)
+                {
+                    if(GUILayout.Button("Delete", GUILayout.Width(65)))
+                    {
+
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndVertical();
@@ -244,8 +275,48 @@ namespace TinaXEditor.VFSKit.Versions
             EditorGUILayout.BeginVertical();
 
             GUILayout.Label(IsChinese ? "分支信息" : "branch info");
-            EditorGUIUtil.HorizontalLine();
+            if(mSelectBranchName != null && mSelectedBranchObj != null)
+            {
+                //分支名
+                GUILayout.Label((IsChinese ? "分支名：" : "Branch Name : ") + mSelectedBranchObj.BranchName);
+                //平台
+                GUILayout.Label((IsChinese ? "目标平台：" : "Platform : ") + mSelectedBranchObj.Platform.ToString());
+                //分支类型
+                GUILayout.Label((IsChinese ? "分支类型：" : "Branch Type : ") + mSelectedBranchObj.BType.ToString());
+                if(mSelectedBranchObj.BType == VersionBranch.BranchType.ExtensionGroup)
+                {
+                    GUILayout.Label((IsChinese ? "扩展组名：" : "Extension Group Name : ") + mSelectedBranchObj.ExtensionGroupName.ToString());
+                }
+                //描述
+                GUILayout.Label((IsChinese ? "分支描述：" : "Branch Desc : "));
+                GUILayout.Label(mSelectedBranchObj.Desc);
+                EditorGUIUtil.HorizontalLine();
+
+
+                //------------具体版本操作------
+                if(mSelectedBranchObj.VersionRecords_ReadWrite.Count > 0)
+                {
+                    GUILayout.Label("Todo 刷新版本");
+                }
+                else
+                {
+
+                }
+
+                //------------版本列表操作----
+                if (GUILayout.Button("创建新版本"))
+                {
+                    CreateVersionRecordGUI.BranchName = mSelectBranchName;
+                    CreateVersionRecordGUI.OpenUI();
+                }
+
+            }
+            else
+            {
+                GUILayout.Label(" - ");
+            }
             
+
             EditorGUILayout.EndVertical();
             #endregion
 

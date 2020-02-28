@@ -9,7 +9,8 @@ namespace TinaX.VFSKit
     [Serializable]
     public class ExtensionGroupInfo
     {
-        public XRuntimePlatform platform;
+        public XRuntimePlatform Platform;
         public string GroupName;
+        public long MainPackageVersionLimit;
     }
 }

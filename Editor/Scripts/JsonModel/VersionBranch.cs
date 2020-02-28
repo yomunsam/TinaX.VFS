@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TinaX;
 
 namespace TinaXEditor.VFSKit.Versions
 {
@@ -23,6 +24,8 @@ namespace TinaXEditor.VFSKit.Versions
         /// </summary>
         public BranchType BType;
 
+        public XRuntimePlatform Platform;
+
         public string Desc;
 
         /// <summary>
@@ -31,6 +34,9 @@ namespace TinaXEditor.VFSKit.Versions
         public string ExtensionGroupName;
 
         public VersionRecord[] VersionRecords;
+
+
+        //==========================================================================================
 
 
         private List<VersionRecord> _list_records;
