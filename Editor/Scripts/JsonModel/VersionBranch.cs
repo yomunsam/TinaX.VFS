@@ -70,6 +70,30 @@ namespace TinaXEditor.VFSKit.Versions
             }
         }
 
+        public long GetMaxVersinCode()
+        {
+            var vr = this.GetMaxVersion();
+            if(vr != null)
+            {
+                return vr.Value.versionCode;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        public bool IsVersionCodeExists(long code)
+        {
+            return VersionRecords_ReadWrite.Any(v => v.versionCode == code);
+        }
+
+        public void AddVersion(ref VersionRecord vr)
+        {
+            VersionRecords_ReadWrite.Add(vr);
+            SortRecordsList(ref _list_records);
+        }
+
         public void ReadySave()
         {
             VersionRecords = mList_records.ToArray();
@@ -88,7 +112,5 @@ namespace TinaXEditor.VFSKit.Versions
         public string versionName;
         public string desc;
 
-        public string dataPath;
-        public string filePackagePath;
     }
 }

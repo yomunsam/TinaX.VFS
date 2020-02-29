@@ -163,6 +163,20 @@ namespace TinaXEditor.VFSKit.Versions
                     mSelectedBranchObj = null;
                 }
             }
+            if(VFSManagerEditor.VersionManager.GetBranchNames().Length != mBranchNames.Length)
+            {
+                mBranchNames = VFSManagerEditor.VersionManager.GetBranchNames();
+                if (!mBranchNames.Contains(mSelectBranchName))
+                {
+                    mSelectBranchName = string.Empty;
+                    mSelectedBranchObj = null;
+                }
+            }
+        }
+
+        private void OnLostFocus()
+        {
+            
         }
 
         private void OnGUI()
@@ -226,7 +240,16 @@ namespace TinaXEditor.VFSKit.Versions
                 {
                     if(GUILayout.Button("Delete", GUILayout.Width(65)))
                     {
-
+                        if (EditorUtility.DisplayDialog(IsChinese ? "确定吗？" : "Are you sure", IsChinese ? $"您将要删除分支\"{mSelectBranchName}\"\n继续删除操作将意味着你将失去该分支下的所有版本记录和二进制数据\n并且该操作是不可撤销的，真的要继续吗？" : $"You are about to delete branch \"{mSelectBranchName}\"\nContinuing the delete operation will mean that you will lose all version records and binary data under this branch and the operation is irrevocable. \nDo you really want to continue?", IsChinese ? "继续删除" : "Delete It", IsChinese ? "取消" : "Cancel"))
+                        {
+                            if (EditorUtility.DisplayDialog(IsChinese ? "二次确认" : "Ask Again", IsChinese ? $"您将要删除分支\"{mSelectBranchName}\"\n继续删除操作将意味着你将失去该分支下的所有版本记录和二进制数据\n并且该操作是不可撤销的，真的要继续吗？\n这是执行操作前的最后一次询问，该操作不可逆。" : $"You are about to delete branch \"{mSelectBranchName}\"\nContinuing the delete operation will mean that you will lose all version records and binary data under this branch and the operation is irrevocable. \nDo you really want to continue?\nThis is the last inquiry before performing the operation", IsChinese ? "继续删除" : "Delete It", IsChinese ? "取消" : "Cancel"))
+                            {
+                                VFSManagerEditor.VersionManager.RemoveBranch(mSelectBranchName);
+                                mBranchNames = VFSManagerEditor.VersionManager.GetBranchNames();
+                                mSelectedBranchObj = null;
+                                mSelectBranchName = null;
+                            }
+                        }
                     }
                 }
                 GUILayout.EndHorizontal();

@@ -38,6 +38,7 @@ namespace TinaXEditor.VFSKit.Const
         /// </summary>
         public static string VFS_VERSION_RECORD_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Version");
         public static string VFS_VERSION_RECORD_Data_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Data");
+        public static string VFS_VERSION_RECORD_Binary_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Binary");
 
     }
 }
