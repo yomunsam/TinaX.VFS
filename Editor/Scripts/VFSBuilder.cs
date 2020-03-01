@@ -211,7 +211,7 @@ namespace TinaXEditor.VFSKit
         {
             var buildTarget = XPlatformEditorUtil.GetBuildTarget(platform);
             var target_name = XPlatformUtil.GetNameText(platform);
-            output_folder = Path.Combine(VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH, target_name);
+            output_folder = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, target_name);
             string build_output_folder = Path.Combine(output_folder, "build_temp");
             temp_output_folder = build_output_folder;
 

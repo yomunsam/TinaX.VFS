@@ -22,11 +22,11 @@
         public static readonly string ExtensionGroupAssetsHashFolderName = "ExtensionGroupAssetsHash";
 
         /// <summary>
-        /// vfs 主文件
+        /// vfs 主文件夹名
         /// </summary>
         public const string VFS_FOLDER_MAIN = "vfs_root";
         /// <summary>
-        /// vfs 扩展包
+        /// vfs 扩展包文件夹名
         /// </summary>
         public const string VFS_FOLDER_EXTENSION = "vfs_extensions";
         public const string VFS_FOLDER_DATA = "vfs_data";
@@ -39,6 +39,8 @@
         /// 放在扩展组根目录下，表示扩展组信息的文件
         /// </summary>
         public static readonly string VFS_Data_ExtensionGroupInfo_FileName = "GroupInfo.json";
+
+        public const string PakcageVersionFileName = "package_version.json";
 
     }
 }

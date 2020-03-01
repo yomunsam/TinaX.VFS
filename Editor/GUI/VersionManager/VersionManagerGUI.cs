@@ -8,6 +8,7 @@ using UnityEditor;
 using TinaX;
 using TinaXEditor.Utils;
 using TinaXEditor.VFSKit;
+using TinaXEditor.VFSKit.Utils;
 
 namespace TinaXEditor.VFSKit.Versions
 {
@@ -144,6 +145,8 @@ namespace TinaXEditor.VFSKit.Versions
 
         private VersionBranch mSelectedBranchObj;
 
+        private VersionRecord? mCurSelectVersion;
+        private string mCurSelectVersion_InBranchName;
 
         private void OnEnable()
         {
@@ -216,8 +219,10 @@ namespace TinaXEditor.VFSKit.Versions
                     {
                         if (GUILayout.Button(item))
                         {
+                            mCurSelectVersion = null;
+                            mCurSelectVersion_InBranchName = null;
                             //获取数据
-                            if(VFSManagerEditor.VersionManager.TryGetVersionBranch(branchName, out mSelectedBranchObj))
+                            if (VFSManagerEditor.VersionManager.TryGetVersionBranch(branchName, out mSelectedBranchObj))
                             {
                                 mSelectBranchName = branchName;
                             }
@@ -282,7 +287,22 @@ namespace TinaXEditor.VFSKit.Versions
                 else
                 {
                     v2_scroll_version_list = EditorGUILayout.BeginScrollView(v2_scroll_version_list);
-
+                    foreach(var item in mSelectedBranchObj.VersionRecords_ReadWrite)
+                    {
+                        if(mCurSelectVersion != null && mCurSelectVersion.Value.versionCode == item.versionCode && mCurSelectVersion_InBranchName == mSelectedBranchObj.BranchName)
+                        {
+                            GUILayout.Label($"{item.versionCode} - {item.versionName}", style_branch_list_selected);
+                        }
+                        else
+                        {
+                            if (GUILayout.Button($"{item.versionCode} - {item.versionName}"))
+                            {
+                                mCurSelectVersion = item;
+                                mCurSelectVersion_InBranchName = mSelectedBranchObj.BranchName;
+                            }
+                        }
+                        
+                    }
 
                     EditorGUILayout.EndScrollView();
                 }
@@ -295,7 +315,7 @@ namespace TinaXEditor.VFSKit.Versions
 
             #region 分支详情和版本操作
 
-            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginVertical(GUILayout.Width(position.width - branchListAreaWidth - versionListAreaWidth));
 
             GUILayout.Label(IsChinese ? "分支信息" : "branch info");
             if(mSelectBranchName != null && mSelectedBranchObj != null)
@@ -316,21 +336,76 @@ namespace TinaXEditor.VFSKit.Versions
                 EditorGUIUtil.HorizontalLine();
 
 
-                //------------具体版本操作------
-                if(mSelectedBranchObj.VersionRecords_ReadWrite.Count > 0)
-                {
-                    GUILayout.Label("Todo 刷新版本");
-                }
-                else
-                {
-
-                }
+                
 
                 //------------版本列表操作----
                 if (GUILayout.Button("创建新版本"))
                 {
                     CreateVersionRecordGUI.BranchName = mSelectBranchName;
                     CreateVersionRecordGUI.OpenUI();
+                }
+                EditorGUIUtil.HorizontalLine();
+
+                //------------具体版本操作------
+                if (mSelectedBranchObj.VersionRecords_ReadWrite.Count > 0)
+                {
+                    if(mCurSelectVersion != null || mCurSelectVersion_InBranchName == mSelectBranchName)
+                    {
+                        //版本号
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Label((IsChinese ? "版本：" : "Version: ") + mCurSelectVersion.Value.versionCode.ToString());
+                        //GUILayout.Label(mCurSelectVersion.Value.versionCode.ToString());
+                        EditorGUILayout.EndHorizontal();
+
+                        //版本名
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Label((IsChinese ? "版本名：" : "Version Name: ") + mCurSelectVersion.Value.versionName);
+                        //GUILayout.Label(mCurSelectVersion.Value.versionName);
+                        EditorGUILayout.EndHorizontal();
+
+                        //概述
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Label((IsChinese ? "描述：" : "Desc: ")+ mCurSelectVersion.Value.desc);
+                        //GUILayout.Label(mCurSelectVersion.Value.desc);
+                        EditorGUILayout.EndHorizontal();
+
+                        long versionCode = mCurSelectVersion.Value.versionCode;
+
+                        if (GUILayout.Button(IsChinese?"浏览版本数据": "View version data"))
+                        {
+                            string data_path = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref mSelectBranchName, ref versionCode);
+                            if (System.IO.Directory.Exists(data_path))
+                            {
+                                var uri = new Uri(data_path);
+                                Application.OpenURL(uri.ToString());
+                            }
+                        }
+
+                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref mSelectBranchName, ref versionCode);
+                        if (System.IO.Directory.Exists(binary_path))
+                        {
+                            if(GUILayout.Button(IsChinese?"浏览二进制数据":"View binary files"))
+                            {
+                                var uri = new Uri(binary_path);
+                                Application.OpenURL(uri.ToString());
+                            }
+                        }
+
+                        //删除版本
+                        if(GUILayout.Button(IsChinese?"删除该版本":"Delete this version"))
+                        {
+                            if (EditorUtility.DisplayDialog(IsChinese ? "删除吗？" : "Delete it?", IsChinese ? $"你将删除该记录，并且不可恢复\n版本号：{versionCode}, 版本名： {mCurSelectVersion.Value.versionName}" : $"You will delete the record and it is not recoverable\nVersion:{versionCode}, Version Name: {mCurSelectVersion.Value.versionName}", IsChinese ? "删它！" : "Delete", IsChinese ? "别删" : "Cancel")) 
+                            {
+                                VFSManagerEditor.VersionManager.RemoveProfileRecord(ref mSelectedBranchObj, versionCode);
+                                mCurSelectVersion_InBranchName = null;
+                                mCurSelectVersion = null;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+
                 }
 
             }

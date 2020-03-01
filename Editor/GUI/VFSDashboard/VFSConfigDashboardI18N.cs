@@ -406,5 +406,14 @@ namespace TinaXEditor.VFSKitInternal.I18N
             }
         }
 
+        internal static string Change_GroupName
+        {
+            get
+            {
+                if (IsChinese) return "更改组名";
+                return "Modify Group Name";
+            }
+        }
+
     }
 }

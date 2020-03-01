@@ -106,6 +106,7 @@ namespace TinaXEditor.VFSKit.Versions
 
     }
 
+    [Serializable]
     public struct VersionRecord
     {
         public long versionCode;

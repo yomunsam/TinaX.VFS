@@ -58,7 +58,7 @@ namespace TinaXEditor.VFSKit.Versions
 
         private bool flag_platform_from_param = false; //从上面的静态变量里接收到了参数
         private XRuntimePlatform platform_from_param;
-        private List<string> match_branches_from_param; //根据参数计算出的符合给定的平台的分支参数
+        private List<string> match_branches_from_param = new List<string>(); //根据参数计算出的符合给定的平台的分支参数
         private string[] match_branches_from_param_arr; //根据参数计算出的符合给定的平台的分支参数
 
         private bool flag_branchName_from_param = false;
@@ -98,7 +98,7 @@ namespace TinaXEditor.VFSKit.Versions
                 if (main_package_branches != null && main_package_branches.Length > 0)
                     match_branches_from_param.AddRange(main_package_branches);
                 string platform_name = XPlatformUtil.GetNameText(platform_from_param);
-                string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH, platform_name);
+                string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platform_name);
                 string[] extension_groups_in_source_package_folder = VFSEditorUtil.GetValidExtensionGroupNamesFromSourcePackage(source_packages_folder_path);
                 foreach(var groupName in extension_groups_in_source_package_folder)
                 {
@@ -148,7 +148,10 @@ namespace TinaXEditor.VFSKit.Versions
                 else
                 {
                     //使用给定的分支信息继续
-                    GUILayout.Label((IsChinese ? "版本分支:" : "Version Branch:") + branchName_from_param);
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label(IsChinese ? "版本分支：" : "Version Branch: ", GUILayout.Width(110));
+                    EditorGUILayout.LabelField(branchName_from_param);
+                    EditorGUILayout.EndHorizontal();
                 }
             }
             else
@@ -165,7 +168,7 @@ namespace TinaXEditor.VFSKit.Versions
                     else
                     {
                         EditorGUILayout.BeginHorizontal();
-                        GUILayout.Label(IsChinese ? "分支版本：" : "Branch Version", GUILayout.Width(110));
+                        GUILayout.Label(IsChinese ? "版本分支：" : "Version Branch: ", GUILayout.Width(110));
                         mCur_Select_Branch_Index = EditorGUILayout.Popup(mCur_Select_Branch_Index, match_branches_from_param_arr);
                         EditorGUILayout.EndHorizontal();
                         mCurSelectBranchName = match_branches_from_param_arr[mCur_Select_Branch_Index];
@@ -187,7 +190,7 @@ namespace TinaXEditor.VFSKit.Versions
                     else
                     {
                         EditorGUILayout.BeginHorizontal();
-                        GUILayout.Label(IsChinese ? "分支版本：" : "Branch Version", GUILayout.Width(110));
+                        GUILayout.Label(IsChinese ? "版本分支：" : "Version Branch: ", GUILayout.Width(110));
                         mCur_Select_Branch_Index = EditorGUILayout.Popup(mCur_Select_Branch_Index, mAllBranchNames);
                         EditorGUILayout.EndHorizontal();
                         mCurSelectBranchName = mAllBranchNames[mCur_Select_Branch_Index];
@@ -205,27 +208,40 @@ namespace TinaXEditor.VFSKit.Versions
                 {
                     //指定了平台，直接显示
                     EditorGUILayout.BeginHorizontal();
-                    GUILayout.Label(IsChinese ? "目标平台" : "Platform",GUILayout.Width(110));
+                    GUILayout.Label(IsChinese ? "目标平台" : "Platform :",GUILayout.Width(110));
                     GUILayout.Label(platform_from_param.ToString());
                     EditorGUILayout.EndHorizontal();
                 }
                 else
                 {
-                    //由分支决定平台
-                    if(mCurBranch == null || mCurBranch.BranchName != mCurSelectBranchName)
+                    if (flag_branchName_from_param)
                     {
-                        VFSManagerEditor.VersionManager.TryGetVersionBranch(mCurSelectBranchName, out mCurBranch);
+                        //指定了分支但没指定平台，也直接显示
+                        //指定了平台，直接显示
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Label(IsChinese ? "目标平台" : "Platform :", GUILayout.Width(110));
+                        GUILayout.Label(platform_from_param.ToString());
+                        EditorGUILayout.EndHorizontal();
                     }
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.Label(IsChinese ? "目标平台" : "Platform", GUILayout.Width(110));
-                    GUILayout.Label(mCurBranch.Platform.ToString());
-                    EditorGUILayout.EndHorizontal();
+                    else
+                    {
+                        //由分支决定平台
+                        if (mCurBranch == null || mCurBranch.BranchName != mCurSelectBranchName)
+                        {
+                            VFSManagerEditor.VersionManager.TryGetVersionBranch(mCurSelectBranchName, out mCurBranch);
+                        }
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Label(IsChinese ? "目标平台" : "Platform", GUILayout.Width(110));
+                        GUILayout.Label(mCurBranch.Platform.ToString());
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    
                 }
 
                 if(IsSourcePackagesValidByCurBranch_BranchName == null || IsSourcePackagesValidByCurBranch_BranchName != mCurBranch.BranchName)
                 {
                     string platformName = XPlatformUtil.GetNameText(mCurBranch.Platform);
-                    string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH, platformName);
+                    string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platformName);
                     if (mCurBranch.BType == VersionBranch.BranchType.MainPackage)
                     {
                         IsSourcePackagesValidByCurBranch = VFSEditorUtil.CheckSourcePackagesValid_MainPackage(source_packages_folder_path);
@@ -241,7 +257,7 @@ namespace TinaXEditor.VFSKit.Versions
 
                 if (!IsSourcePackagesValidByCurBranch)
                 {
-                    GUILayout.Label(IsChinese ? "没有适合当前分支的已构建文件，请先构建资源。" : "There are no built files for the current branch, please build assets first.");
+                    EditorGUILayout.HelpBox(IsChinese ? "没有适合当前分支的已构建文件，请先构建资源。" : "There are no built files for the current branch, please build assets first.", MessageType.Error);
                     mBranchAndPlatformValid = false;
                 }
             }
@@ -262,6 +278,7 @@ namespace TinaXEditor.VFSKit.Versions
                     {
                         curMaxVersionCode = max_version.Value.versionCode;
                     }
+                    curMaxVersionCode_BranchName = mCurBranch.BranchName;
                 }
 
                 //版本号
@@ -303,13 +320,17 @@ namespace TinaXEditor.VFSKit.Versions
                 }
             }
 
-            if (GUILayout.Button("Save"))
+            if (mBranchAndPlatformValid)
             {
+                if (GUILayout.Button("Save"))
+                {
 
-                VFSManagerEditor.VersionManager.AddVersionRecord(mCurBranch.BranchName, mCurVersionCode, mCurVersionName, mCurVersionDecs, mCurSaveBinary);
-                EditorUtility.DisplayDialog("Finish", "Finish", "Ok");
-                this.Close();
+                    VFSManagerEditor.VersionManager.AddVersionRecord(mCurBranch.BranchName, mCurVersionCode, mCurVersionName, mCurVersionDecs, mCurSaveBinary);
+                    EditorUtility.DisplayDialog("Finish", "Finish", "Ok");
+                    this.Close();
+                }
             }
+            
 
             #endregion
 

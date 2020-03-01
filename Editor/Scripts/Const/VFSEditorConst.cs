@@ -8,9 +8,9 @@ namespace TinaXEditor.VFSKit.Const
         public static string VFSProfileProjectSettingFileName = "VFSProfiles.json";
 
         /// <summary>
-        /// 在工程目录下存放VFS打包文件的地方
+        /// 在工程目录下存放VFS打包文件的地方 （存放多个Source Packages的地方）
         /// </summary>
-        public static string PROJECT_VFS_FILES_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Build");
+        public static string PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Build");
         
         /// <summary>
         /// 调试文件服务器的文件根目录
@@ -29,16 +29,18 @@ namespace TinaXEditor.VFSKit.Const
         /// <summary>
         /// 存放VFS每次打包的数据的文件
         /// </summary>
-        public static string PROJECT_VFS_FILE_FOLDER_DATA = VFSConst.VFS_FOLDER_DATA;
+        public static string PROJECT_VFS_FILE_FOLDER_DATA = VFSConst.VFS_FOLDER_DATA; 
 
         public const string VFS_Version_Record_File_Name = "VFSVersion.json";
-        public static string VFS_VERSION_RECORD_FILE_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Data", VFS_Version_Record_File_Name);
+        public static string VFS_VERSION_RECORD_FILE_PATH => System.IO.Path.Combine(VFS_VERSION_ROOT_FOLDER_PATH, "Data", VFS_Version_Record_File_Name);
         /// <summary>
         /// 所有分支信息的根目录
         /// </summary>
-        public static string VFS_VERSION_RECORD_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Version");
-        public static string VFS_VERSION_RECORD_Data_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Data");
-        public static string VFS_VERSION_RECORD_Binary_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_RECORD_ROOT_FOLDER_PATH, "Binary");
+        public static string VFS_VERSION_ROOT_FOLDER_PATH => System.IO.Path.Combine(XEditorConst.TinaXProjectRootFolderPath, "VFS_Version");
+        public static string VFS_VERSION_RECORD_Data_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_ROOT_FOLDER_PATH, "Data");
+        public static string VFS_VERSION_RECORD_Binary_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_ROOT_FOLDER_PATH, "Binary");
+
+        public static string VFS_VERSION_AssetsBinary_Zip_Name = "assets.zip";
 
     }
 }

@@ -321,6 +321,7 @@ namespace TinaXEditor.VFSKit
             }
         }
 
+
         public static string GetEditorFileServerRootPath()
         {
             return VFSEditorConst.PROJECT_VFS_FILES_SERVER_FOLDER_PATH;
@@ -354,7 +355,7 @@ namespace TinaXEditor.VFSKit
         [MenuItem("Explor VFS Assts Build Folder",menuItem = "TinaX/VFS/Explor VFS Assts Build Folder",priority = 21)]
         static void OpenABBuildFolder()
         {
-            var uri = new System.Uri(VFSEditorConst.PROJECT_VFS_FILES_ROOT_FOLDER_PATH);
+            var uri = new System.Uri(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH);
             Application.OpenURL(uri.ToString());
         }
 

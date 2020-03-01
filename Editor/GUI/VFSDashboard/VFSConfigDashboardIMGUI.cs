@@ -547,9 +547,23 @@ namespace TinaXEditor.VFSKit.UI
                 GUILayout.Label(mVFSConfig.Groups[cur_select_group_index.Value].GroupName, style_title_h3);
 
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
+                //GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
                 SerializedProperty groupName = group_root_property.FindPropertyRelative("GroupName");
-                EditorGUILayout.PropertyField(groupName, new GUIContent( ));
+                if (GUILayout.Button("Change_GroupName"))
+                {
+                    EditorGUIUtil.Prompt((success,text) => 
+                    {
+                        if (success)
+                        {
+                            Debug.Log("喵一下");
+                        }
+                    }, 
+                    title:"Modify Group Name",
+                    message:"New Group Name:",
+                    defaultContent: groupName.stringValue,
+                    comfirn_btn_text:"Modify");
+                }
+                //EditorGUILayout.PropertyField(groupName, new GUIContent( ));
                 GUILayout.EndHorizontal();
 
                 #region Group类型
