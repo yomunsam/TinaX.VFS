@@ -31,7 +31,7 @@
         public const string VFS_FOLDER_EXTENSION = "vfs_extensions";
         public const string VFS_FOLDER_DATA = "vfs_data";
 
-        public const string VFS_STREAMINGASSETS_PATH = "Assets/SteamingAssets/TinaX";
+        public const string VFS_STREAMINGASSETS_PATH = "TinaX"; //Assets/StreamingAssets/TinaX
 
         public const string AssetsManifestFileName = "VFSManifest.json";
 

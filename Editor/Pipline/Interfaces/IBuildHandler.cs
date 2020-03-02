@@ -8,6 +8,6 @@ namespace TinaXEditor.VFSKit.Pipeline
 {
     public interface IBuildHandler
     {
-
+        void BeforeAssetBundleSign(ref string assetbundleName);
     }
 }

@@ -58,6 +58,21 @@ namespace TinaXEditor.VFSKit.UI
         private GUIStyle style_text_warning;
         private GUIStyle style_text_normal;
 
+        private GUIStyle _styel_label_color_emphasize;
+        private GUIStyle styel_label_color_emphasize
+        {
+            get
+            {
+                if(_styel_label_color_emphasize == null)
+                {
+                    _styel_label_color_emphasize = new GUIStyle(EditorStyles.label);
+                    _styel_label_color_emphasize.normal.textColor = XEditorColorDefine.Color_Emphasize;
+                }
+                return _styel_label_color_emphasize;
+            }
+        }
+
+
         private Vector2 v2_scrollview_globalConfig = Vector2.zero;
 
         bool b_flodout_global_extname = false;
@@ -500,6 +515,38 @@ namespace TinaXEditor.VFSKit.UI
                             EditorUtility.DisplayDialog(VFSConfigDashboardI18N.MsgBox_Common_Error, VFSConfigDashboardI18N.Groups_Cannot_Be_Null,VFSConfigDashboardI18N.MsgBox_Common_Confirm);
                             return;
                         }
+                        //对于删除扩展组的判断
+                        var group = reorderableList_groups.serializedProperty.GetArrayElementAtIndex(list.index);
+                        if (group.FindPropertyRelative("ExtensionGroup").boolValue)
+                        {
+                            string group_name = group.FindPropertyRelative("GroupName").stringValue;
+                            //获取到该扩展组相关的版本分支
+                            string[] branches = VFSManagerEditor.VersionManager.GetBranchNamesByExtensionGroup(group_name);
+                            string branch_str = "";
+                            if (branches != null && branches.Length > 0)
+                            {
+                                for (int i = 0; i < branches.Length; i++)
+                                {
+                                    branch_str += branches[i];
+                                    if (i != branches.Length - 1)
+                                    {
+                                        branch_str += "\n";
+                                    }
+                                }
+
+                                if (EditorUtility.DisplayDialog("Warning", string.Format(VFSConfigDashboardI18N.Delete_ExtensionGroup_Msg,group_name) + branch_str, "Delete", "Cancel"))
+                                {
+                                    foreach (var branch in branches)
+                                    {
+                                        VFSManagerEditor.VersionManager.RemoveBranch(branch);
+                                    }
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                            }
+                        }
 
                         if (cur_select_group_index == list.index)
                             cur_select_group_index = null;
@@ -549,13 +596,31 @@ namespace TinaXEditor.VFSKit.UI
                 GUILayout.BeginHorizontal();
                 //GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
                 SerializedProperty groupName = group_root_property.FindPropertyRelative("GroupName");
-                if (GUILayout.Button("Change_GroupName"))
+                if (GUILayout.Button(VFSConfigDashboardI18N.Change_GroupName, GUILayout.Width(110)))
                 {
                     EditorGUIUtil.Prompt((success,text) => 
                     {
                         if (success)
                         {
-                            Debug.Log("喵一下");
+                            if (!text.IsValidFileName()) return;
+                            if (text == groupName.stringValue) return;
+                            if (mVFSConfig.Groups.Any(g => g.GroupName == text))
+                            {
+                                UnityEditor.EditorUtility.DisplayDialog("Err", "The Group Name you want modify is already exist: " + text, "Okey");
+                                return;
+                            }
+                            SerializedProperty extension_group = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExtensionGroup");
+                            if (!extension_group.boolValue)
+                            {
+                                groupName.stringValue = text;
+                            }
+                            else
+                            {
+                                VFSManagerEditor.ChangeExtensionGroupName(groupName.stringValue, text);
+                                groupName.stringValue = text;
+                                mVFSConfigSerializedObject.ApplyModifiedProperties();
+                                VFSManagerEditor.RefreshManager(true);
+                            }
                         }
                     }, 
                     title:"Modify Group Name",
@@ -579,8 +644,22 @@ namespace TinaXEditor.VFSKit.UI
                 #endregion
 
                 #region 可扩展Groups
-                SerializedProperty extensionGroup = mVFSConfigSerializedObject.FindProperty("Groups").GetArrayElementAtIndex(cur_select_group_index.Value).FindPropertyRelative("ExtensionGroup");
-                EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extension));
+                SerializedProperty extensionGroup = group_root_property.FindPropertyRelative("ExtensionGroup");
+                //EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extension));
+                if (!extensionGroup.boolValue)
+                {
+                    if (GUILayout.Button(VFSConfigDashboardI18N.Enable_ExtensionGroup, GUILayout.Width(110)))
+                    {
+                        extensionGroup.boolValue = true;
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label(VFSConfigDashboardI18N.Is_ExtensionGroup, styel_label_color_emphasize, GUILayout.MaxWidth(240));
+                    //GUILayout.Button()
+                    EditorGUILayout.EndHorizontal();
+                }
                 EditorGUILayout.LabelField(VFSConfigDashboardI18N.Window_Group_Extensible_Tips,EditorStyles.helpBox);
 
 

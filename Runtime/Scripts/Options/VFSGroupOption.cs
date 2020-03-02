@@ -13,7 +13,7 @@ namespace TinaX.VFSKit
         internal static VFSGroupOption New() => new VFSGroupOption();
         internal static VFSGroupOption New(string groupName) => new VFSGroupOption() { GroupName = groupName };
 
-        public string GroupName = "common";
+        public string GroupName = "common";//【有直接对变量名的反射使用，如需修改请注意。】
 
         /// <summary>
         /// Obfuscate Directory Structure | 混淆目录结构
@@ -31,7 +31,7 @@ namespace TinaX.VFSKit
 
         //[Header("Extension Group：")]
         [Tooltip("Extension group, eg: mod, dlc")]
-        public bool ExtensionGroup = false;
+        public bool ExtensionGroup = false; //【有直接对变量名的反射使用，如需修改请注意。】
 
         public long Extension_VFSPackageMinVersion = 0; //如果是扩展组的话，扩展组所依赖的最低版本的“母资源包”的版本号。
 

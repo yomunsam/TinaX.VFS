@@ -250,6 +250,24 @@ namespace TinaXEditor.VFSKit.Versions
             return result.ToArray();
         }
 
+        /// <summary>
+        /// 获取用于某个扩展组的所有分支名称
+        /// </summary>
+        /// <param name="extensionGroupName"></param>
+        /// <returns></returns>
+        public string[] GetBranchNamesByExtensionGroup(string extensionGroupName)
+        {
+            List<string> result = new List<string>();
+            foreach (var item in mDict_Branches)
+            {
+                if (item.Value.BType == VersionBranch.BranchType.ExtensionGroup && item.Value.ExtensionGroupName == extensionGroupName)
+                {
+                    result.Add(item.Key);
+                }
+            }
+            return result.ToArray();
+        }
+
         public VersionRecord? GetMaxVersionRecord(string branchName)
         {
             if (mDict_Branches.ContainsKey(branchName))
@@ -520,7 +538,7 @@ namespace TinaXEditor.VFSKit.Versions
             XConfig.SaveJson(data, path, AssetLoadType.SystemIO);
         }
 
-        private void SaveBranchFile(ref VersionBranch data)
+        public void SaveBranchFile(ref VersionBranch data)
         {
             string branch_path = Path.Combine(mVersionData_BranchIndex_FolderPath, data.BranchName + ".json");
             data.ReadySave();

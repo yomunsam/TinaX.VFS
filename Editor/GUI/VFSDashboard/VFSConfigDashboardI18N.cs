@@ -415,5 +415,41 @@ namespace TinaXEditor.VFSKitInternal.I18N
             }
         }
 
+        internal static string Is_ExtensionGroup
+        {
+            get
+            {
+                if (IsChinese) return "当前资源组为扩展组";
+                return "The current group is an extension group";
+            }
+        }
+
+        internal static string Enable_ExtensionGroup
+        {
+            get
+            {
+                if (IsChinese) return "切换为扩展组";
+                return "Set as extension group";
+            }
+        }
+
+        internal static string Delete_ExtensionGroup_Msg
+        {
+            get
+            {
+                if (IsChinese) return "你要删除的资源组\"{0}\"是一个扩展组.\n因为扩展组是独立管理版本历史记录的，因此删除该扩展组，会导致与之相关的版本分支也被删除，且不可撤销\n如果你只是暂时不需要该组的资源，可以在Profile中设置相关规则。\n与该组相关的版本分支为:\n";
+                return "The assets group \"{0} \" you want to delete  is an extension group. \nBecause the extension group manages the version history independently, deleting the extension group will cause the version branch associated with it to be deleted, and it cannot be undone \nIf you only need the assets of this group temporarily, you can set related rules in the profile. \nThe branch associated with this group is: \n";
+            }
+        }
+
+        //internal static string Disable_ExtensionGroup
+        //{
+        //    get
+        //    {
+        //        if (IsChinese) return "设置为普通组";
+        //        return "Set as Normal group";
+        //    }
+        //}
+
     }
 }

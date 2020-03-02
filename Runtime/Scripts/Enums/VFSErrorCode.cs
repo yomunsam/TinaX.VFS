@@ -8,11 +8,13 @@ namespace TinaX.VFSKit
 {
     public enum VFSErrorCode
     {
+        Unknow                      = 0,
         /// <summary>
         /// Load VFS Config Failed | 加载VFS配置 失败
         /// </summary>
         LoadConfigFailed            = 1,
 
+        FileNotFound                = 2,
 
         /// <summary>
         /// 资源组规则冲突

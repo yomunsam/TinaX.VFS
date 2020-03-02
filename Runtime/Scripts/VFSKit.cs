@@ -9,7 +9,10 @@ using TinaX.VFSKit.Exceptions;
 using TinaX.VFSKitInternal;
 using System;
 using UnityEngine;
+using UnityEngine.Networking;
 using TinaX.VFSKitInternal.Utils;
+using UniRx;
+using UniRx.Async;
 
 namespace TinaX.VFSKit
 {
@@ -27,7 +30,7 @@ namespace TinaX.VFSKit
         /// <summary>
         /// 白名单文件夹路径 | 全局所有Groups里的路径都存放在这里
         /// </summary>
-        private List<string> mWhitelistFolderPaths = new List<string>();
+        //private List<string> mWhitelistFolderPaths = new List<string>();
 
         private VFSException mStartException;
 
@@ -42,7 +45,7 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         public async Task<bool> Start()
         {
-            // load config by xconfig | VFS not enable, so vfs config can not load by vfs.
+            // load config by xconfig | VFS not ready, so vfs config can not load by vfs.
             mConfig = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
             if(mConfig == null)
             {
@@ -58,13 +61,18 @@ namespace TinaX.VFSKit
                 return false;
             }
 
+            //load
+
             // init configs data.
             mGroups.Clear();
             if (mConfig.Groups != null)
             {
                 foreach (var groupOption in mConfig.Groups)
                 {
-                    mGroups.Add(new VFSGroup(groupOption));
+                    var group = new VFSGroup(groupOption);
+                    mGroups.Add(group);
+
+                    //init each group status.
                 }
             }
 
@@ -98,6 +106,30 @@ namespace TinaX.VFSKit
         public VFSException GetStartException()
         {
             return mStartException;
+        }
+
+        public void RunTest()
+        {
+            Debug.Log("关于在StreamingAssets中加载文件的测试");
+            string file_path = Path.Combine(Application.streamingAssetsPath, "test.txt");
+            byte[] bytes = this.LoadFileFromStreamingAssetsAsync(file_path).Result;
+            string text = System.Text.Encoding.UTF8.GetString(bytes);
+            Debug.Log("text:" + text);
+        }
+
+
+        private async Task<byte[]> LoadFileFromStreamingAssetsAsync(string path)
+        {
+            var req = UnityWebRequest.Get(path);
+            var operation = req.SendWebRequest();
+            await operation;
+            //await Task.Delay(0);
+            if (req.isHttpError)
+            {
+                if (req.responseCode == 404)
+                    throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+            }
+            return req.downloadHandler.data;
         }
 
     }

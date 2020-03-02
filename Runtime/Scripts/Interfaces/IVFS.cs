@@ -4,6 +4,8 @@
     {
         string ConfigPath { get; set; }
         AssetLoadType ConfigLoadType { get; }
+
+        void RunTest();
     }
 }
 

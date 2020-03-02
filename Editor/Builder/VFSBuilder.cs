@@ -413,7 +413,7 @@ namespace TinaXEditor.VFSKit
         public void CopyToStreamingAssets(string root_path)
         {
             VFSEditorUtil.InitVFSFoldersInStreamingAssets();
-            var stream_root_path = Path.Combine(Directory.GetCurrentDirectory(), VFSConst.VFS_STREAMINGASSETS_PATH);
+            var stream_root_path = Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH);
             var project_vfs_root_path = Path.Combine(root_path, VFSConst.VFS_FOLDER_MAIN);
             if (Directory.Exists(project_vfs_root_path))
             {

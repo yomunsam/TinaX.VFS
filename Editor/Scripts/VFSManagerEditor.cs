@@ -289,6 +289,11 @@ namespace TinaXEditor.VFSKit
             return Groups;
         }
 
+        public static bool IsGroupNameExists(string name)
+        {
+            return Groups.Any(g => g.GroupName == name);
+        }
+
         public static ProfileRecord GetProfileRecord(string profileName)
         {
             if (VFSProfileEditor.TryGetProfille(profileName,out var pr))
@@ -319,6 +324,29 @@ namespace TinaXEditor.VFSKit
                 var profile_path = Path.Combine(XEditorConst.EditorProjectSettingRootFolder, VFSEditorConst.VFSProfileProjectSettingFileName);
                 XConfig.SaveJson(VFSProfileEditor, profile_path, AssetLoadType.SystemIO);
             }
+        }
+
+        /// <summary>
+        /// 更改扩展组的组名，注意这个方法不会修改资源组配置中的组名，而是用来处理扩展组改名之后的对应的变动，比如版本记录
+        /// </summary>
+        public static void ChangeExtensionGroupName(string source_name, string new_name)
+        {
+            //检查所有包含该组的分支名称
+            string[] branches = VersionManager.GetBranchNamesByExtensionGroup(source_name);
+            if(branches != null && branches.Length > 0)
+            {
+                foreach(var branchName in branches)
+                {
+                    if(VersionManager.TryGetVersionBranch(branchName,out var branch))
+                    {
+                        branch.ExtensionGroupName = new_name;
+                        VersionManager.SaveBranchFile(ref branch);
+                    }
+                }
+            }
+
+            //把这个地方缓存的组名也改改
+            //不改了，直接外面调用刷新吧
         }
 
 
