@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System;
+using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -52,6 +54,9 @@ namespace TinaXEditor.VFSKit
         private bool mDevelopMode;
         private AssetBundleManifest mAssetBundleManifest;
 
+        private BuilderPipeline mPipeline;
+        private bool mUsePipeline = false;
+
         public VFSBuilder()
         {
 
@@ -73,6 +78,48 @@ namespace TinaXEditor.VFSKit
             mProfileName = profileName;
             curProfile = VFSManagerEditor.GetProfileRecord(profileName);
             mDevelopMode = XCoreEditor.IsXProfileDevelopMode(mProfileName);
+            return this;
+        }
+
+        public IVFSBuilder UsePipeline(BuilderPipeline pipeline)
+        {
+            mUsePipeline = true;
+            mPipeline = pipeline;
+            return this;
+        }
+
+        public IVFSBuilder UseAutoPipeline()
+        {
+            var interface_type = typeof(IBuildHandler);
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(interface_type) && t != typeof(TinaXEditor.VFSKit.Pipeline.Builtin.BuilderPipelineHead) && t != typeof(TinaXEditor.VFSKit.Pipeline.Builtin.BuilderPipelineLast)))
+                .ToArray();
+            Dictionary<Type, int> dict_priority = new Dictionary<Type, int>();
+            //查找优先级
+            foreach(var type in types)
+            {
+                var priority_attr = type.GetCustomAttribute<TinaX.PriorityAttribute>(true);
+                if(priority_attr == null)
+                {
+                    dict_priority.Add(type, 100);
+                }
+                else
+                {
+                    dict_priority.Add(type, priority_attr.Priority);
+                }
+            }
+
+            List<Type> list_types = new List<Type>(types);
+            list_types.Sort((x, y) => dict_priority[x].CompareTo(dict_priority[y]));
+
+            var pipeline = new BuilderPipeline();
+            foreach (var type in list_types)
+            {
+                pipeline.AddLast(Activator.CreateInstance(type) as IBuildHandler);
+            }
+            this.mUsePipeline = true;
+            this.mPipeline = pipeline;
+
             return this;
         }
 
@@ -155,8 +202,25 @@ namespace TinaXEditor.VFSKit
                         var importer = AssetImporter.GetAtPath(cur_asset_path);
                         if (!XPath.IsFolder(cur_asset_path) && !result.AssetBundleFileNameWithoutExtension.IsNullOrEmpty())
                         {
+                            string assetBundleName_without_extension = result.AssetBundleFileNameWithoutExtension;
+                            void InvokePipeline(BuilderPipelineContext ctx)
+                            {
+                                if(ctx != null && ctx.Handler != null)
+                                {
+                                    bool b = ctx.Handler.BeforeSetAssetBundleSign(ref assetBundleName_without_extension, ref result);
+                                    if(b && ctx.Next != null)
+                                    {
+                                        InvokePipeline(ctx.Next);
+                                    }
+                                }
+                            }
+                            if (mUsePipeline)
+                            {
+                                InvokePipeline(mPipeline.First);
+                            }
+
                             //正式设置AssetBundle
-                            importer.SetAssetBundleNameAndVariant(result.AssetBundleFileNameWithoutExtension, ab_extension);
+                            importer.SetAssetBundleNameAndVariant(assetBundleName_without_extension, ab_extension);
 
                             //记录
                             if (result.ExtensionGroup)
@@ -467,49 +531,6 @@ namespace TinaXEditor.VFSKit
         }
 
 
-        ///// <summary>
-        ///// 根据Group的配置，把构建好的AssetBundle文件中的相关文件移动到指定的地方
-        ///// </summary>
-        ///// <param name="group"></param>
-        ///// <param name="build_ab_path"></param>
-        ///// <returns></returns>
-        //private bool MoveAssetBundleFilesByGroup(VFSGroup group, string build_ab_path,string target_root_path)
-        //{
-        //    bool flag_moved = false;
-        //    string extension = Config.AssetBundleFileExtension;
-        //    if (!extension.StartsWith("."))
-        //        extension = "." + extension;
-        //    foreach(var folder in group.FolderPathsLower)
-        //    {
-        //        string full_folder_path = Path.Combine(build_ab_path, folder);
-        //        if (Directory.Exists(full_folder_path))
-        //        {
-        //            string target_path = Path.Combine(target_root_path, folder);
-        //            XDirectory.DeleteIfExists(target_path);
-        //            XDirectory.CopyDir(full_folder_path, target_path);
-        //            Directory.Delete(full_folder_path,true);
-        //            flag_moved = true;
-        //        }
-        //    }
-        //    foreach(var asset in group.AssetPathsLower)
-        //    {
-        //        string ab_name = group.GetAssetBundleNameOfAsset(asset) + extension;
-        //        string ab_full_name = Path.Combine(build_ab_path, ab_name);
-        //        string move_target_name = Path.Combine(target_root_path, ab_name);
-        //        if (File.Exists(ab_full_name))
-        //        {
-        //            if (File.Exists(move_target_name))
-        //                File.Delete(move_target_name);
-
-        //            XFile.DeleteIfExists(move_target_name);
-        //            File.Move(ab_full_name, move_target_name);
-        //            flag_moved = true;
-        //        }
-        //    }
-
-        //    return flag_moved;
-        //}
-
         /// <summary>
         /// 根据Group的配置，把构建好的AssetBundle文件中的相关文件复制到指定的地方
         /// </summary>
@@ -569,7 +590,28 @@ namespace TinaXEditor.VFSKit
                                     File.Delete(target_path);
                                 }
                                 XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                                
                                 File.Copy(ab_path, target_path);
+                                if (mUsePipeline) //Pipeline: Before AssetBundle Save
+                                {
+                                    FileStream fileStream = new FileStream(target_path, FileMode.Open, FileAccess.ReadWrite);
+                                    void InvokePipline(BuilderPipelineContext ctx)
+                                    {
+                                        if(ctx.Handler != null)
+                                        {
+                                            bool b = ctx.Handler.BeforeAssetBundleFileSavedByGroup(ref group, ab_file_name, asset_path, ref fileStream);
+                                            if (b && ctx.Next != null)
+                                            {
+                                                InvokePipline(ctx.Next);
+                                            }
+                                        }
+                                    }
+                                    if (mPipeline.First != null)
+                                    {
+                                        InvokePipline(mPipeline.First);
+                                    }
+                                    fileStream.Close();
+                                }
                                 flag_moved = true;
                             }
                         }

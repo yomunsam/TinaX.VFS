@@ -1,5 +1,7 @@
 ﻿using System.IO;
+using System.Text;
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TinaX;
@@ -16,7 +18,7 @@ using UniRx.Async;
 
 namespace TinaX.VFSKit
 {
-    public class VFSKit : IVFS , IVFSInternal , IAssetService
+    public class VFSKit : IVFS, IVFSInternal, IAssetService
     {
         public string ConfigPath { get; set; } = VFSConst.ConfigFilePath_Resources;
         public AssetLoadType ConfigLoadType { get; private set; } = AssetLoadType.Resources;
@@ -47,13 +49,13 @@ namespace TinaX.VFSKit
         {
             // load config by xconfig | VFS not ready, so vfs config can not load by vfs.
             mConfig = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
-            if(mConfig == null)
+            if (mConfig == null)
             {
                 mStartException = new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
                 return false;
             }
 
-            
+
 
             if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
             {
@@ -122,15 +124,33 @@ namespace TinaX.VFSKit
         {
             var req = UnityWebRequest.Get(path);
             var operation = req.SendWebRequest();
-            await operation;
-            //await Task.Delay(0);
-            if (req.isHttpError)
+            await Task.Delay(0);
+            var result = await operation;
+
+            if (result.isHttpError)
             {
-                if (req.responseCode == 404)
+                if (result.responseCode == 404)
                     throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
             }
-            return req.downloadHandler.data;
+            return result.downloadHandler.data;
         }
+
+
+
+
+
+
+        //private IEnumerator LoadFileFromStreamingAssetsAsync(string path, Action<byte[]> callback)
+        //{
+        //    var req = UnityWebRequest.Get(path);
+        //    yield return req.SendWebRequest();
+        //    if (req.isHttpError)
+        //    {
+        //        if (req.responseCode == 404)
+        //            throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+        //    }
+        //}
+
 
     }
 }

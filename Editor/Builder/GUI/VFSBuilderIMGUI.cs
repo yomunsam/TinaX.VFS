@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,8 @@ using TinaX.VFSKit;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.Const;
-
+using TinaXEditor.VFSKit.Pipeline;
+using TinaXEditor.VFSKit.Pipeline.Builtin;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -120,7 +122,9 @@ namespace TinaXEditor.VFSKit.UI
         private bool cur_ClearOutputFolder = false;
         private bool cur_ForceRebuild = false;
 
-
+        private bool mPipeline_ready = false;
+        private List<Type> mList_pipeline;
+        private Vector2 v2_scroll_pipeline;
         //private string cur_preview_profileName;
 
         private bool isBuilding = false;
@@ -165,7 +169,7 @@ namespace TinaXEditor.VFSKit.UI
             }
             GUILayout.BeginHorizontal(style_profile_selector);
             GUILayout.Label("Profile:", GUILayout.Width(55));
-            
+
             //select_xprofile = EditorGUILayout.Popup(select_xprofile, xprofiles);
             GUILayout.Label(xprofiles[select_xprofile]);
             if (GUILayout.Button(VFSBuilderI18N.SwitchProfile, GUILayout.Width(50)))
@@ -173,9 +177,9 @@ namespace TinaXEditor.VFSKit.UI
                 SettingsService.OpenProjectSettings(XEditorConst.ProjectSetting_CorePath);
             }
             GUILayout.EndHorizontal();
-            
+
             #endregion
-            if(xprofiles != null && xprofiles.Length > 0)
+            if (xprofiles != null && xprofiles.Length > 0)
             {
                 cur_select_xprofile_name = xprofiles[select_xprofile];
             }
@@ -186,7 +190,7 @@ namespace TinaXEditor.VFSKit.UI
             cur_select_platform = (XRuntimePlatform)EditorGUILayout.EnumPopup(cur_select_platform);
             EditorGUILayout.EndHorizontal();
             #endregion
-            
+
             #region 严格模式
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(VFSBuilderI18N.strictMode, GUILayout.Width(100));
@@ -200,7 +204,7 @@ namespace TinaXEditor.VFSKit.UI
             cur_select_compress = (AssetCompressType)EditorGUILayout.EnumPopup(cur_select_compress);
             EditorGUILayout.EndHorizontal();
             #endregion
-            
+
             #region 复制到StreamingAssets
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(VFSBuilderI18N.CopyToStramingAssetPath, GUILayout.MaxWidth(200));
@@ -229,12 +233,36 @@ namespace TinaXEditor.VFSKit.UI
             cur_ClearOutputFolder = EditorGUILayout.Toggle(cur_ClearOutputFolder);
             EditorGUILayout.EndHorizontal();
             #endregion
-            
+
             #region 强制重构建资源
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(VFSBuilderI18N.ForceRebuild);
             cur_ForceRebuild = EditorGUILayout.Toggle(cur_ForceRebuild);
             EditorGUILayout.EndHorizontal();
+            #endregion
+
+            #region 管线
+            if (mPipeline_ready == false) { refreshBuildPipline(); }
+            if (mList_pipeline != null && mList_pipeline.Count > 0)
+            {
+                GUILayout.Space(15);
+                TinaXEditor.Utils.EditorGUIUtil.HorizontalLine();
+                GUILayout.Label("Builder Pipeline:");
+                v2_scroll_pipeline = EditorGUILayout.BeginScrollView(v2_scroll_pipeline);
+                foreach(var type in mList_pipeline)
+                {
+                    if (type.Namespace.IsNullOrEmpty())
+                    {
+                        GUILayout.Label($"- {type.FullName} [{type.Assembly.ManifestModule.Name}]");
+                    }
+                    else
+                    {
+                        GUILayout.Label($"- {type.Namespace}.{type.FullName} [{type.Assembly.ManifestModule.Name}]");
+                    }
+                }
+                EditorGUILayout.EndScrollView();
+            }
+            
             #endregion
 
             //#region Preview
@@ -265,6 +293,7 @@ namespace TinaXEditor.VFSKit.UI
             select_xprofile = 0;
             cur_select_xprofile_name = null;
             mDevelopMode = false;
+            mPipeline_ready = false;
         }
 
         private void OnFocus()
@@ -273,6 +302,8 @@ namespace TinaXEditor.VFSKit.UI
             select_xprofile = 0;
             cur_select_xprofile_name = null;
             mDevelopMode = false;
+            mPipeline_ready = false;
+
         }
 
         void refreshXprofilesCacheData()
@@ -294,13 +325,32 @@ namespace TinaXEditor.VFSKit.UI
             mDevelopMode = XCoreEditor.IsXProfileDevelopMode(xprofiles[select_xprofile]);
         }
 
-        //void refreshProfilePreviewData()
-        //{
-        //    if(cur_preview_profileName == null || cur_preview_profileName!= cur_select_xprofile_name)
-        //    {
+        private void refreshBuildPipline()
+        {
+            var interface_type = typeof(IBuildHandler);
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(interface_type) && t != typeof(BuilderPipelineHead) && t != typeof(BuilderPipelineLast)))
+                .ToArray();
+            Dictionary<Type, int> dict_priority = new Dictionary<Type, int>();
+            //查找优先级
+            foreach(var type in types)
+            {
+                var priority_attr = type.GetCustomAttribute<TinaX.PriorityAttribute>(true);
+                if(priority_attr == null)
+                {
+                    dict_priority.Add(type, 100);
+                }
+                else
+                {
+                    dict_priority.Add(type, priority_attr.Priority);
+                }
+            }
 
-        //    }
-        //}
+            List<Type> list_types = new List<Type>(types);
+            list_types.Sort((x, y) => dict_priority[x].CompareTo(dict_priority[y]));
+            mList_pipeline = list_types;
+            mPipeline_ready = true;
+        }
 
         private void Update()
         {
@@ -315,9 +365,20 @@ namespace TinaXEditor.VFSKit.UI
             try
             {
                 VFSManagerEditor.RefreshManager(true);
+
                 var builder = new VFSBuilder()
                     .UseProfile(cur_select_xprofile_name)
                     .SetConfig(VFSManagerEditor.VFSConfig);
+
+                if (mList_pipeline != null && mList_pipeline.Count > 0)
+                {
+                    var pipeline = new BuilderPipeline();
+                    foreach (var type in mList_pipeline)
+                    {
+                        pipeline.AddLast(Activator.CreateInstance(type) as IBuildHandler);
+                    }
+                    builder.UsePipeline(pipeline);
+                }
                 builder.EnableTipsGUI = true;
                 builder.CopyToStreamingAssetsFolder = cur_copyToStreamingAssetFolder;
                 builder.ClearAssetBundleSignAfterBuild = cur_clearAllABSignAfterFinish;
