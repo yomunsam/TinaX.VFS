@@ -15,6 +15,8 @@ using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKitInternal;
 using TinaXEditor.VFSKit.Versions;
 using TinaX.VFSKit.Versions;
+using TinaXEditor.VFSKit.Utils;
+using TinaX.Utils;
 
 namespace TinaXEditor.VFSKit
 {
@@ -33,6 +35,7 @@ namespace TinaXEditor.VFSKit
         /// 整个VFS中所有Group整合的AssetPaths
         /// </summary>
         static List<string> AssetPaths = new List<string>();
+
 
         private static VFSVersionsManagerEditor _versionMgr;
 
@@ -354,6 +357,8 @@ namespace TinaXEditor.VFSKit
         {
             return VFSEditorConst.PROJECT_VFS_FILES_SERVER_FOLDER_PATH;
         }
+
+        
 
         /// <summary>
         /// 初始值

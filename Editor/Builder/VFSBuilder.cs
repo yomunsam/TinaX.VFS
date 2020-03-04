@@ -661,7 +661,7 @@ namespace TinaXEditor.VFSKit
             {
                 var bundleInfo = new AssetBundleInfo();
                 bundleInfo.name = abfile;
-                bundleInfo.dependencies = mAssetBundleManifest.GetAllDependencies(abfile);
+                bundleInfo.dependencies = mAssetBundleManifest.GetDirectDependencies(abfile);
 
                 Infos.Add(bundleInfo);
             }

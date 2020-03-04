@@ -357,8 +357,8 @@ namespace TinaX.VFSKit
 
         private string GetObfuscatedAssetBundleName(string sourceAssetbundleName)
         {
-            string md5 = sourceAssetbundleName.GetMD5(true, true);
-            return md5.Substring(0, 2) + "/" + md5;
+            string md5_32 = sourceAssetbundleName.GetMD5(true, false);
+            return md5_32.Substring(0, 2) + "/" + md5_32.Substring(8,16);
         }
     }
 }

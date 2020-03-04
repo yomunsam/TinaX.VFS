@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using TinaX.VFSKit;
+using UnityEngine;
+using TinaX.VFSKit.Const;
 
 namespace TinaX.VFSKitInternal.Utils
 {
@@ -256,6 +259,43 @@ namespace TinaX.VFSKitInternal.Utils
             folders = null;
             return false;
 
+        }
+
+        public static string GetSourcePackagesRootFolderInStreamingAssets()
+        {
+            return Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH);
+        }
+
+        /// <summary>
+        /// StreamingAssets 里的 vfs_root
+        /// </summary>
+        /// <returns></returns>
+        public static string GetMainPackageFolderInStreamingAssets()
+        {
+            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_MAIN);
+        }
+
+        /// <summary>
+        /// StreamingAssets 里的 vfs_data
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDataFolderInStreamingAssets()
+        {
+            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_DATA);
+        }
+
+        /// <summary>
+        /// StreamingAssets 里的 vfs_extension
+        /// </summary>
+        /// <returns></returns>
+        public static string GetExtensionGroupRootFolderInStreamingAssets()
+        {
+            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_EXTENSION);
+        }
+
+        public static string GetAssetBundleManifestInPackage(string package_path)
+        {
+            return Path.Combine(package_path, VFSConst.AssetsManifestFileName);
         }
 
     }
