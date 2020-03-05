@@ -10,6 +10,7 @@ using TinaX;
 using TinaX.Internal;
 using TinaXEditor;
 using TinaXEditor.VFSKitInternal;
+using UnityEditorInternal;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -17,6 +18,8 @@ namespace TinaXEditor.VFSKit.UI
     {
 
         static ProfileEditorIMGUI wnd;
+
+        public static int? param_toolbar_index;
 
         public static void OpenUI()
         {
@@ -119,10 +122,33 @@ namespace TinaXEditor.VFSKit.UI
             }
         }
 
+        private string[] _toolbar_str;
+        private string[] toolbar_str
+        {
+            get
+            {
+                if(_toolbar_str == null)
+                {
+                    if (IsChinese)
+                    {
+                        _toolbar_str = new string[] { "文件组", "WebVFS" };
+                    }
+                    else
+                    {
+                        _toolbar_str = new string[] { "Groups", "WebVFS" };
+                    }
+                }
+                return _toolbar_str;
+            }
+        }
+        private int mToolbar_Index;
+
         private string[] xprofiles;
         private int select_xprofile;
-        private Vector2 v2_body_scrollview;
+        private Vector2 v2_body_groups_scrollview;
+        private Vector2 v2_body_webvfs_scrollview;
         private ProfileRecord mCurProfileRecord;
+
 
         //private string[] groupNames;
         //private Dictionary<string, GroupHandleMode> groups_handlemode_cache = new Dictionary<string, GroupHandleMode>(); //string: groupName
@@ -138,7 +164,14 @@ namespace TinaXEditor.VFSKit.UI
         /// </summary>
         private Dictionary<string, Dictionary<string, bool>> disable_expansionGroup_cache = new Dictionary<string, Dictionary<string, bool>>();
 
-        
+        private WebVFSNetworkConfig mWebVFS_Net_Config;
+        private SerializedObject mWebVFS_Net_Config_serialized;
+        private string mCur_WebVFS_profileNmae;
+        private int mCur_ProfileIndex_InWebVFS = 0;
+        private ReorderableList reorderableList_urls;
+
+        //private Dictionary<string, WebVFSNetworkConfig.NetworkConfig> mDict_NetworkConfigs = new Dictionary<string, WebVFSNetworkConfig.NetworkConfig>();
+        //private Dictionary<string, SerializedProperty> mDict_NetworkConfigs_SerializedProperty = new Dictionary<string, SerializedProperty>();
 
         private void OnEnable()
         {
@@ -148,6 +181,11 @@ namespace TinaXEditor.VFSKit.UI
             }
             refreshXprofilesCacheData();
 
+            if(param_toolbar_index != null && param_toolbar_index.Value < toolbar_str.Length)
+            {
+                mToolbar_Index = param_toolbar_index.Value;
+                param_toolbar_index = null;
+            }
         }
 
         private void OnGUI()
@@ -174,102 +212,205 @@ namespace TinaXEditor.VFSKit.UI
                 addConfiguredValueToCache();
             }
 
-            
+            // 工具栏
+            GUILayout.Space(5);
+            mToolbar_Index = GUILayout.Toolbar(mToolbar_Index, toolbar_str);
 
-            
-            
-
-            #region Group列表
-
-            GUILayout.BeginVertical(style_body);
-            v2_body_scrollview = EditorGUILayout.BeginScrollView(v2_body_scrollview);
-
-
-            //表头
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Group",GUILayout.Width(165));
-            GUILayout.Label("|", GUILayout.Width(10));
-            GUILayout.Label(IsChinese ? "资源存储位置" : "Assets Storage Location",GUILayout.Width(150));
-            GUILayout.Label("|",GUILayout.Width(10));
-            GUILayout.Label("Disable",GUILayout.Width(50));
-
-            EditorGUILayout.EndHorizontal();
-
-            
-            if(groups == null)
+            if (mToolbar_Index == 0)
             {
-                groups = VFSManagerEditor.GetGroups();
-                //groupNames = VFSManagerEditor.GetGroupNames();
-            }
+                #region Group列表
 
-            foreach(var group in groups)
-            {
-                GUILayout.BeginHorizontal();
-                //GroupName
-                GUILayout.Label(group.GroupName, style_txt_group_item,GUILayout.Width(170));
-                GUILayout.Space(5);
-                //资源存储位置
-                GroupHandleMode handleMode = group.HandleMode;
-                
+                GUILayout.BeginVertical(style_body);
+                v2_body_groups_scrollview = EditorGUILayout.BeginScrollView(v2_body_groups_scrollview);
 
-                if(handleMode == GroupHandleMode.LocalAndUpdatable || handleMode == GroupHandleMode.LocalOrRemote)
+
+                //表头
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label("Group", GUILayout.Width(165));
+                GUILayout.Label("|", GUILayout.Width(10));
+                GUILayout.Label(IsChinese ? "资源存储位置" : "Assets Storage Location", GUILayout.Width(150));
+                GUILayout.Label("|", GUILayout.Width(10));
+                GUILayout.Label("Disable", GUILayout.Width(50));
+
+                EditorGUILayout.EndHorizontal();
+
+
+                if (groups == null)
                 {
-                    //可以主动设置资源位置
-                    if (!assetLocation_cache.ContainsKey(cur_xprofile_name))
-                        assetLocation_cache.Add(cur_xprofile_name, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
-
-                    if (!assetLocation_cache[cur_xprofile_name].ContainsKey(group.GroupName))
-                        assetLocation_cache[cur_xprofile_name].Add(group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
-
-                    assetLocation_cache[cur_xprofile_name][group.GroupName] = (ProfileRecord.E_GroupAssetsLocation)EditorGUILayout.EnumPopup(assetLocation_cache[cur_xprofile_name][group.GroupName],GUILayout.Width(150));
-
-                    GUILayout.Space(2);
-                }
-                else
-                {
-                    //写死资源位置
-                    if (handleMode == GroupHandleMode.LocalOnly)
-                    {
-                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
-                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Local.ToString()}]", GUILayout.Width(150));
-                    }
-                    else if (handleMode == GroupHandleMode.RemoteOnly)
-                    {
-                        setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Remote);
-                        GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Remote.ToString()}]", GUILayout.Width(150));
-                    }
+                    groups = VFSManagerEditor.GetGroups();
+                    //groupNames = VFSManagerEditor.GetGroupNames();
                 }
 
-                GUILayout.Space(10);
-                //Disable
-                if (group.ExtensionGroup)
+                foreach (var group in groups)
                 {
-                    //可以主动设置group disable
-                    if (!disable_expansionGroup_cache.ContainsKey(cur_xprofile_name))
-                        disable_expansionGroup_cache.Add(cur_xprofile_name, new Dictionary<string, bool>());
+                    GUILayout.BeginHorizontal();
+                    //GroupName
+                    GUILayout.Label(group.GroupName, style_txt_group_item, GUILayout.Width(170));
+                    GUILayout.Space(5);
+                    //资源存储位置
+                    GroupHandleMode handleMode = group.HandleMode;
 
-                    if (!disable_expansionGroup_cache[cur_xprofile_name].ContainsKey(group.GroupName))
-                        disable_expansionGroup_cache[cur_xprofile_name].Add(group.GroupName, false);
+
+                    if (handleMode == GroupHandleMode.LocalAndUpdatable || handleMode == GroupHandleMode.LocalOrRemote)
+                    {
+                        //可以主动设置资源位置
+                        if (!assetLocation_cache.ContainsKey(cur_xprofile_name))
+                            assetLocation_cache.Add(cur_xprofile_name, new Dictionary<string, ProfileRecord.E_GroupAssetsLocation>());
+
+                        if (!assetLocation_cache[cur_xprofile_name].ContainsKey(group.GroupName))
+                            assetLocation_cache[cur_xprofile_name].Add(group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
+
+                        assetLocation_cache[cur_xprofile_name][group.GroupName] = (ProfileRecord.E_GroupAssetsLocation)EditorGUILayout.EnumPopup(assetLocation_cache[cur_xprofile_name][group.GroupName], GUILayout.Width(150));
+
+                        GUILayout.Space(2);
+                    }
+                    else
+                    {
+                        //写死资源位置
+                        if (handleMode == GroupHandleMode.LocalOnly)
+                        {
+                            setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Local);
+                            GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Local.ToString()}]", GUILayout.Width(150));
+                        }
+                        else if (handleMode == GroupHandleMode.RemoteOnly)
+                        {
+                            setAssetLocationCacheValue(cur_xprofile_name, group.GroupName, ProfileRecord.E_GroupAssetsLocation.Remote);
+                            GUILayout.Label($"[{ProfileRecord.E_GroupAssetsLocation.Remote.ToString()}]", GUILayout.Width(150));
+                        }
+                    }
+
                     GUILayout.Space(10);
-                    disable_expansionGroup_cache[cur_xprofile_name][group.GroupName] = EditorGUILayout.Toggle(disable_expansionGroup_cache[cur_xprofile_name][group.GroupName], GUILayout.Width(50));
-                }
-                else
-                {
-                    GUILayout.Label("[-]", style_label_center,GUILayout.Width(36));
-                    setGroupDisableCacheValue(cur_xprofile_name, group.GroupName, false);
+                    //Disable
+                    if (group.ExtensionGroup)
+                    {
+                        //可以主动设置group disable
+                        if (!disable_expansionGroup_cache.ContainsKey(cur_xprofile_name))
+                            disable_expansionGroup_cache.Add(cur_xprofile_name, new Dictionary<string, bool>());
+
+                        if (!disable_expansionGroup_cache[cur_xprofile_name].ContainsKey(group.GroupName))
+                            disable_expansionGroup_cache[cur_xprofile_name].Add(group.GroupName, false);
+                        GUILayout.Space(10);
+                        disable_expansionGroup_cache[cur_xprofile_name][group.GroupName] = EditorGUILayout.Toggle(disable_expansionGroup_cache[cur_xprofile_name][group.GroupName], GUILayout.Width(50));
+                    }
+                    else
+                    {
+                        GUILayout.Label("[-]", style_label_center, GUILayout.Width(36));
+                        setGroupDisableCacheValue(cur_xprofile_name, group.GroupName, false);
+                    }
+
+                    GUILayout.EndHorizontal();
                 }
 
-                GUILayout.EndHorizontal();
+
+
+                EditorGUILayout.EndScrollView();
+
+
+
+                GUILayout.EndVertical();
+                #endregion
             }
+            else if (mToolbar_Index == 1)
+            {
+                #region WebVFS URLs
 
+                if (mWebVFS_Net_Config == null)
+                {
+                    mWebVFS_Net_Config = XConfig.CreateConfigIfNotExists<WebVFSNetworkConfig>(TinaX.VFSKit.Const.VFSConst.Config_WebVFS_URLs);
+                }
+                if (mWebVFS_Net_Config_serialized == null)
+                {
+                    mWebVFS_Net_Config_serialized = new SerializedObject(mWebVFS_Net_Config);
+                }
+                if (mCur_WebVFS_profileNmae == null || mCur_WebVFS_profileNmae != cur_xprofile_name)
+                {
+                    if (mWebVFS_Net_Config.Configs == null || !mWebVFS_Net_Config.Configs.Any(item => item.ProfileName == cur_xprofile_name))
+                    {
+                        ArrayUtil.Combine(ref mWebVFS_Net_Config.Configs, new WebVFSNetworkConfig.NetworkConfig[] {
+                            new WebVFSNetworkConfig.NetworkConfig()
+                            {
+                                ProfileName = cur_xprofile_name
+                            }
+                        });
+                        mWebVFS_Net_Config_serialized.UpdateIfRequiredOrScript();
+                    }
+                    for(int i = 0; i < mWebVFS_Net_Config.Configs.Length; i++)
+                    {
+                        if(mWebVFS_Net_Config.Configs[i].ProfileName == cur_xprofile_name)
+                        {
+                            mCur_ProfileIndex_InWebVFS = i;
+                        }
+                    }
+                    SerializedProperty cur_config = mWebVFS_Net_Config_serialized.FindProperty("Configs").GetArrayElementAtIndex(mCur_ProfileIndex_InWebVFS);
+                    SerializedProperty cur_urls = cur_config.FindPropertyRelative("Urls");
 
+                    reorderableList_urls = new ReorderableList(
+                                                mWebVFS_Net_Config_serialized,
+                                                cur_urls,
+                                                true,
+                                                true,
+                                                true,
+                                                true);
+                    reorderableList_urls.drawElementCallback = (rect, index, selected, focused) =>
+                    {
+                        SerializedProperty itemData = reorderableList_urls.serializedProperty.GetArrayElementAtIndex(index);
+                        SerializedProperty mode = itemData.FindPropertyRelative("NetworkMode");
+                        SerializedProperty url = itemData.FindPropertyRelative("BaseUrl");
+                        SerializedProperty helloUrl = itemData.FindPropertyRelative("HelloUrl");
 
-            EditorGUILayout.EndScrollView();
+                        rect.y += 2;
+                        rect.height = EditorGUIUtility.singleLineHeight * 1;
 
-            
+                        var rect_mode = rect;
+                        EditorGUI.PropertyField(rect_mode, mode, new GUIContent(IsChinese ? "网络模式" : "Network Mode"));
+                        //--------------------------------------------------------------------------------------------
+                        var rect_url_label = rect;
+                        rect_url_label.y += EditorGUIUtility.singleLineHeight + 2;
+                        rect_url_label.width = 58;
+                        GUI.Label(rect_url_label, IsChinese ? "基础Url" : "Base Url");
 
-            GUILayout.EndVertical();
-            #endregion
+                        var rect_url = rect;
+                        rect_url.y += EditorGUIUtility.singleLineHeight + 2;
+                        rect_url.width -= 62;
+                        rect_url.x += 62;
+                        EditorGUI.PropertyField(rect_url, url, GUIContent.none);
+                        //---------------------------------------------------------------------------------------------------
+
+                        var rect_hellourl_label = rect;
+                        rect_hellourl_label.y += EditorGUIUtility.singleLineHeight * 2 + 4;
+                        rect_hellourl_label.width = 58;
+                        GUI.Label(rect_hellourl_label, IsChinese ? "HelloUrl" : "Hello Url");
+
+                        var rect_helloUrl = rect;
+                        rect_helloUrl.y += EditorGUIUtility.singleLineHeight * 2 + 4;
+                        rect_helloUrl.width -= 62;
+                        rect_helloUrl.x += 62;
+                        EditorGUI.PropertyField(rect_helloUrl, helloUrl, GUIContent.none);
+
+                    };
+                    reorderableList_urls.elementHeightCallback = (index) =>
+                    {
+                        return EditorGUIUtility.singleLineHeight * 3 + 10;
+                    };
+                    reorderableList_urls.drawHeaderCallback = (rect) =>
+                    {
+                        GUI.Label(rect, IsChinese?"Web Urls":"Web Urls");
+                    };
+
+                    mCur_WebVFS_profileNmae = cur_xprofile_name;
+                }
+
+                GUILayout.BeginVertical(style_body);
+                v2_body_webvfs_scrollview = EditorGUILayout.BeginScrollView(v2_body_webvfs_scrollview);
+
+                reorderableList_urls.DoLayoutList();
+                //EditorGUILayout.PropertyField(cur_urls);
+
+                EditorGUILayout.EndScrollView();
+
+                GUILayout.EndVertical();
+                #endregion
+            }
 
             #region 保存和重置值的两个按钮
             GUILayout.BeginHorizontal();
@@ -278,7 +419,8 @@ namespace TinaXEditor.VFSKit.UI
             //包存cache的值
             if(GUILayout.Button(IsChinese ? "保存设置" : "Save", GUILayout.Width(100)))
             {
-                foreach(var item in assetLocation_cache)
+                #region Group Profile
+                foreach (var item in assetLocation_cache)
                 {
                     //item.key: profile,
                     var profile = VFSManagerEditor.GetProfileRecord(item.Key); //因为获取到的是class，所以直接修改它就行了
@@ -356,10 +498,34 @@ namespace TinaXEditor.VFSKit.UI
 
                 //通知VFSManager保存到disk
                 VFSManagerEditor.SaveProfileRecord();
+                #endregion
+
+                #region WebVFS URL
+                mWebVFS_Net_Config_serialized?.ApplyModifiedPropertiesWithoutUndo();
+                //删掉可能多余的内容
+                string[] profiles = XCoreEditor.GetXProfileNames();
+                if(mWebVFS_Net_Config.Configs != null && mWebVFS_Net_Config.Configs.Length > 0)
+                {
+                    List<WebVFSNetworkConfig.NetworkConfig> list_temp = new List<WebVFSNetworkConfig.NetworkConfig>(mWebVFS_Net_Config.Configs);
+                    for(var i = list_temp.Count - 1; i >= 0; i--)
+                    {
+                        if (!profiles.Contains(list_temp[i].ProfileName))
+                        {
+                            list_temp.RemoveAt(i);
+                        }
+                    }
+                    if(list_temp.Count != mWebVFS_Net_Config.Configs.Length)
+                    {
+                        mWebVFS_Net_Config.Configs = list_temp.ToArray();
+                    }
+                }
+
+                AssetDatabase.SaveAssets();
+                #endregion
             }
 
             //重置cache的已记录值
-            if(GUILayout.Button(IsChinese ? "重置设置" : "Reset modify", GUILayout.Width(100)))
+            if (GUILayout.Button(IsChinese ? "重置设置" : "Reset modify", GUILayout.Width(100)))
             {
                 assetLocation_cache?.Clear();
                 disable_expansionGroup_cache?.Clear();
@@ -379,6 +545,7 @@ namespace TinaXEditor.VFSKit.UI
             mCurProfileRecord = null;
             select_xprofile = 0;
             groups = null;
+            mCur_WebVFS_profileNmae = null;
             //groups_handlemode_cache?.Clear();
         }
 
@@ -388,6 +555,7 @@ namespace TinaXEditor.VFSKit.UI
             mCurProfileRecord = null;
             select_xprofile = 0;
             groups = null;
+            mCur_WebVFS_profileNmae = null;
             //groups_handlemode_cache?.Clear();
         }
 

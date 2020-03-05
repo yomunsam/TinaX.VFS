@@ -83,6 +83,9 @@ namespace TinaXEditor.VFSKit.UI
 
         bool b_flodout_global_ab_detail = false;
 
+        bool b_flodout_global_webvfs = false;
+
+
 
         private Vector2 v2_scrollview_assetGroup = Vector2.zero;
         private string input_createGroupName;
@@ -127,6 +130,10 @@ namespace TinaXEditor.VFSKit.UI
         /// vfs 后缀名
         /// </summary>
         private SerializedProperty sp_vfs_extension;
+
+
+        private SerializedProperty sp_enable_webvfs;
+        private SerializedProperty sp_webvfs_default_download_url;
 
         private void OnEnable()
         {
@@ -291,9 +298,9 @@ namespace TinaXEditor.VFSKit.UI
             v2_scrollview_globalConfig = EditorGUILayout.BeginScrollView(v2_scrollview_globalConfig);
             //启用vfs
             if(sp_enable_vfs == null)
-                sp_enable_vfs = mVFSConfigSerializedObject.FindProperty("EnableWebVFS");
+                sp_enable_vfs = mVFSConfigSerializedObject.FindProperty("EnableVFS");
 
-            //mVFSConfig.EnableWebVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableWebVFS);
+            //mVFSConfig.EnableVFS = EditorGUILayout.Toggle(VFSConfigDashboardI18N.EnableVFS, mVFSConfig.EnableVFS);
             EditorGUILayout.PropertyField(sp_enable_vfs, new GUIContent(VFSConfigDashboardI18N.EnableVFS));
             EditorGUILayout.Space();
             //忽略后缀名
@@ -421,6 +428,33 @@ namespace TinaXEditor.VFSKit.UI
                 GUILayout.EndHorizontal();
                 if (!mVFSConfig.AssetBundleFileExtension.StartsWith("."))
                     GUILayout.Label(VFSConfigDashboardI18N.Window_AB_Extension_Name_Tip_startwithdot, style_text_warning);
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                EditorGUILayout.Space();
+            }
+
+            //WebVFS
+            b_flodout_global_webvfs = EditorGUILayout.Foldout(b_flodout_global_webvfs, "Web VFS");
+            if (b_flodout_global_webvfs)
+            {
+                //enable
+                if(sp_enable_webvfs == null)
+                    sp_enable_webvfs = mVFSConfigSerializedObject.FindProperty("EnableWebVFS");
+                EditorGUILayout.PropertyField(sp_enable_webvfs, new GUIContent(VFSConfigDashboardI18N.Enable_WebVFS));
+
+                //default url
+                if(sp_webvfs_default_download_url == null)
+                    sp_webvfs_default_download_url = mVFSConfigSerializedObject.FindProperty("DefaultWebVFSBaseUrl");
+                EditorGUILayout.LabelField(VFSConfigDashboardI18N.WebVFS_DefaultDownloadUrl);
+                EditorGUILayout.PropertyField(sp_webvfs_default_download_url, GUIContent.none);
+
+                EditorGUILayout.HelpBox(VFSConfigDashboardI18N.WebVFS_DefaultDownloadUrl_tips, MessageType.Info);
+                if(GUILayout.Button("Configure Urls in Profile"))
+                {
+                    ProfileEditorIMGUI.param_toolbar_index = 1;
+                    ProfileEditorIMGUI.OpenUI();
+                }
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                EditorGUILayout.Space();
             }
 
 

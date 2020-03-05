@@ -101,7 +101,7 @@ namespace TinaXEditor.VFSKit
             }
 
             Groups.Clear();
-            if (!mConfig.EnableWebVFS) return;
+            if (!mConfig.EnableVFS) return;
 
             //VFS Profile
             XDirectory.CreateIfNotExists(XEditorConst.EditorProjectSettingRootFolder);

@@ -319,25 +319,27 @@ namespace TinaXEditor.VFSKit
 
             string[] files = Directory.GetFiles(build_output_folder, $"*{ab_extension}", SearchOption.AllDirectories);
 
-            var hashBook = new FilesHashBook();
-            List<FilesHashBook.FileHash> temp_hash_list = new List<FilesHashBook.FileHash>();
-            int build_output_folder_len = build_output_folder.Length + 1;
-            foreach (var file in files)
-            {
-                string pure_path = file.Substring(build_output_folder_len, file.Length - build_output_folder_len);
-                if (pure_path.IndexOf("\\") != -1)
-                    pure_path = pure_path.Replace("\\", "/");
-                temp_hash_list.Add(new FilesHashBook.FileHash()
-                {
-                    p = pure_path,
-                    h = XFile.GetMD5(file, true)
-                });
-            }
-            hashBook.Files = temp_hash_list.ToArray();
-            string hashBook_path = Path.Combine(build_output_folder, VFSConst.ABsHashFileName);
-            XFile.DeleteIfExists(hashBook_path);
-            string hashBook_json = JsonUtility.ToJson(hashBook);
-            File.WriteAllText(hashBook_path, hashBook_json, Encoding.UTF8);
+            #region temp下的目录完全hash
+            //var hashBook = new FilesHashBook();
+            //List<FilesHashBook.FileHash> temp_hash_list = new List<FilesHashBook.FileHash>();
+            //int build_output_folder_len = build_output_folder.Length + 1;
+            //foreach (var file in files)
+            //{
+            //    string pure_path = file.Substring(build_output_folder_len, file.Length - build_output_folder_len);
+            //    if (pure_path.IndexOf("\\") != -1)
+            //        pure_path = pure_path.Replace("\\", "/");
+            //    temp_hash_list.Add(new FilesHashBook.FileHash()
+            //    {
+            //        p = pure_path,
+            //        h = XFile.GetMD5(file, true)
+            //    });
+            //}
+            //hashBook.Files = temp_hash_list.ToArray();
+            //string hashBook_path = Path.Combine(build_output_folder, VFSConst.ABsHashFileName);
+            //XFile.DeleteIfExists(hashBook_path);
+            //string hashBook_json = JsonUtility.ToJson(hashBook);
+            //File.WriteAllText(hashBook_path, hashBook_json, Encoding.UTF8);
+            #endregion
         }
 
         public void Build(XRuntimePlatform platform, AssetCompressType compressType)
@@ -400,6 +402,8 @@ namespace TinaXEditor.VFSKit
                     {
                         //需要给组生成独立的manifest
                         MakeVFSManifestByFolder(extension_group_root_path);
+                        //给独立的组生成一份hash
+                        MakeAssetBundleFileHashListByFolder(extension_group_root_path);
                         SaveExtensionGroupInfo(extension_group_root_path, group.GroupName, platform, group.ExtensionGroup_MainPackageVersionLimit);
                     }
 
@@ -444,7 +448,15 @@ namespace TinaXEditor.VFSKit
 
             }
 
-            MakeVFSManifestByFolders(new string[] { local_files_root_path, remote_files_root_path }, local_files_root_path);
+            string[] folders_remote_and_local = new string[] { local_files_root_path, remote_files_root_path };
+            MakeVFSManifestByFolders(folders_remote_and_local, local_files_root_path);
+            MakeAssetBundleFileHashListByFolders(folders_remote_and_local, local_files_root_path, out string hash_path);
+            if (Directory.Exists(remote_files_root_path))
+            {
+                string hash_path_remote = Path.Combine(remote_files_root_path, Path.GetFileName(hash_path));
+                if (File.Exists(hash_path_remote)) File.Delete(hash_path_remote);
+                File.Copy(hash_path, hash_path_remote);
+            }
         }
 
         private void SaveAssetHashFiles(string data_path)
@@ -670,6 +682,73 @@ namespace TinaXEditor.VFSKit
             bundleManifest.assetBundleInfos = Infos.ToArray();
 
             XConfig.SaveJson(bundleManifest, manifestTargetPath, AssetLoadType.SystemIO);
+        }
+
+        private void MakeAssetBundleFileHashListByFolder(string folder_path)
+        {
+            this.MakeAssetBundleFileHashListByFolders(new string[1] { folder_path }, folder_path);
+        }
+
+        private void MakeAssetBundleFileHashListByFolders(string[] folder_paths, string hashbook_output_folder_path)
+        {
+            this.MakeAssetBundleFileHashListByFolders(folder_paths, hashbook_output_folder_path, out _);
+        }
+
+        /// <summary>
+        /// 传入一堆目录，把这些目录里的assetBundle文件的hash都记录下来
+        /// </summary>
+        /// <param name="folder_paths"></param>
+        /// <param name="hashbook_output_folder_path"></param>
+        /// <param name="hashFilePath">最终生成出来的那个文件的路径</param>
+        private void MakeAssetBundleFileHashListByFolders(string[] folder_paths, string hashbook_output_folder_path, out string hashFilePath)
+        {
+            string ab_extension = Config.AssetBundleFileExtension;
+            if (!ab_extension.StartsWith("."))
+                ab_extension = "." + ab_extension;
+            List<string[]> abFiles = new List<string[]>();
+
+            foreach (var folder_path in folder_paths)
+            {
+                string[] files = Directory.GetFiles(folder_path, $"*{ab_extension}", SearchOption.AllDirectories);
+                int folder_len = folder_path.Length + 1;
+                foreach (var file in files)
+                {
+                    string pure_path = file.Substring(folder_len, file.Length - folder_len);
+                    if (pure_path.IndexOf("\\") != -1)
+                        pure_path = pure_path.Replace("\\", "/");
+
+                    abFiles.Add(new string[2] { pure_path, file });
+                }
+            }
+            
+            hashFilePath = Path.Combine(hashbook_output_folder_path, VFSConst.ABsHashFileName);
+            this.MakeAssetBundleFileHashList(abFiles.ToArray(), hashFilePath);
+        }
+
+        /// <summary>
+        /// 把所有的assetbundles文件的hash保存下来
+        /// </summary>
+        /// <param name="assetBundleNamesAndPaths">每个assetBundle用一个长度为2的数组表示，下标0是assetbundleName,下标1是绝对路径</param>
+        /// <param name="TargetPath">要保存到哪儿？路径</param>
+        private void MakeAssetBundleFileHashList(string[][] assetBundleNamesAndPaths, string TargetPath)
+        {
+            List<FilesHashBook.FileHash> Infos = new List<FilesHashBook.FileHash>();
+
+            foreach(var ab in assetBundleNamesAndPaths)
+            {
+                if(ab.Length == 2)
+                {
+                    var hashInfo = new FilesHashBook.FileHash();
+                    hashInfo.p = ab[0];
+                    hashInfo.h = XFile.GetMD5(ab[1], true);
+
+                    Infos.Add(hashInfo);
+                }
+            }
+            var hashbook = new FilesHashBook();
+            hashbook.Files = Infos.ToArray();
+
+            XConfig.SaveJson(hashbook, TargetPath, AssetLoadType.SystemIO);
         }
 
     }

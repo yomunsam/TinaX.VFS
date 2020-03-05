@@ -12,11 +12,11 @@ namespace TinaX.VFSKit
     public class VFSConfigModel : ScriptableObject
     {
         public VFSGroupOption[] Groups = { VFSGroupOption.New() };
-        public bool EnableWebVFS = false;
+        public bool EnableVFS = false;
 
         public string AssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
 
-        public string[] GlobalVFS_Ignore_ExtName = ArrayUtil.Combine<string>(InternalVFSConfig.GlobalIgnoreExtName,new string[] 
+        public string[] GlobalVFS_Ignore_ExtName = ArrayUtil.Combine<string>(InternalVFSConfig.GlobalIgnoreExtName, new string[]
         {
             "exe",
             "doc",
@@ -43,10 +43,10 @@ namespace TinaX.VFSKit
         {
             get
             {
-                if (GlobalVFS_Ignore_Path_Item == null) 
+                if (GlobalVFS_Ignore_Path_Item == null)
                     return Array.Empty<string>();
                 string[] arr = new string[GlobalVFS_Ignore_Path_Item.Length];
-                for(var i = 0; i < GlobalVFS_Ignore_Path_Item.Length; i++)
+                for (var i = 0; i < GlobalVFS_Ignore_Path_Item.Length; i++)
                 {
                     arr[i] = GlobalVFS_Ignore_Path_Item[i].ToLower();
                 }
@@ -66,7 +66,7 @@ namespace TinaX.VFSKit
                     return GlobalVFS_Ignore_Path_Item_Lower;
                 else
                 {
-                    if(_globalVFS_ignore_path_item_lower != null && GlobalVFS_Ignore_Path_Item  != null && _globalVFS_ignore_path_item_lower.Length == GlobalVFS_Ignore_Path_Item.Length)
+                    if (_globalVFS_ignore_path_item_lower != null && GlobalVFS_Ignore_Path_Item != null && _globalVFS_ignore_path_item_lower.Length == GlobalVFS_Ignore_Path_Item.Length)
                         return _globalVFS_ignore_path_item_lower;
                     else
                     {
@@ -77,6 +77,13 @@ namespace TinaX.VFSKit
             }
         }
 
+        #region Web VFS
+        public bool EnableWebVFS = true;
+
+        public string DefaultWebVFSBaseUrl = "http://127.0.0.1:8080";
+
+
+        #endregion
     }
 
 }

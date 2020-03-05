@@ -14,7 +14,7 @@ namespace TinaXEditor.VFSKit.Versions
     {
         static CreateBranchGUI wnd;
 
-        [MenuItem("Test/创建分支")]
+
         public static void OpenUI()
         {
             if (wnd == null)

@@ -339,6 +339,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             }
         }
 
+
         internal static string Window_AB_Extension_Name
         {
             get
@@ -439,6 +440,33 @@ namespace TinaXEditor.VFSKitInternal.I18N
             {
                 if (IsChinese) return "你要删除的资源组\"{0}\"是一个扩展组.\n因为扩展组是独立管理版本历史记录的，因此删除该扩展组，会导致与之相关的版本分支也被删除，且不可撤销\n如果你只是暂时不需要该组的资源，可以在Profile中设置相关规则。\n与该组相关的版本分支为:\n";
                 return "The assets group \"{0} \" you want to delete  is an extension group. \nBecause the extension group manages the version history independently, deleting the extension group will cause the version branch associated with it to be deleted, and it cannot be undone \nIf you only need the assets of this group temporarily, you can set related rules in the profile. \nThe branch associated with this group is: \n";
+            }
+        }
+        
+        internal static string Enable_WebVFS
+        {
+            get
+            {
+                if (IsChinese) return "启用Web VFS：";
+                return "Enable Web VFS:";
+            }
+        }
+
+        internal static string WebVFS_DefaultDownloadUrl
+        {
+            get
+            {
+                if (IsChinese) return "默认的资源下载基础Url:";
+                return "Default Download Url:";
+            }
+        }
+
+        internal static string WebVFS_DefaultDownloadUrl_tips
+        {
+            get
+            {
+                if (IsChinese) return "此处设置的下载地址只是作为一个缺省值的存在，更详细的设置请在Profile窗口中设置";
+                return "The download address set here only exists as a default value. For more detailed settings, please set it in the profile window";
             }
         }
 

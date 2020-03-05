@@ -23,7 +23,6 @@ namespace TinaXEditor.VFSKit.Versions
 
         static CreateVersionRecordGUI wnd;
 
-        [MenuItem("Test/开呀")]
         public static void OpenUI()
         {
             if (wnd == null)

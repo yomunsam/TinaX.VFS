@@ -27,10 +27,10 @@ namespace TinaXEditor.VFSKit.UI
             {
                 wnd = GetWindow<VFSBuilderIMGUI>();
                 wnd.titleContent = new GUIContent(VFSBuilderI18N.WindowTitle);
-                wnd.minSize = new Vector2(364, 599);
-                wnd.maxSize = new Vector2(365, 600);
+                wnd.minSize = new Vector2(394, 599);
+                wnd.maxSize = new Vector2(395, 600);
                 Rect pos = wnd.position;
-                pos.width = 365;
+                pos.width = 395;
                 pos.height = 600;
                 wnd.position = pos;
             }

@@ -28,9 +28,24 @@ namespace TinaX.VFSKit
 
         public string VirtualDiskPath { get; private set; }
 
+        public VFSCustomizable Customizable { get; private set; }
+
         public bool Override_StreamingAssetsPath { get; private set; } = false;
+
         private string mVirtualDisk_MainPackageFolderPath;
 
+        private bool? _ischinese;
+        private bool IsChinese
+        {
+            get
+            {
+                if(_ischinese == null)
+                {
+                    _ischinese = (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified);
+                }
+                return _ischinese.Value;
+            }
+        }
 
         /// <summary>
         /// StreamingAssets -> vfs_root
@@ -78,8 +93,15 @@ namespace TinaX.VFSKit
             }
         }
 
+        private FilesHashBook mFileHash_StreamingAssets;
+
+        internal GetWebAssetUrlDelegate GetWebAssetUrl;
+
         public VFSKit()
         {
+            Customizable = new VFSCustomizable(this);
+            this.GetWebAssetUrl = getWebAssetUrl;
+
             mStreamingAssets_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInStreamingAssets();
             mStreamingAssets_DataRootFolderPath = VFSUtil.GetDataFolderInStreamingAssets();
             mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionGroupRootFolderInStreamingAssets();
@@ -119,7 +141,7 @@ namespace TinaX.VFSKit
                 mStartException = new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
                 return false;
             }
-
+            VFSUtil.NormalizationConfig(ref mConfig);
 
             if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
             {
@@ -164,6 +186,10 @@ namespace TinaX.VFSKit
                 mStartException = e;
                 return false;
             }
+
+            #endregion
+
+            #region StreamingAssets assetbundle files hash .
 
             #endregion
 
@@ -241,17 +267,147 @@ namespace TinaX.VFSKit
 
         #region VFS 加载流程
 
-        private 
+        private UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
+        {
+            if(QueryAsset(assetPath, out var result , out var group))
+            {
+                //可被加载
+                //那就加载吧，首先加载Bundle
+                return default;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+        }
 
         #endregion 
 
         #region 加载AssetBundle_Async
 
+        /// <summary>
+        /// 加载AssetBundle和它的依赖， 异步总入口
+        /// </summary>
+        /// <param name="assetbundleName"></param>
+        /// <returns></returns>
+        private UniTask<AssetBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName)
+        {
 
+            return default;
+        }
+
+        /// <summary>
+        /// 加载一个AssetBundle，不考虑依赖， 异步总入口
+        /// </summary>
+        /// <param name="assetBundle"></param>
+        /// <returns></returns>
+        private UniTask<AssetBundle> loadAssetBundleAsync(string assetBundle)
+        {
+            return default;
+        }
 
 
         #endregion
 
+        /// <summary>
+        /// 查询资源
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="result"></param>
+        /// <returns>is valid</returns>
+        private bool QueryAsset(string path, out AssetQueryResult result, out VFSGroup matched_group)
+        {
+            result = new AssetQueryResult();
+            result.AssetPath = path;
+            result.AssetPathLower = path.ToLower();
+            result.AssetExtensionName = XPath.GetExtension(result.AssetPathLower,true);
+
+            //检查有没有被全局的规则拦下来
+            if (this.IgnoreByGlobalConfig(result.AssetPathLower, result.AssetExtensionName))
+            {
+                result.Vliad = false;
+                matched_group = null;
+                return false;
+            }
+
+            //有效组查询
+            foreach(var group in mGroups)
+            {
+                if (group.IsAssetPathMatch(path))
+                {
+                    result.Vliad = true;
+                    result.GroupName = group.GroupName;
+                    string assetbundle_name = group.GetAssetBundleNameOfAsset(path, out var buildType, out var devType); //获取到的assetbundle是不带后缀的
+                    result.AssetBundleName = assetbundle_name + mConfig.AssetBundleFileExtension;
+                    result.AssetBundleNameWithoutExtension = assetbundle_name;
+                    result.DevelopType = devType;
+                    result.BuildType = buildType;
+                    matched_group = group;
+                    return true;
+                }
+            }
+            result.Vliad = false;
+            matched_group = null;
+            return false;
+        }
+
+        /// <summary>
+        /// 是否被全局配置项所忽略
+        /// </summary>
+        /// <param name="path_lower">小写处理后的路径</param>
+        /// <param name="extension">扩展名,传进来的是小写，以点开头的</param>
+        /// <returns></returns>
+        private bool IgnoreByGlobalConfig(string path_lower, string extension)
+        {
+            //后缀名忽略 //据说迭代器循环的效率比LINQ高，所以先用迭代器，有机会细测一下
+            foreach(var item in mConfig.GlobalVFS_Ignore_ExtName) //在初始化过程中，配置中的数据都被规范化成小写，以点开头的格式，并且去掉了重复
+            {
+                if (item.Equals(extension)) return true;
+            }
+
+            //Path Item 
+            if(mConfig.GlobalVFS_Ignore_Path_Item != null && mConfig.GlobalVFS_Ignore_Path_Item.Length > 0)
+            {
+                string[] path_items = path_lower.Split('/');
+                foreach(var ignore_item in mConfig.GetGlobalVFS_Ignore_Path_Item(true, false)) //获取到的数据已经是小写，并且有缓存
+                {
+                    foreach(var path_item in path_items)
+                    {
+                        if (ignore_item.Equals(path_item)) return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsAssetLoaded(string lower_path)
+        {
+            return false;   //TODO: 检查资源是否已加载
+        }
+
+
+        #region Customizable_Default_Function
+        private string getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
+        {
+            if (isExtensionGroup)
+                return $"{platform_name}/{group.GroupName}/{assetBundleName}";
+            else
+                return $"{platform_name}/{assetBundleName}";
+        }
+
+        #endregion
 
     }
+
+    /// <summary>
+    /// Get download url of Web Assets
+    /// </summary>
+    /// <param name="platform_name"></param>
+    /// <param name="assetBundleName"></param>
+    /// <param name="group"></param>
+    /// <param name="isExtensionGroup"></param>
+    /// <returns></returns>
+    public delegate string GetWebAssetUrlDelegate(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup);
+
 }

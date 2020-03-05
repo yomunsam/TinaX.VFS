@@ -17,6 +17,11 @@ namespace TinaX.VFSKit
         FileNotFound                = 2,
 
         /// <summary>
+        /// The path being loaded is invalid | 被加载的path是无效的
+        /// </summary>
+        ValidLoadPath = 3,
+
+        /// <summary>
         /// 资源组规则冲突
         /// </summary>
         ConfigureGroupsConflict     = 200,

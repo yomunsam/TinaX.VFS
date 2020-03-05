@@ -8,6 +8,8 @@
 
         public static string ConfigFilePath_Resources = $"{TinaX.Const.FrameworkConst.Framework_Configs_Folder_Path}/{ConfigFileName}";
 
+        public static string Config_WebVFS_URLs = $"{TinaX.Const.FrameworkConst.Framework_Configs_Folder_Path}/WebVFSUrl";
+
         public static System.Type[] IgnoreType =
         {
 #if UNITY_EDITOR
