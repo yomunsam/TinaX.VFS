@@ -149,8 +149,18 @@ namespace TinaX.VFSKitInternal.Utils
 
             #endregion
 
-            #region 至少包含一个Group
-            if(config.Groups == null || config.Groups.Length == 0)
+            #region WebVFS
+            if(config.DefaultWebVFSBaseUrl.IsNullOrEmpty() || config.DefaultWebVFSBaseUrl.IsNullOrWhiteSpace())
+            {
+                config.DefaultWebVFSBaseUrl = VFSKit.VFSKit.DefaultDownloadWebAssetUrl;
+            }
+            if (!config.DefaultWebVFSBaseUrl.EndsWith("/"))
+                config.DefaultWebVFSBaseUrl += "/";
+            #endregion
+
+
+                #region 至少包含一个Group
+            if (config.Groups == null || config.Groups.Length == 0)
             {
                 config.Groups = new VFSGroupOption[]{ VFSGroupOption.New() };
             }
@@ -297,6 +307,12 @@ namespace TinaX.VFSKitInternal.Utils
         {
             return Path.Combine(package_path, VFSConst.AssetsManifestFileName);
         }
+        
+        public static string GetAssetBundleFileHashBookInPackage(string package_path)
+        {
+            return Path.Combine(package_path, VFSConst.ABsHashFileName);
+        }
+
 
     }
 

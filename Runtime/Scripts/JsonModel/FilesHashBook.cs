@@ -47,6 +47,11 @@ namespace TinaX.VFSKitInternal
             }
         }
 
+        public bool IsPathExist(string filePath)
+        {
+            return dict_files.ContainsKey(filePath);
+        }
+
 
         [System.Serializable]
         public struct FileHash

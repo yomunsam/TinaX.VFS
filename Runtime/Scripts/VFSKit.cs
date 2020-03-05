@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TinaX;
+using TinaX.Utils;
 using TinaX.IO;
 using TinaX.Services;
 using TinaX.VFSKit.Const;
@@ -22,10 +23,13 @@ namespace TinaX.VFSKit
 {
     public class VFSKit : IVFS, IVFSInternal, IAssetService
     {
-
+        public const string DefaultDownloadWebAssetUrl = "http://localhost:8080/";
         public string ConfigPath { get; set; } = VFSConst.ConfigFilePath_Resources;
         public AssetLoadType ConfigLoadType { get; private set; } = AssetLoadType.Resources;
 
+        public XRuntimePlatform Platform { get; private set; }
+        public string PlatformText { get; private set; }
+        public string DownloadWebAssetUrl => webVfs_asset_download_base_url;
         public string VirtualDiskPath { get; private set; }
 
         public VFSCustomizable Customizable { get; private set; }
@@ -33,6 +37,8 @@ namespace TinaX.VFSKit
         public bool Override_StreamingAssetsPath { get; private set; } = false;
 
         private string mVirtualDisk_MainPackageFolderPath;
+        private string mVirtualDisk_DataFolderPath;
+        private string mVirtualDisk_ExtensionGroupRootFolderPath;
 
         private bool? _ischinese;
         private bool IsChinese
@@ -74,6 +80,7 @@ namespace TinaX.VFSKit
         /// 所有组的对象
         /// </summary>
         private List<VFSGroup> mGroups = new List<VFSGroup>();
+        private Dictionary<string, VFSGroup> mDict_Groups = new Dictionary<string, VFSGroup>();
 
         /// <summary>
         /// 白名单文件夹路径 | 全局所有Groups里的路径都存放在这里
@@ -94,8 +101,16 @@ namespace TinaX.VFSKit
         }
 
         private FilesHashBook mFileHash_StreamingAssets;
+        private FilesHashBook mFileHash_VirtualDisk;
 
+        private string webVfs_asset_download_base_url;
+        private bool webvfs_download_base_url_modify = false; //如果被profile或者手动修改过的话，这里为true
+
+        /// <summary>
+        /// 获取Url请调用这里的委托变量
+        /// </summary>
         internal GetWebAssetUrlDelegate GetWebAssetUrl;
+        internal BundlesManager Bundles { get; private set; } = new BundlesManager();
 
         public VFSKit()
         {
@@ -105,6 +120,9 @@ namespace TinaX.VFSKit
             mStreamingAssets_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInStreamingAssets();
             mStreamingAssets_DataRootFolderPath = VFSUtil.GetDataFolderInStreamingAssets();
             mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionGroupRootFolderInStreamingAssets();
+
+            Platform = XPlatformUtil.GetXRuntimePlatform(Application.platform);
+            PlatformText = XPlatformUtil.GetNameText(Platform);
 
 #if UNITY_EDITOR
             //load mode
@@ -135,42 +153,57 @@ namespace TinaX.VFSKit
 
             #region Configs
             // load config by xconfig | VFS not ready, so vfs config can not load by vfs.
-            mConfig = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
-            if (mConfig == null)
+            var config = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
+            try
             {
-                mStartException = new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
-                return false;
+                UseConfig(config);
             }
-            VFSUtil.NormalizationConfig(ref mConfig);
-
-            if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            catch (VFSException e)
             {
-                mStartException = new VFSException("VFS Config Error:", errorCode);
+                mStartException = e;
                 return false;
             }
 
-
-            // init configs data.
-            mGroups.Clear();
-            if (mConfig.Groups != null)
-            {
-                foreach (var groupOption in mConfig.Groups)
-                {
-                    var group = new VFSGroup(groupOption);
-                    mGroups.Add(group);
-
-                    //init each group status.
-                }
-            }
 
             #endregion
 
             //init vfs virtual disk folder
             VirtualDiskPath = Path.Combine(Application.persistentDataPath, "VFS_VDisk"); //TODO: 在Windows之类目录权限比较自由的平台，未来可以考虑搞个把这个目录移动到别的地方的功能。（毕竟有人不喜欢把太多文件扔在C盘）
             XDirectory.CreateIfNotExists(VirtualDiskPath);
+            mVirtualDisk_MainPackageFolderPath = Path.Combine(VirtualDiskPath, VFSConst.VFS_FOLDER_MAIN);
+            mVirtualDisk_DataFolderPath = Path.Combine(VirtualDiskPath, VFSConst.VFS_FOLDER_DATA);
+            mVirtualDisk_ExtensionGroupRootFolderPath = Path.Combine(VirtualDiskPath, VFSConst.VFS_FOLDER_EXTENSION);
+
+            #region init virtual disk assetbundleManifest
+            //this path can be load by "System.IO" in any platform
+            string virtualdisk_manifest_path = VFSUtil.GetAssetBundleManifestInPackage(mVirtualDisk_MainPackageFolderPath);
+            if (File.Exists(virtualdisk_manifest_path))
+            {
+                try
+                {
+                    string json_text = File.ReadAllText(virtualdisk_manifest_path, Encoding.UTF8);
+                    var manifest_obj = JsonUtility.FromJson<BundleManifest>(json_text);
+                    mManifest_VirtualDisk = new XAssetBundleManifest(manifest_obj);
+                    manifest_obj = null;
+                }
+                catch { }
+            }
+            #endregion
+
+            #region init virtual disk assetbundle hash book
+            string virtualdisk_hash_path = VFSUtil.GetAssetBundleFileHashBookInPackage(mVirtualDisk_MainPackageFolderPath);
+            if (File.Exists(virtualdisk_hash_path))
+            {
+                try
+                {
+                    string json = File.ReadAllText(virtualdisk_manifest_path, Encoding.UTF8);
+                    mFileHash_VirtualDisk = JsonUtility.FromJson<FilesHashBook>(json);
+                }catch { }
+            }
+            #endregion
 
             //init vfs packages in streamingassets
-                //main package 's assetbundleManifest
+            //main package 's assetbundleManifest
             #region StramingAssets AssetBundleManifest
             string streaming_manifest_path = VFSUtil.GetAssetBundleManifestInPackage(mStreamingAssets_MainPackageFolderPath);
             try
@@ -192,6 +225,14 @@ namespace TinaX.VFSKit
             #region StreamingAssets assetbundle files hash .
 
             #endregion
+
+            #region WebVFS Url
+            var web_vfs_config = XConfig.GetConfig<WebVFSNetworkConfig>(VFSConst.Config_WebVFS_URLs);
+            if(web_vfs_config != null)
+            {
+                await this.UseWebVFSNetworkConfig(web_vfs_config);
+            }
+            #endregion 
 
             return true;
         }
@@ -233,6 +274,116 @@ namespace TinaX.VFSKit
             Debug.Log("text:" + text);
         }
 
+        public bool TryGetGroup(string groupName,out VFSGroup group)
+        {
+            return mDict_Groups.TryGetValue(groupName, out group);
+        }
+
+        public VFSGroup[] GetAllGroups()
+        {
+            return mGroups.ToArray();
+        }
+
+        /// <summary>
+        /// 使用配置，如果有效，返回true
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public void UseConfig(VFSConfigModel config)
+        {
+            if (config == null)
+            {
+                throw new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
+            }
+            VFSUtil.NormalizationConfig(ref mConfig);
+
+            if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            {
+                throw new VFSException("VFS Config Error:", errorCode);
+            }
+            mConfig = config;
+
+            // init configs data.
+            mGroups.Clear();
+            mDict_Groups.Clear();
+            if (mConfig.Groups != null)
+            {
+                foreach (var groupOption in mConfig.Groups)
+                {
+                    var group = new VFSGroup(groupOption);
+                    mGroups.Add(group);
+
+                    mDict_Groups.Add(group.GroupName, group);
+                    //init each group status.
+                }
+            }
+
+            if (!webvfs_download_base_url_modify)
+            {
+                webVfs_asset_download_base_url = mConfig.DefaultWebVFSBaseUrl;
+            }
+        }
+
+        public void SetDownloadWebAssetUrl(string url)
+        {
+            webvfs_download_base_url_modify = true;
+            webVfs_asset_download_base_url = url;
+            if (!webVfs_asset_download_base_url.EndsWith("/"))
+            {
+                webVfs_asset_download_base_url += "/";
+            }
+        }
+
+        public async Task UseWebVFSNetworkConfig(WebVFSNetworkConfig config)
+        {
+            bool flag = false;
+            if (config != null || config.Configs != null && config.Configs.Length > 0)
+            {
+                //尝试获取profile
+                string profile = XCore.GetMainInstance().ProfileName;
+                bool developMode = XCore.GetMainInstance().DevelopMode;
+                var results = config.Configs.Where(item => item.ProfileName == profile);
+                if(results.Count() > 0)
+                {
+                    var result = results.First();
+                    //挨个寻找合适的服务器
+                    if(result.Urls!= null && result.Urls.Length > 0)
+                    {
+                        foreach(var item in result.Urls)
+                        {
+                            if (item.NetworkMode == WebVFSNetworkConfig.NetworkMode.DevelopMode && !developMode)
+                                continue;
+                            if (item.NetworkMode == WebVFSNetworkConfig.NetworkMode.Editor && !Application.isEditor)
+                                continue;
+
+                            bool b = await SayHelloToWebServer(item.HelloUrl, 4);
+                            if (b)
+                            {
+                                flag = true;
+                                webVfs_asset_download_base_url = item.BaseUrl;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            if (!flag)
+            {
+                //执行到这里，没有在prefile配置中找到有效的url的话，就用mconfig里的
+                webVfs_asset_download_base_url = mConfig.DefaultWebVFSBaseUrl;
+            }
+
+            if(webVfs_asset_download_base_url.IsNullOrEmpty() || webVfs_asset_download_base_url.IsNullOrWhiteSpace())
+            {
+                webVfs_asset_download_base_url = DefaultDownloadWebAssetUrl;
+            }
+            if (!webVfs_asset_download_base_url.EndsWith("/"))
+                webVfs_asset_download_base_url += "/";
+
+            webvfs_download_base_url_modify = true;
+        }
 
         private async UniTask<byte[]> LoadFileFromStreamingAssetsAsync(string path)
         {
@@ -292,6 +443,7 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         private UniTask<AssetBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName)
         {
+            //先加载依赖吧
 
             return default;
         }
@@ -299,10 +451,26 @@ namespace TinaX.VFSKit
         /// <summary>
         /// 加载一个AssetBundle，不考虑依赖， 异步总入口
         /// </summary>
-        /// <param name="assetBundle"></param>
+        /// <param name="assetBundleName"></param>
         /// <returns></returns>
-        private UniTask<AssetBundle> loadAssetBundleAsync(string assetBundle)
+        private async UniTask<AssetBundle> loadAssetBundleAsync(string assetBundleName, List<VFSBundle> dependencise, AssetQueryResult result, bool counter = true)
         {
+            //检查bundle是不是已经加载了
+            if(IsBundleLoadedOrLoading(assetBundleName,out var bundle))
+            {
+                if (counter) bundle.Retain();
+                return bundle.AssetBundle;
+            }
+
+            //那么现在得考虑下加载它了
+            var my_bundle = new VFSBundle();
+            my_bundle.AssetBundleName = assetBundleName;
+            if (dependencise != null)
+                my_bundle.Dependencies = dependencise;
+
+            my_bundle.QueryResult = result;
+            my_bundle.LoadedPath = GetAssetBundleLoadPath(assetBundleName,ref result);
+
             return default;
         }
 
@@ -386,6 +554,60 @@ namespace TinaX.VFSKit
             return false;   //TODO: 检查资源是否已加载
         }
 
+        /// <summary>
+        /// AssetBundle 正在加载中或已加载
+        /// </summary>
+        /// <param name="bundle_name"></param>
+        /// <param name="bundle"></param>
+        /// <returns></returns>
+        private bool IsBundleLoadedOrLoading(string bundle_name,out VFSBundle bundle)
+        {
+            return Bundles.TryGetBundle(bundle_name, out bundle);
+        }
+
+        /// <summary>
+        /// 获取资源的加载路径
+        /// </summary>
+        /// <param name="assetbundle"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private string GetAssetBundleLoadPath(string assetbundle, ref AssetQueryResult result)
+        {
+            var group = mDict_Groups[result.GroupName];
+            if(group.HandleMode == GroupHandleMode.RemoteOnly)
+            {
+                //资源只有可能在web,
+                return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+            }
+
+            //检查资源是否在Virtual Disk
+
+            return default; //TODO
+        }
+
+        /// <summary>
+        /// 获取到完整的，拼接后的，以http://之类的开头的可以直接用的url
+        /// </summary>
+        /// <param name="platform_name"></param>
+        /// <param name="assetBundleName"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        private string GetWebAssetDownloadUrl(string platform_name,string assetBundleName,ref VFSGroup group)
+        {
+            return this.DownloadWebAssetUrl + this.GetWebAssetUrl(platform_name, assetBundleName, ref group, group.ExtensionGroup);
+        }
+
+        private async UniTask<bool> SayHelloToWebServer(string url, int timeout = 10)
+        {
+            var req = UnityWebRequest.Get(url);
+            req.timeout = timeout;
+            await req.SendWebRequest();
+
+            if (req.isNetworkError || req.isHttpError)
+                return false;
+
+            return (req.downloadHandler.text == "hello");
+        }
 
         #region Customizable_Default_Function
         private string getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
@@ -393,7 +615,7 @@ namespace TinaX.VFSKit
             if (isExtensionGroup)
                 return $"{platform_name}/{group.GroupName}/{assetBundleName}";
             else
-                return $"{platform_name}/{assetBundleName}";
+                return $"{platform_name}/main/{assetBundleName}";
         }
 
         #endregion
