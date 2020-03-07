@@ -33,16 +33,16 @@ namespace TinaX.VFSKitInternal
             }
         }
 
-        public bool TryGetFileHashValue(string filePath)
+        public bool TryGetFileHashValue(string filePath, out string hash)
         {
             if (dict_files.ContainsKey(filePath))
             {
-                filePath = (string)dict_files[filePath];
+                hash = (string)dict_files[filePath];
                 return true;
             }
             else
             {
-                filePath = string.Empty;
+                hash = string.Empty;
                 return false;
             }
         }

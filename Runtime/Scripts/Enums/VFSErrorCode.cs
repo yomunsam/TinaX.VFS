@@ -19,7 +19,10 @@ namespace TinaX.VFSKit
         /// <summary>
         /// The path being loaded is invalid | 被加载的path是无效的
         /// </summary>
-        ValidLoadPath = 3,
+        ValidLoadPath               = 3,
+
+        InitWebVFSError             = 4,
+
 
         /// <summary>
         /// 资源组规则冲突

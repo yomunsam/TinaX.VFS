@@ -74,6 +74,7 @@ namespace TinaX.VFSKit
         private bool mLoadByAssetDatabaseInEditor = false;
 #endif
 
+
         private VFSConfigModel mConfig;
 
         /// <summary>
@@ -102,20 +103,31 @@ namespace TinaX.VFSKit
 
         private FilesHashBook mFileHash_StreamingAssets;
         private FilesHashBook mFileHash_VirtualDisk;
+        private FilesHashBook mFileHash_WebVFS;
+        private Dictionary<string, FilesHashBook> mDict_FileHash_WebVFS_ExtensionGroups = new Dictionary<string, FilesHashBook>();
 
         private string webVfs_asset_download_base_url;
         private bool webvfs_download_base_url_modify = false; //如果被profile或者手动修改过的话，这里为true
 
         /// <summary>
-        /// 获取Url请调用这里的委托变量
+        /// 获取WebAssets的Url请调用这里的委托变量
         /// </summary>
         internal GetWebAssetUrlDelegate GetWebAssetUrl;
+        /// <summary>
+        /// 获取hash file 的url请调用这个
+        /// </summary>
+        internal GetFileHashUrlDalegate GetWebFileHashBookUrl;
         internal BundlesManager Bundles { get; private set; } = new BundlesManager();
+
+        private bool mInited = false;
+        private bool mWebVFSReady = false;
 
         public VFSKit()
         {
             Customizable = new VFSCustomizable(this);
             this.GetWebAssetUrl = getWebAssetUrl;
+            this.GetWebFileHashBookUrl = getWebFilesHashUrl;
+
 
             mStreamingAssets_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInStreamingAssets();
             mStreamingAssets_DataRootFolderPath = VFSUtil.GetDataFolderInStreamingAssets();
@@ -150,7 +162,8 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         public async Task<bool> Start()
         {
-
+            Debug.Log("启动VFS");
+            if (mInited) return true;
             #region Configs
             // load config by xconfig | VFS not ready, so vfs config can not load by vfs.
             var config = XConfig.GetConfig<VFSConfigModel>(ConfigPath);
@@ -204,37 +217,133 @@ namespace TinaX.VFSKit
 
             //init vfs packages in streamingassets
             //main package 's assetbundleManifest
-            #region StramingAssets AssetBundleManifest
-            string streaming_manifest_path = VFSUtil.GetAssetBundleManifestInPackage(mStreamingAssets_MainPackageFolderPath);
-            try
+            bool init_streamingassets = true;
+#if UNITY_EDITOR
+            //if (mLoadByAssetDatabaseInEditor) init_streamingassets = false;
+#endif
+            if (init_streamingassets)
             {
-                string streaming_manifest_json = await LoadTextFromStreamingAssetsAsync(streaming_manifest_path);
-                var streaming_manifest_obj = JsonUtility.FromJson<BundleManifest>(streaming_manifest_json);
-                mManifest_StreamingAssets = new XAssetBundleManifest(streaming_manifest_obj);
-                streaming_manifest_obj = null;
+                Debug.Log("喵load streamingassets");
+                #region StramingAssets AssetBundleManifest
+                string streaming_manifest_path = VFSUtil.GetAssetBundleManifestInPackage(mStreamingAssets_MainPackageFolderPath);
+                try
+                {
+                    string streaming_manifest_json = await LoadTextFromStreamingAssetsAsync(streaming_manifest_path);
+                    if (!streaming_manifest_json.IsNullOrEmpty())
+                    {
+                        var streaming_manifest_obj = JsonUtility.FromJson<BundleManifest>(streaming_manifest_json);
+                        mManifest_StreamingAssets = new XAssetBundleManifest(streaming_manifest_obj);
+                        streaming_manifest_obj = null;
+                    }
+                }
+                catch (FileNotFoundException) { /* do nothing */ }
+                catch (VFSException e)
+                {
+                    mStartException = e;
+                    return false;
+                }
+
+                #endregion
+
+                #region StreamingAssets assetbundle files hash .
+                string streaming_hash_path = VFSUtil.GetAssetBundleFileHashBookInPackage(mStreamingAssets_MainPackageFolderPath);
+                try
+                {
+                    var json = await LoadTextFromStreamingAssetsAsync(streaming_hash_path);
+                    mFileHash_StreamingAssets = JsonUtility.FromJson<FilesHashBook>(json);
+
+                }
+                catch (FileNotFoundException) { /* do nothing */ }
+                catch (VFSException e)
+                {
+                    mStartException = e;
+                    return false;
+                }
+                #endregion
+
+                Debug.Log("streamingassets init finish 喵");
             }
-            catch (FileNotFoundException) { /* do nothing */ }
-            catch (VFSException e)
+
+
+
+
+            bool need_init_webvfs = false;
+            if (mConfig.EnableVFS)
             {
-                mStartException = e;
-                return false;
+                need_init_webvfs = true;
+#if UNITY_EDITOR
+                if (mLoadByAssetDatabaseInEditor) need_init_webvfs = false;
+#endif
+            }
+            if (need_init_webvfs)
+            {
+                try
+                {
+                    await InitWebVFS();
+                }
+                catch (VFSException e)
+                {
+                    mStartException = e;
+                    return false;
+                }
             }
 
-            #endregion
+            mInited = true;
+            return true;
+        }
 
-            #region StreamingAssets assetbundle files hash .
-
-            #endregion
-
+        public async Task InitWebVFS()
+        {
             #region WebVFS Url
             var web_vfs_config = XConfig.GetConfig<WebVFSNetworkConfig>(VFSConst.Config_WebVFS_URLs);
-            if(web_vfs_config != null)
+            if (web_vfs_config != null)
             {
                 await this.UseWebVFSNetworkConfig(web_vfs_config);
             }
-            #endregion 
+            #endregion
 
-            return true;
+            #region WebVFS FileHash
+            var hash_url = new Uri(this.GetWebHashsFileDownloadUrl(PlatformText, false));
+            try
+            {
+                var json = await LoadTextFromWebAsync(hash_url,5);
+                mFileHash_WebVFS = JsonUtility.FromJson<FilesHashBook>(json);
+            }
+            catch(FileNotFoundException e)
+            {
+                throw new VFSException("Init WebVFS Failed: Cannot download Hashs file from: " + e.Path);
+            }
+
+            //Extensions
+            foreach(var group in mGroups)
+            {
+                if(group.ExtensionGroup && (group.HandleMode == GroupHandleMode.LocalOrRemote || group.HandleMode == GroupHandleMode.RemoteOnly))
+                {
+                    try
+                    {
+                        var url = new Uri(this.GetWebHashsFileDownloadUrl(PlatformText, true, group.GroupName));
+                        var json = await LoadTextFromWebAsync(url, 5);
+                        var obj = JsonUtility.FromJson<FilesHashBook>(json);
+                        lock (mDict_FileHash_WebVFS_ExtensionGroups)
+                        {
+                            if (mDict_FileHash_WebVFS_ExtensionGroups.ContainsKey(group.GroupName))
+                                mDict_FileHash_WebVFS_ExtensionGroups[group.GroupName] = obj;
+                            else
+                                mDict_FileHash_WebVFS_ExtensionGroups.Add(group.GroupName, obj);
+                        }
+
+                    }
+                    catch(FileNotFoundException e)
+                    {
+                        // do nothing
+                        //throw new VFSException("Init WebVFS Failed: Cannot download Hashs file from: " + e.Path);
+                    }
+                }
+            }
+            #endregion
+
+
+            mWebVFSReady = true;
         }
 
         public Task OnServiceClose()
@@ -272,6 +381,10 @@ namespace TinaX.VFSKit
             byte[] bytes = await this.LoadFileFromStreamingAssetsAsync(file_path);
             string text = System.Text.Encoding.UTF8.GetString(bytes);
             Debug.Log("text:" + text);
+
+            Debug.Log("新增的测试：加载一个大的文件");
+            await this.LoadFileFromStreamingAssetsAsync(Path.Combine(Application.streamingAssetsPath, "m.flac"));
+            Debug.Log("结束");
         }
 
         public bool TryGetGroup(string groupName,out VFSGroup group)
@@ -295,9 +408,9 @@ namespace TinaX.VFSKit
             {
                 throw new VFSException("Load VFS config failed, \nload type:" + ConfigLoadType.ToString() + "\nload path:" + ConfigPath, VFSErrorCode.LoadConfigFailed);
             }
-            VFSUtil.NormalizationConfig(ref mConfig);
+            VFSUtil.NormalizationConfig(ref config);
 
-            if (!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            if (!VFSUtil.CheckConfiguration(ref config, out var errorCode, out var folderError))
             {
                 throw new VFSException("VFS Config Error:", errorCode);
             }
@@ -376,9 +489,8 @@ namespace TinaX.VFSKit
             }
 
             if(webVfs_asset_download_base_url.IsNullOrEmpty() || webVfs_asset_download_base_url.IsNullOrWhiteSpace())
-            {
                 webVfs_asset_download_base_url = DefaultDownloadWebAssetUrl;
-            }
+
             if (!webVfs_asset_download_base_url.EndsWith("/"))
                 webVfs_asset_download_base_url += "/";
 
@@ -388,16 +500,15 @@ namespace TinaX.VFSKit
         private async UniTask<byte[]> LoadFileFromStreamingAssetsAsync(string path)
         {
             var req = UnityWebRequest.Get(path);
-            var operation = req.SendWebRequest();
-            var result = await operation;
-
-            if (result.isHttpError)
+            await req.SendWebRequest();
+            if (req.isHttpError)
             {
-                if (result.responseCode == 404)
+                if (req.responseCode == 404)
                     throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
             }
-            return result.downloadHandler.data;
+            return req.downloadHandler.data;
         }
+
 
         private async UniTask<string> LoadTextFromStreamingAssetsAsync(string path, Encoding encoding = null)
         {
@@ -414,6 +525,24 @@ namespace TinaX.VFSKit
             {
                 throw e;
             }
+        }
+
+        private async UniTask<string> LoadTextFromWebAsync(Uri uri, int timeout = 3, Encoding encoding = null)
+        {
+            var req = UnityWebRequest.Get(uri);
+            req.timeout = timeout;
+            await req.SendWebRequest();
+            if (req.isNetworkError || req.isHttpError)
+            {
+                if (req.responseCode == 404)
+                    throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
+                else
+                    throw new VFSException("Failed to get text from web:" + uri.ToString());
+            }
+            if (encoding == null)
+                return req.downloadHandler.text;
+            else
+                return encoding.GetString(req.downloadHandler.data);
         }
 
         #region VFS 加载流程
@@ -581,8 +710,50 @@ namespace TinaX.VFSKit
             }
 
             //检查资源是否在Virtual Disk
+            string asset_path_vdisk = group.ExtensionGroup ? Path.Combine(mVirtualDisk_ExtensionGroupRootFolderPath, group.GroupName, assetbundle) : Path.Combine(mVirtualDisk_MainPackageFolderPath, assetbundle);
+            if (File.Exists(asset_path_vdisk))
+            {
+                //资源存在，检查：如果这个资源是LocalOrRemote，并且本地hash与云端不一致的话，则使用云端地址
+                if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady && mFileHash_WebVFS != null)
+                {
+                    string hash_vdisk = XFile.GetMD5(asset_path_vdisk);
+                    string hash_streaming = string.Empty;
+                    if(mFileHash_StreamingAssets != null)
+                        mFileHash_StreamingAssets.TryGetFileHashValue(assetbundle, out assetbundle);
 
-            return default; //TODO
+                    if (group.ExtensionGroup && mDict_FileHash_WebVFS_ExtensionGroups.TryGetValue(group.GroupName,out var web_hashs))
+                    {
+                        if(web_hashs.TryGetFileHashValue(assetbundle,out string hash))
+                        {
+                            if (!hash.Equals(hash_vdisk))
+                            {
+                                if (!hash_streaming.IsNullOrEmpty())
+                                {
+                                    if (!hash_streaming.Equals(hash))
+                                        return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                }
+                                else
+                                {
+                                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                }
+                            }
+                        }
+                    }
+
+                    //在上面没有被return 的话，返回vdisk的地址
+                    return asset_path_vdisk;
+                }
+            }
+
+            //已知文件不在Virtual Disk
+            string asset_path_streamingassets = group.ExtensionGroup ? Path.Combine(mStreamingAssets_ExtensionGroupRootFolderPath, group.GroupName, assetbundle) : Path.Combine(mStreamingAssets_MainPackageFolderPath, assetbundle);
+            //有没有可能这个文件在web?
+            if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady && mFileHash_WebVFS != null)
+            {
+
+            }
+            
+            return asset_path_streamingassets; //TODO
         }
 
         /// <summary>
@@ -595,6 +766,11 @@ namespace TinaX.VFSKit
         private string GetWebAssetDownloadUrl(string platform_name,string assetBundleName,ref VFSGroup group)
         {
             return this.DownloadWebAssetUrl + this.GetWebAssetUrl(platform_name, assetBundleName, ref group, group.ExtensionGroup);
+        }
+
+        private string GetWebHashsFileDownloadUrl(string platform, bool isExtensionGroup, string groupName = null)
+        {
+            return this.DownloadWebAssetUrl + this.GetWebFileHashBookUrl(platform, isExtensionGroup, groupName);
         }
 
         private async UniTask<bool> SayHelloToWebServer(string url, int timeout = 10)
@@ -618,6 +794,14 @@ namespace TinaX.VFSKit
                 return $"{platform_name}/main/{assetBundleName}";
         }
 
+        private string getWebFilesHashUrl(string platform_name, bool isExtensionGroup, string groupName = null)
+        {
+            if (isExtensionGroup)
+                return $"{platform_name}/{groupName}/{VFSConst.ABsHashFileName}";
+            else
+                return $"{platform_name}/main/{VFSConst.ABsHashFileName}";
+        }
+
         #endregion
 
     }
@@ -631,5 +815,6 @@ namespace TinaX.VFSKit
     /// <param name="isExtensionGroup"></param>
     /// <returns></returns>
     public delegate string GetWebAssetUrlDelegate(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup);
+    public delegate string GetFileHashUrlDalegate(string platform_name, bool isExtensionGroup, string groupName = null);
 
 }

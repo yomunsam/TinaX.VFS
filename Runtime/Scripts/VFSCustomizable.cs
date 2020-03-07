@@ -22,5 +22,10 @@ namespace TinaX.VFSKitInternal
         {
             mVFS.GetWebAssetUrl = func;
         }
+
+        public void GetWebFileHashUrl(TinaX.VFSKit.GetFileHashUrlDalegate func)
+        {
+            mVFS.GetWebFileHashBookUrl = func;
+        }
     }
 }
