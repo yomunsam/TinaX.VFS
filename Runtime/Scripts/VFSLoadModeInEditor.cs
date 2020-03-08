@@ -15,9 +15,9 @@ namespace TinaX.VFSKitInternal
 
         static VFSLoadModeInEditor()
         {
-#if UNITY_EDITOR
-            ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase;
-#endif
+//#if UNITY_EDITOR
+//            ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase;
+//#endif
         }
 
         public static RuntimeAssetsLoadModeInEditor GetLoadMode()
@@ -67,7 +67,19 @@ namespace TinaX.VFSKitInternal
 
     public class VFSLoadModeInEditorCache : ScriptableSingleton<VFSLoadModeInEditorCache>
     {
-        public RuntimeAssetsLoadModeInEditor LoadMode;
+        //private RuntimeAssetsLoadModeInEditor _loadMode;
+        public RuntimeAssetsLoadModeInEditor LoadMode = RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase;
+        //{
+        //    get
+        //    {
+        //        return _loadMode;
+        //    }
+        //    set
+        //    {
+        //        Debug.Log($"<color=#66ccff>Load Mode 被设置 {value.ToString()} </color>");
+        //        _loadMode = value;
+        //    }
+        //}
         public string Override_MainPackagePath_InStreamingAssets;
         public string Override_ExtensionGroupRootPath_InStreamingAssets;
         public string Override_DataFolderPath_InStreamingAssets;

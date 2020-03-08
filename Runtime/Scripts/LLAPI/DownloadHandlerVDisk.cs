@@ -10,19 +10,31 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using TinaX;
+using TinaX.IO;
 
-namespace TinaX.VFSKitInternal
+namespace TinaX.VFSKit.Network
 {
     /// <summary>
     /// Use to load android 
     /// </summary>
-    public class DownloadHandlerStreamingAssets : DownloadHandlerScript
+    public class DownloadHandlerVDisk : DownloadHandlerScript
     {
 
         private ulong mContentLength = 0;
         private ulong mReceivedLength = 0; //已送达的数据长度
         private FileStream mStream;
 
+        public DownloadHandlerVDisk(string save_target,int bufferSize = 4096, FileShare fileShare = FileShare.ReadWrite) :base(new byte[bufferSize])
+        {
+            string directory = Path.GetDirectoryName(save_target);
+            XDirectory.CreateIfNotExists(directory);
+            mStream = new FileStream(save_target, FileMode.OpenOrCreate, FileAccess.Write, fileShare, bufferSize);
+        }
+
+        protected override float GetProgress()
+        {
+            return mContentLength <= 0 ? 0 : Mathf.Clamp01((float)mReceivedLength / (float)mContentLength);
+        }
 
         /// <summary>
         /// HTTP请求中收到Content-Length头时会调用，可能会在请求中响应多次。
@@ -43,7 +55,29 @@ namespace TinaX.VFSKitInternal
         {
             if (data == null || data.Length == 0) return false; //如果返回值为false，UnityWebRequest将被中止， 如果返回true, 则继续运行。
             mReceivedLength += (ulong)dataLength;
+            mStream.Write(data, 0, dataLength);
+
             return true;
+        }
+
+        protected override void CompleteContent()
+        {
+            CloseStream();
+        }
+
+        public new void Dispose()
+        {
+            CloseStream();
+            base.Dispose();
+        }
+
+        private void CloseStream()
+        {
+            if (mStream != null)
+            {
+                mStream.Dispose();
+                mStream = null;
+            }
         }
 
     }

@@ -470,14 +470,41 @@ namespace TinaXEditor.VFSKitInternal.I18N
             }
         }
 
-        //internal static string Disable_ExtensionGroup
-        //{
-        //    get
-        //    {
-        //        if (IsChinese) return "设置为普通组";
-        //        return "Set as Normal group";
-        //    }
-        //}
+        internal static string Btn_AssetsLoadModeInEditor
+        {
+            get
+            {
+                if (IsChinese) return "编辑器下资源加载方式";
+                return "Assets Load Mode In Editor";
+            }
+        }
+
+        internal static string AssetsLoadModeInEditor_AssetDatabase
+        {
+            get
+            {
+                if (IsChinese) return "编辑器方式加载";
+                return "Load By Editor";
+            }
+        }
+
+        internal static string AssetsLoadModeInEditor_Normal
+        {
+            get
+            {
+                if (IsChinese) return "StreamingAssets";
+                return "StreamingAssets";
+            }
+        }
+
+        internal static string AssetsLoadModeInEditor_SourcePackages
+        {
+            get
+            {
+                if (IsChinese) return "从资源构建结果目录中加载AssetBundle";
+                return "Load AssetBundle from the resource build results directory";
+            }
+        }
 
     }
 }

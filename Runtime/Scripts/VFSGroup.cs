@@ -54,9 +54,11 @@ namespace TinaX.VFSKit
 
         private VFSGroupOption mOption;
 
+        internal Loader.IAssetBundleLoader ABLoader;
+
         public VFSGroup()
         {
-
+            ABLoader = new Loader.AssetBundleLoader();
         }
 
         public VFSGroup(VFSGroupOption option)
@@ -193,7 +195,21 @@ namespace TinaX.VFSKit
             return true;
         }
 
+        public bool IsAssetBundleMatch(string abPath)
+        {
+            foreach(var folder in FolderPathsLower)
+            {
+                if (abPath.StartsWith(folder))
+                    return true;
+            }
 
+            foreach(var asset in AssetPathsLower)
+            {
+                if (GetAssetBundleNameOfAsset(asset).Equals(abPath))
+                    return true;
+            }
+            return false;
+        }
 
         //给定的资源path是否包含在Folder中
         private bool _IsAssetPathMatchFolder(ref string assetPath, string folderPath)
@@ -339,6 +355,7 @@ namespace TinaX.VFSKit
             }
             return false;
         }
+
 
         /// <summary>
         /// 是否是FolderPathsLower的子目录

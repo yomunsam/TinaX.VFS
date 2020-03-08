@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TinaX.VFSKit;
 using UnityEngine;
 using TinaX.VFSKit.Const;
+using TinaX.Utils;
 
 namespace TinaX.VFSKitInternal.Utils
 {
@@ -271,9 +272,14 @@ namespace TinaX.VFSKitInternal.Utils
 
         }
 
+        public static string GetSourcePackagesRootFolderInStreamingAssets(string platform_name)
+        {
+            return Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH, platform_name);
+        }
         public static string GetSourcePackagesRootFolderInStreamingAssets()
         {
-            return Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH);
+            var pname = XPlatformUtil.GetNameText(XPlatformUtil.GetXRuntimePlatform(Application.platform));
+            return GetSourcePackagesRootFolderInStreamingAssets(pname);
         }
 
         /// <summary>
@@ -313,6 +319,37 @@ namespace TinaX.VFSKitInternal.Utils
             return Path.Combine(package_path, VFSConst.ABsHashFileName);
         }
 
+        public static string GetAssetPathInExtensionGroup(string extension_root_folder,string groupName,string assetbundleName)
+        {
+            return Path.Combine(extension_root_folder, groupName, assetbundleName);
+        }
+
+        public static string GetAssetPath(bool isExtensionGroup, string main_or_extension_folder, string assetBundleName, string group_name = null)
+        {
+            if (isExtensionGroup)
+                return Path.Combine(main_or_extension_folder, group_name, assetBundleName);
+            else
+                return Path.Combine(main_or_extension_folder, assetBundleName);
+        }
+
+
+        private static readonly int head_code = 65279;
+        private static readonly char head_char = (char)head_code;
+        private static readonly string head_str = new string(new char[1] { head_char });
+
+        public static void RemoveInvalidHead(ref string text)
+        {
+            if (text.StartsWith(head_str))
+                text = text.Substring(1, text.Length - 1);
+        }
+
+        public static string RemoveInvalidHead(string text)
+        {
+            if (text.StartsWith(head_str))
+                return text.Substring(1, text.Length - 1);
+            else
+                return text;
+        }
 
     }
 

@@ -10,6 +10,7 @@ namespace TinaX.VFSKit
         string DownloadWebAssetUrl { get; }
         XRuntimePlatform Platform { get; }
         string PlatformText { get; }
+        int DownloadWebAssetTimeout { get; set; }
 
         VFSGroup[] GetAllGroups();
         void RunTest();

@@ -1,34 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinaX;
+﻿using UniRx.Async;
 using UnityEngine;
 using UnityEngine.Networking;
-using UniRx;
-using UniRx.Async;
 using TinaX.VFSKit.Exceptions;
+using TinaX.VFSKit.Network;
 
 namespace TinaX.VFSKit.Loader
 { 
     public class AssetBundleLoader : IAssetBundleLoader
     {
-        public async Task<AssetBundle> LoadFromFileAsync(string path, bool loadFromStreamingAssets, uint crc, ulong offset)
+        public async UniTask<AssetBundle> LoadAssetBundleFromFileAsync(string path, string assetbundleName)
         {
-            _ = loadFromStreamingAssets;
-            var req = AssetBundle.LoadFromFileAsync(path, crc, offset);
+            var req = AssetBundle.LoadFromFileAsync(path);
             await req;
             return req.assetBundle;
         }
 
-        public AssetBundle LoadFromFile(string path, bool loadFromStreamingAssets, uint crc, ulong offset)
+        public async UniTask<AssetBundle> LoadAssetBundleFromAndroidStreamingAssetsAsync(string path, string assetbundleName,string virtualDiskPath)
         {
-            _ = loadFromStreamingAssets;
-            return AssetBundle.LoadFromFile(path, crc, offset);
+            var req = AssetBundle.LoadFromFileAsync(path);
+            await req;
+            return req.assetBundle;
+        }
+        
+        public async UniTask DownloadFile(string url, string save_path, int timeout)
+        {
+            var req = UnityWebRequest.Get(url);
+            req.timeout = timeout;
+            req.downloadHandler = new DownloadHandlerVDisk(save_path);
+            await req.SendWebRequest();
+            if (req.isNetworkError || req.isHttpError)
+            {
+                if (req.responseCode == 404)
+                    throw new FileNotFoundException("file not found from web :" + url, url);
+                else
+                    throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+            }
         }
 
-        
+        public async UniTask<AssetBundle> LoadAssetBundleFromWebAsync(string path,string assetBundleName,int timeout)
+        {
+            var req = UnityWebRequestAssetBundle.GetAssetBundle(path);
+            req.timeout = timeout;
+            await req.SendWebRequest();
+            if(req.isNetworkError || req.isHttpError)
+            {
+                if (req.responseCode == 404)
+                    throw new FileNotFoundException("assetbundle not found from web :" + path, path);
+                else
+                    throw new DownloadNetworkException($"[{req.responseCode}]Failed to download assetbundle from web: {path} --> {req.error}", path, req.error, req.responseCode);
+            }
+            return DownloadHandlerAssetBundle.GetContent(req);
+        }
 
     }
 }

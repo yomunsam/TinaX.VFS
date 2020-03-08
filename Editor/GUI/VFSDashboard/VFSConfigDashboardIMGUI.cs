@@ -6,11 +6,13 @@ using UnityEditorInternal;
 using UnityEditor.EditorTools;
 using TinaX;
 using TinaX.VFSKit;
+using TinaX.Utils;
 using TinaX.VFSKitInternal;
 using TinaX.VFSKitInternal.Utils;
 using TinaXEditor.Utils;
 using System.Linq;
 using TinaX.Internal;
+using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKit.FileServer;
 using TinaXEditor.VFSKit.Versions;
@@ -224,6 +226,40 @@ namespace TinaXEditor.VFSKit.UI
                     {
                         VFSManagerEditor.RefreshManager(true);
                         ProfileEditorIMGUI.OpenUI();
+                    }
+                    #endregion
+
+                    #region 资源加载模式
+                    if (GUILayout.Button(VFSConfigDashboardI18N.Btn_AssetsLoadModeInEditor, EditorStyles.toolbarPopup, GUILayout.MaxWidth(180)))
+                    {
+                        var load_mode = ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode;
+                        GenericMenu menu = new GenericMenu();
+                        menu.AddItem(    //AssetDatabase加载
+                            new GUIContent(VFSConfigDashboardI18N.AssetsLoadModeInEditor_AssetDatabase),
+                            load_mode == RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase,
+                            () =>
+                            {
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase;
+                            });
+                        menu.AddItem(    //StreamingAssets
+                            new GUIContent(VFSConfigDashboardI18N.AssetsLoadModeInEditor_Normal),
+                            load_mode == RuntimeAssetsLoadModeInEditor.Normal,
+                            () =>
+                            {
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.Normal;
+                            });
+                        menu.AddItem(    //StreamingAssets
+                            new GUIContent(VFSConfigDashboardI18N.AssetsLoadModeInEditor_SourcePackages),
+                            load_mode == RuntimeAssetsLoadModeInEditor.Override_StreamingAssetsPath,
+                            () =>
+                            {
+                                var this_platform_name = XPlatformUtil.GetNameText(XPlatformUtil.GetXRuntimePlatform(Application.platform));
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.Override_StreamingAssetsPath;
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_MainPackagePath_InStreamingAssets = VFSEditorUtil.GetMainPackageManifestFilePathInSourcePackagesFolder(ref this_platform_name);
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_DataFolderPath_InStreamingAssets = VFSEditorUtil.Get_PackagesDataFolderPath_InSourcePackages(ref this_platform_name);
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_ExtensionGroupRootPath_InStreamingAssets = VFSEditorUtil.Get_ExtensionGroupsRootFolder_InSourcePackages(ref this_platform_name);
+                            });
+                        menu.ShowAsContext();
                     }
                     #endregion
                     GUILayout.FlexibleSpace();

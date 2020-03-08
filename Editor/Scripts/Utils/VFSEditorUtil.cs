@@ -33,7 +33,7 @@ namespace TinaXEditor.VFSKit.Utils
 
         internal static void InitVFSFoldersInStreamingAssets()
         {
-            string project_root_path = Directory.GetCurrentDirectory();
+            string project_root_path = Application.streamingAssetsPath;
             //tinax
             XDirectory.DeleteIfExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH));
             XDirectory.CreateIfNotExists(Path.Combine(project_root_path, VFSConst.VFS_STREAMINGASSETS_PATH));

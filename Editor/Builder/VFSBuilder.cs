@@ -366,7 +366,7 @@ namespace TinaXEditor.VFSKit
             SaveAssetHashFiles(Path.Combine(output_root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA));
 
             if (CopyToStreamingAssetsFolder)
-                CopyToStreamingAssets(output_root_path);
+                CopyToStreamingAssets(output_root_path,XPlatformUtil.GetNameText(platform));
 
             if (ClearAssetBundleSignAfterBuild)
                 VFSEditorUtil.RemoveAllAssetbundleSigns();
@@ -486,15 +486,25 @@ namespace TinaXEditor.VFSKit
         /// 
         /// </summary>
         /// <param name="root_path">root_path下面应该就是"vfs_root","vfs_data"之类的文件</param>
-        public void CopyToStreamingAssets(string root_path)
+        public void CopyToStreamingAssets(string root_path,string platform_name)
         {
+            Debug.Log("    copy To \"StreamingAssets\"");
             VFSEditorUtil.InitVFSFoldersInStreamingAssets();
             var stream_root_path = Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH);
             var project_vfs_root_path = Path.Combine(root_path, VFSConst.VFS_FOLDER_MAIN);
             if (Directory.Exists(project_vfs_root_path))
             {
-                string target_vfs_root = Path.Combine(stream_root_path, VFSConst.VFS_FOLDER_MAIN);
+                string target_vfs_root = Path.Combine(stream_root_path, platform_name, VFSConst.VFS_FOLDER_MAIN);
+                XDirectory.DeleteIfExists(target_vfs_root);
                 XDirectory.CopyDir(project_vfs_root_path, target_vfs_root);
+            }
+
+            var project_vfs_extension_group = Path.Combine(root_path, VFSConst.VFS_FOLDER_EXTENSION);
+            if (Directory.Exists(project_vfs_extension_group))
+            {
+                string target_vfs_extension = Path.Combine(stream_root_path, platform_name, VFSConst.VFS_FOLDER_EXTENSION);
+                XDirectory.DeleteIfExists(target_vfs_extension);
+                XDirectory.CopyDir(project_vfs_root_path, target_vfs_extension);
             }
 
         }

@@ -34,6 +34,8 @@ namespace TinaX.VFSKit
 
         public VFSCustomizable Customizable { get; private set; }
 
+        public int DownloadWebAssetTimeout { get; set; } = 10;
+
         public bool Override_StreamingAssetsPath { get; private set; } = false;
 
         private string mVirtualDisk_MainPackageFolderPath;
@@ -96,15 +98,14 @@ namespace TinaX.VFSKit
         {
             get
             {
-                if (mManifest_VirtualDisk == null) return mManifest_StreamingAssets;
-                return mManifest_VirtualDisk;
+                if (mManifest_VirtualDisk == null) return mManifest_VirtualDisk;
+                return mManifest_StreamingAssets;
             }
         }
 
         private FilesHashBook mFileHash_StreamingAssets;
         private FilesHashBook mFileHash_VirtualDisk;
         private FilesHashBook mFileHash_WebVFS;
-        private Dictionary<string, FilesHashBook> mDict_FileHash_WebVFS_ExtensionGroups = new Dictionary<string, FilesHashBook>();
 
         private string webVfs_asset_download_base_url;
         private bool webvfs_download_base_url_modify = false; //如果被profile或者手动修改过的话，这里为true
@@ -118,12 +119,15 @@ namespace TinaX.VFSKit
         /// </summary>
         internal GetFileHashUrlDalegate GetWebFileHashBookUrl;
         internal BundlesManager Bundles { get; private set; } = new BundlesManager();
+        internal ExtensionGroupsManager ExtensionGroups { get; private set; }
 
         private bool mInited = false;
         private bool mWebVFSReady = false;
 
+
         public VFSKit()
         {
+            ExtensionGroups = new ExtensionGroupsManager(this); 
             Customizable = new VFSCustomizable(this);
             this.GetWebAssetUrl = getWebAssetUrl;
             this.GetWebFileHashBookUrl = getWebFilesHashUrl;
@@ -143,6 +147,7 @@ namespace TinaX.VFSKit
             {
                 case RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase:
                     mLoadByAssetDatabaseInEditor = true;
+                    Debug.Log("[TinaX] VFS:" + (IsChinese ? $"<color=#{Internal.XEditorColorDefine.Color_Emphasize_16}>基于编辑器策略，采用编辑器方式加载资源</color>" : $"<color=#{Internal.XEditorColorDefine.Color_Emphasize_16}>Load assets by UnityEditor.AssetDatabase</color>"));
                     break;
                 case RuntimeAssetsLoadModeInEditor.Normal:
                     mLoadByAssetDatabaseInEditor = false;
@@ -219,11 +224,11 @@ namespace TinaX.VFSKit
             //main package 's assetbundleManifest
             bool init_streamingassets = true;
 #if UNITY_EDITOR
-            //if (mLoadByAssetDatabaseInEditor) init_streamingassets = false;
+            if (mLoadByAssetDatabaseInEditor) init_streamingassets = false;
 #endif
             if (init_streamingassets)
             {
-                Debug.Log("喵load streamingassets");
+                Debug.Log("vfs start 开始处理streamingassets");
                 #region StramingAssets AssetBundleManifest
                 string streaming_manifest_path = VFSUtil.GetAssetBundleManifestInPackage(mStreamingAssets_MainPackageFolderPath);
                 try
@@ -231,6 +236,7 @@ namespace TinaX.VFSKit
                     string streaming_manifest_json = await LoadTextFromStreamingAssetsAsync(streaming_manifest_path);
                     if (!streaming_manifest_json.IsNullOrEmpty())
                     {
+                        Debug.Log(streaming_manifest_json);
                         var streaming_manifest_obj = JsonUtility.FromJson<BundleManifest>(streaming_manifest_json);
                         mManifest_StreamingAssets = new XAssetBundleManifest(streaming_manifest_obj);
                         streaming_manifest_obj = null;
@@ -261,14 +267,11 @@ namespace TinaX.VFSKit
                 }
                 #endregion
 
-                Debug.Log("streamingassets init finish 喵");
             }
 
-
-
-
+            Debug.Log("vfs start 开始处理webvfs ");
             bool need_init_webvfs = false;
-            if (mConfig.EnableVFS)
+            if (mConfig.EnableWebVFS)
             {
                 need_init_webvfs = true;
 #if UNITY_EDITOR
@@ -288,6 +291,7 @@ namespace TinaX.VFSKit
                 }
             }
 
+            Debug.Log(" vfs start 结束");
             mInited = true;
             return true;
         }
@@ -314,32 +318,32 @@ namespace TinaX.VFSKit
                 throw new VFSException("Init WebVFS Failed: Cannot download Hashs file from: " + e.Path);
             }
 
-            //Extensions
-            foreach(var group in mGroups)
-            {
-                if(group.ExtensionGroup && (group.HandleMode == GroupHandleMode.LocalOrRemote || group.HandleMode == GroupHandleMode.RemoteOnly))
-                {
-                    try
-                    {
-                        var url = new Uri(this.GetWebHashsFileDownloadUrl(PlatformText, true, group.GroupName));
-                        var json = await LoadTextFromWebAsync(url, 5);
-                        var obj = JsonUtility.FromJson<FilesHashBook>(json);
-                        lock (mDict_FileHash_WebVFS_ExtensionGroups)
-                        {
-                            if (mDict_FileHash_WebVFS_ExtensionGroups.ContainsKey(group.GroupName))
-                                mDict_FileHash_WebVFS_ExtensionGroups[group.GroupName] = obj;
-                            else
-                                mDict_FileHash_WebVFS_ExtensionGroups.Add(group.GroupName, obj);
-                        }
+            //Extensions //改动，Extension需要主动启用
+            //foreach(var group in mGroups)
+            //{
+            //    if(group.ExtensionGroup && (group.HandleMode == GroupHandleMode.LocalOrRemote || group.HandleMode == GroupHandleMode.RemoteOnly))
+            //    {
+            //        try
+            //        {
+            //            var url = new Uri(this.GetWebHashsFileDownloadUrl(PlatformText, true, group.GroupName));
+            //            var json = await LoadTextFromWebAsync(url, 5);
+            //            var obj = JsonUtility.FromJson<FilesHashBook>(json);
+            //            lock (mDict_FileHash_WebVFS_ExtensionGroups)
+            //            {
+            //                if (mDict_FileHash_WebVFS_ExtensionGroups.ContainsKey(group.GroupName))
+            //                    mDict_FileHash_WebVFS_ExtensionGroups[group.GroupName] = obj;
+            //                else
+            //                    mDict_FileHash_WebVFS_ExtensionGroups.Add(group.GroupName, obj);
+            //            }
 
-                    }
-                    catch(FileNotFoundException e)
-                    {
-                        // do nothing
-                        //throw new VFSException("Init WebVFS Failed: Cannot download Hashs file from: " + e.Path);
-                    }
-                }
-            }
+            //        }
+            //        catch(FileNotFoundException e)
+            //        {
+            //            // do nothing
+            //            //throw new VFSException("Init WebVFS Failed: Cannot download Hashs file from: " + e.Path);
+            //        }
+            //    }
+            //}
             #endregion
 
 
@@ -376,21 +380,20 @@ namespace TinaX.VFSKit
 
         public async void RunTest()
         {
-            Debug.Log("关于在StreamingAssets中加载文件的测试");
-            string file_path = Path.Combine(Application.streamingAssetsPath, "test.txt");
-            byte[] bytes = await this.LoadFileFromStreamingAssetsAsync(file_path);
-            string text = System.Text.Encoding.UTF8.GetString(bytes);
-            Debug.Log("text:" + text);
+            //Debug.Log("关于在StreamingAssets中加载文件的测试");
+            //string file_path = Path.Combine(Application.streamingAssetsPath, "test.txt");
+            //byte[] bytes = await this.LoadFileFromStreamingAssetsAsync(file_path);
+            //string text = System.Text.Encoding.UTF8.GetString(bytes);
+            //Debug.Log("text:" + text);
 
-            Debug.Log("新增的测试：加载一个大的文件");
-            await this.LoadFileFromStreamingAssetsAsync(Path.Combine(Application.streamingAssetsPath, "m.flac"));
-            Debug.Log("结束");
+            //Debug.Log("新增的测试：加载一个大的文件");
+            //await this.LoadFileFromStreamingAssetsAsync(Path.Combine(Application.streamingAssetsPath, "m.flac"));
+            //Debug.Log("结束");
+
+            Debug.Log("关于直接加载AssetBundle的测试");
+            await loadAssetAsync<Sprite>("Assets/MyApp/Local/imgs/myImg1.jpg");
         }
 
-        public bool TryGetGroup(string groupName,out VFSGroup group)
-        {
-            return mDict_Groups.TryGetValue(groupName, out group);
-        }
 
         public VFSGroup[] GetAllGroups()
         {
@@ -423,10 +426,13 @@ namespace TinaX.VFSKit
             {
                 foreach (var groupOption in mConfig.Groups)
                 {
-                    var group = new VFSGroup(groupOption);
-                    mGroups.Add(group);
+                    if (!groupOption.ExtensionGroup)
+                    {
+                        var group = new VFSGroup(groupOption);
+                        mGroups.Add(group);
 
-                    mDict_Groups.Add(group.GroupName, group);
+                        mDict_Groups.Add(group.GroupName, group);
+                    }
                     //init each group status.
                 }
             }
@@ -509,29 +515,33 @@ namespace TinaX.VFSKit
             return req.downloadHandler.data;
         }
 
-
-        private async UniTask<string> LoadTextFromStreamingAssetsAsync(string path, Encoding encoding = null)
+        private async UniTask<string> LoadTextFromStreamingAssetsAsync(string path)
         {
-            try
+            Debug.Log("喵载入文本:" + path);
+            var req = UnityWebRequest.Get(path);
+            await req.SendWebRequest();
+            if (req.isHttpError)
             {
-                byte[] bytes = await this.LoadFileFromStreamingAssetsAsync(path);
-                return (encoding == null) ? Encoding.UTF8.GetString(bytes) : encoding.GetString(bytes);
+                if (req.responseCode == 404)
+                    throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
             }
-            catch (Exceptions.FileNotFoundException e404)
-            {
-                throw e404;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            return VFSUtil.RemoveInvalidHead(req.downloadHandler.text);
         }
 
         private async UniTask<string> LoadTextFromWebAsync(Uri uri, int timeout = 3, Encoding encoding = null)
         {
+            Debug.Log("喵下载文本:" + uri + "  timeout:" + timeout);
             var req = UnityWebRequest.Get(uri);
             req.timeout = timeout;
-            await req.SendWebRequest();
+            var op =  req.SendWebRequest();
+            Debug.Log("下载文本：" + op.GetHashCode());
+            Task waitTask = Task.Run(async () => { await op; });
+            var t = await Task.WhenAny(waitTask, Task.Delay(TimeSpan.FromSeconds(timeout)));
+            if(t != waitTask)
+            {
+                Debug.LogError("超时");
+            }
+
             if (req.isNetworkError || req.isHttpError)
             {
                 if (req.responseCode == 404)
@@ -547,12 +557,18 @@ namespace TinaX.VFSKit
 
         #region VFS 加载流程
 
-        private UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
+        private async UniTask<T> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
         {
             if(QueryAsset(assetPath, out var result , out var group))
             {
                 //可被加载
                 //那就加载吧，首先加载Bundle
+                VFSBundle bundle = await loadAssetBundleAndDependenciesAsync(result.AssetBundleName, group, true);
+                Debug.Log("加载完成");
+                foreach(var a in bundle.AssetBundle.GetAllAssetNames())
+                {
+                    Debug.Log(a);
+                }
                 return default;
             }
             else
@@ -570,11 +586,60 @@ namespace TinaX.VFSKit
         /// </summary>
         /// <param name="assetbundleName"></param>
         /// <returns></returns>
-        private UniTask<AssetBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName)
+        private async UniTask<VFSBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName, VFSGroup group, bool counter = true)
         {
-            //先加载依赖吧
 
-            return default;
+            //先加载依赖吧
+            string[] DependenciesNames = null;
+            if (group.ExtensionGroup)
+            {
+                var egroup = (VFSExtensionGroup)group;
+                if (egroup.AssetBundleManifest != null)
+                {
+                    DependenciesNames = egroup.AssetBundleManifest.GetAllDependencies(assetbundleName);
+                }
+                else
+                {
+                    Debug.LogError((IsChinese ? "[TinaX.VFS] VFS尝试加载AssetBundle，但是当前没有任何有效的AssetBundleManifest文件。" : "[TinaX.VFS]VFS tried to load AssetBundle, but there are currently no valid AssetBundleManifest files.") + "Path:" + assetbundleName + "\nGroup:" + egroup.GroupName);
+                }
+            }
+            else
+            {
+                if (mAssetBundleManifest != null)
+                {
+                    DependenciesNames = mAssetBundleManifest.GetAllDependencies(assetbundleName);
+                }
+                else
+                {
+                    Debug.LogError((IsChinese ? "[TinaX.VFS] VFS尝试加载AssetBundle，但是当前没有任何有效的AssetBundleManifest文件。" : "[TinaX.VFS]VFS tried to load AssetBundle, but there are currently no valid AssetBundleManifest files.") + "Path:" + assetbundleName);
+                }
+            }
+
+            List<VFSBundle> dependencies_bundle = new List<VFSBundle>();
+            List<UniTask<VFSBundle>> dependency_task = new List<UniTask<VFSBundle>>();
+            if(DependenciesNames != null && DependenciesNames.Length > 0)
+            {
+                foreach(var name in DependenciesNames)
+                {
+                    if(this.TryGetGroupByAssetBundleName(name,out var _group))
+                    {
+                        var task = loadAssetBundleAndDependenciesAsync(name, _group, counter);
+                        dependency_task.Add(task);
+                    }
+                    else
+                    {
+                        Debug.LogError("[TinaX.VFS]Cannot found assetbundle's depencency in any group, assetbundle:" + assetbundleName +" depencency:" + name );
+                    }
+                }
+
+                await UniTask.WhenAll(dependency_task);
+                foreach(var task in dependency_task)
+                {
+                    dependencies_bundle.Add(task.Result);
+                }
+            }
+
+            return await loadAssetBundleAsync(assetbundleName, dependencies_bundle, group, counter);
         }
 
         /// <summary>
@@ -582,13 +647,19 @@ namespace TinaX.VFSKit
         /// </summary>
         /// <param name="assetBundleName"></param>
         /// <returns></returns>
-        private async UniTask<AssetBundle> loadAssetBundleAsync(string assetBundleName, List<VFSBundle> dependencise, AssetQueryResult result, bool counter = true)
+        private async UniTask<VFSBundle> loadAssetBundleAsync(string assetBundleName, List<VFSBundle> dependencise, VFSGroup group, bool counter = true)
         {
             //检查bundle是不是已经加载了
-            if(IsBundleLoadedOrLoading(assetBundleName,out var bundle))
+            if(IsBundleLoadedOrLoading(assetBundleName,out var _bundle))
             {
-                if (counter) bundle.Retain();
-                return bundle.AssetBundle;
+                if (counter) _bundle.Retain();
+                lock (_bundle)
+                {
+                    if (_bundle.LoadState == AssetLoadState.Loaded)
+                        return _bundle;
+                }
+                await _bundle.LoadTask;
+                return _bundle;
             }
 
             //那么现在得考虑下加载它了
@@ -597,13 +668,18 @@ namespace TinaX.VFSKit
             if (dependencise != null)
                 my_bundle.Dependencies = dependencise;
 
-            my_bundle.QueryResult = result;
-            my_bundle.LoadedPath = GetAssetBundleLoadPath(assetBundleName,ref result);
+            my_bundle.LoadedPath = GetAssetBundleLoadPath(assetBundleName,ref group,out var vdisk_path);
+            my_bundle.ABLoader = group.ABLoader;
+            my_bundle.DownloadTimeout = this.DownloadWebAssetTimeout;
+            my_bundle.VirtualDiskPath = vdisk_path;
+            my_bundle.GroupHandleMode = group.HandleMode;
 
-            return default;
+            //加载
+            await my_bundle.Load();
+            return my_bundle;
         }
 
-
+        
         #endregion
 
         /// <summary>
@@ -627,25 +703,87 @@ namespace TinaX.VFSKit
                 return false;
             }
 
+            VFSGroup myGroup = null;
             //有效组查询
             foreach(var group in mGroups)
             {
                 if (group.IsAssetPathMatch(path))
                 {
-                    result.Vliad = true;
-                    result.GroupName = group.GroupName;
-                    string assetbundle_name = group.GetAssetBundleNameOfAsset(path, out var buildType, out var devType); //获取到的assetbundle是不带后缀的
-                    result.AssetBundleName = assetbundle_name + mConfig.AssetBundleFileExtension;
-                    result.AssetBundleNameWithoutExtension = assetbundle_name;
-                    result.DevelopType = devType;
-                    result.BuildType = buildType;
-                    matched_group = group;
-                    return true;
+                    myGroup = group;
+                    break;
                 }
+            }
+            if(myGroup == null)
+            {
+                foreach(var group in this.ExtensionGroups.mGroups)
+                {
+                    if (group.IsAssetPathMatch(path))
+                    {
+                        myGroup = group;
+                        break;
+                    }
+                }
+            }
+            if(myGroup != null)
+            {
+                result.Vliad = true;
+                result.GroupName = myGroup.GroupName;
+                string assetbundle_name = myGroup.GetAssetBundleNameOfAsset(path, out var buildType, out var devType); //获取到的assetbundle是不带后缀的
+                result.AssetBundleName = assetbundle_name + mConfig.AssetBundleFileExtension;
+                result.AssetBundleNameWithoutExtension = assetbundle_name;
+                result.DevelopType = devType;
+                result.BuildType = buildType;
+                result.ExtensionGroup = myGroup.ExtensionGroup;
+                result.GroupHandleMode = myGroup.HandleMode;
+                matched_group = myGroup;
+                return true;
             }
             result.Vliad = false;
             matched_group = null;
             return false;
+        }
+
+        public bool TryGetGroupByAssetBundleName(string assetbundle,out VFSGroup group)
+        {
+            foreach(var g in mGroups)
+            {
+                if (g.IsAssetBundleMatch(assetbundle))
+                {
+                    group = g;
+                    return true;
+                }
+            }
+
+            foreach(var g in this.ExtensionGroups.mGroups)
+            {
+                if (g.IsAssetBundleMatch(assetbundle))
+                {
+                    group = g;
+                    return true;
+                }
+            }
+            group = null;
+            return false;
+        }
+
+        public bool TryGetGroup(string groupName, out VFSGroup group)
+        {
+            if(this.mDict_Groups.TryGetValue(groupName,out group))
+            {
+                return true;
+            }
+            else
+            {
+                if(this.ExtensionGroups.TryGetExtensionGroup(groupName, out var ex_group))
+                {
+                    group = ex_group;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         /// <summary>
@@ -699,61 +837,154 @@ namespace TinaX.VFSKit
         /// </summary>
         /// <param name="assetbundle"></param>
         /// <param name="result"></param>
+        /// <param name="vdisk_path">这个资源如果保存在vidsk的话，它的路径应该是啥</param>
         /// <returns></returns>
-        private string GetAssetBundleLoadPath(string assetbundle, ref AssetQueryResult result)
+        private string GetAssetBundleLoadPath(string assetbundle, ref VFSGroup group,out string vdisk_path)
         {
-            var group = mDict_Groups[result.GroupName];
+            if (group == null) { vdisk_path = string.Empty; return string.Empty; }
+            //没有匹配的组，无效
+
             if(group.HandleMode == GroupHandleMode.RemoteOnly)
             {
                 //资源只有可能在web,
+                vdisk_path = string.Empty;
                 return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
             }
 
             //检查资源是否在Virtual Disk
-            string asset_path_vdisk = group.ExtensionGroup ? Path.Combine(mVirtualDisk_ExtensionGroupRootFolderPath, group.GroupName, assetbundle) : Path.Combine(mVirtualDisk_MainPackageFolderPath, assetbundle);
+            string asset_path_vdisk = group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mVirtualDisk_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mVirtualDisk_MainPackageFolderPath, assetbundle);
+            vdisk_path = asset_path_vdisk;
+
             if (File.Exists(asset_path_vdisk))
             {
                 //资源存在，检查：如果这个资源是LocalOrRemote，并且本地hash与云端不一致的话，则使用云端地址
-                if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady && mFileHash_WebVFS != null)
+                if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
                 {
                     string hash_vdisk = XFile.GetMD5(asset_path_vdisk);
                     string hash_streaming = string.Empty;
-                    if(mFileHash_StreamingAssets != null)
-                        mFileHash_StreamingAssets.TryGetFileHashValue(assetbundle, out assetbundle);
-
-                    if (group.ExtensionGroup && mDict_FileHash_WebVFS_ExtensionGroups.TryGetValue(group.GroupName,out var web_hashs))
+                    if (group.ExtensionGroup)
                     {
-                        if(web_hashs.TryGetFileHashValue(assetbundle,out string hash))
+                        var eGroup = (VFSExtensionGroup)group;
+                        if (eGroup.FileHash_StreamingAssets != null)
+                            eGroup.FileHash_StreamingAssets.TryGetFileHashValue(assetbundle, out hash_streaming);
+
+                        //尝试找到它在remote的hash
+                        if (eGroup.FileHash_Remote != null)
                         {
-                            if (!hash.Equals(hash_vdisk))
+                            if (eGroup.FileHash_Remote.TryGetFileHashValue(assetbundle, out var remote_hash))
                             {
-                                if (!hash_streaming.IsNullOrEmpty())
+                                if (!hash_vdisk.Equals(remote_hash))
                                 {
-                                    if (!hash_streaming.Equals(hash))
+                                    //和vdisk的hash不一致了，检查下stream的，如果也不一致就用云端的了
+                                    if (!hash_streaming.IsNullOrEmpty())
+                                    {
+                                        if (!hash_streaming.Equals(remote_hash))
+                                        {
+                                            //不一致，用remote吧
+                                            this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                        }
+                                        else
+                                        {
+                                            //用steram的
+                                            return VFSUtil.GetAssetPath(true, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle, group.GroupName);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //在stream没有有效的hash，只能用remote的
                                         return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
-                                }
-                                else
-                                {
-                                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                    }
                                 }
                             }
                         }
                     }
+                    else
+                    {
+                        if (mFileHash_StreamingAssets != null)
+                            mFileHash_StreamingAssets.TryGetFileHashValue(assetbundle, out hash_streaming);
 
-                    //在上面没有被return 的话，返回vdisk的地址
-                    return asset_path_vdisk;
+                        //找找remote的hash
+                        if(mFileHash_WebVFS != null)
+                        {
+                            if(mFileHash_WebVFS.TryGetFileHashValue(assetbundle,out string remote_hash))
+                            {
+                                if (!hash_vdisk.Equals(remote_hash))
+                                {
+                                    if(!hash_streaming.IsNullOrEmpty())
+                                    {
+                                        if(hash_streaming.Equals(remote_hash))
+                                            return VFSUtil.GetAssetPath(false, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle);
+                                        else
+                                            return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                    }
+                                    else
+                                        return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                }
+                            }
+                        }
+                    }
                 }
+
+                //在上面没有被return 的话，返回vdisk的地址
+                return asset_path_vdisk;
             }
 
             //已知文件不在Virtual Disk
-            string asset_path_streamingassets = group.ExtensionGroup ? Path.Combine(mStreamingAssets_ExtensionGroupRootFolderPath, group.GroupName, assetbundle) : Path.Combine(mStreamingAssets_MainPackageFolderPath, assetbundle);
-            //有没有可能这个文件在web?
-            if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady && mFileHash_WebVFS != null)
-            {
+            string asset_path_streamingassets = group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mStreamingAssets_MainPackageFolderPath, assetbundle);
 
+            //有没有可能这个文件在web?
+            if (group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
+            {
+                
+                if (group.ExtensionGroup)
+                {
+                    var eGroup = (VFSExtensionGroup)group;
+                    if(eGroup.FileHash_StreamingAssets == null)
+                    {
+                        return asset_path_streamingassets; //因为无法获取到streamingassets文件中的hash，所以直接不比较了
+                    }
+                    
+                    if(eGroup.FileHash_StreamingAssets.TryGetFileHashValue(assetbundle,out var stream_hash))
+                    {
+                        if (eGroup.FileHash_Remote != null)
+                        {
+                            if (eGroup.FileHash_Remote.TryGetFileHashValue(assetbundle, out var remote_hash))
+                            {
+                                if (!remote_hash.Equals(stream_hash))
+                                {
+                                    //不一致，用云端的
+                                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                                }
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        //本地没有，用云端的
+                        return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                    }
+
+                }
+                else
+                {
+                    if (mFileHash_StreamingAssets == null)
+                        return asset_path_streamingassets;
+
+                    if(mFileHash_StreamingAssets.TryGetFileHashValue(assetbundle,out var stream_hash))
+                    {
+                        if(mFileHash_WebVFS.TryGetFileHashValue(assetbundle,out var remote_hash))
+                        {
+                            if(!remote_hash.Equals(stream_hash))
+                                return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                        }
+                    }
+                    else
+                        return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                }
             }
             
-            return asset_path_streamingassets; //TODO
+            return asset_path_streamingassets;
         }
 
         /// <summary>
@@ -775,6 +1006,7 @@ namespace TinaX.VFSKit
 
         private async UniTask<bool> SayHelloToWebServer(string url, int timeout = 10)
         {
+            Debug.Log("喵，say hello:" + url);
             var req = UnityWebRequest.Get(url);
             req.timeout = timeout;
             await req.SendWebRequest();
@@ -782,7 +1014,7 @@ namespace TinaX.VFSKit
             if (req.isNetworkError || req.isHttpError)
                 return false;
 
-            return (req.downloadHandler.text == "hello");
+            return (VFSUtil.RemoveInvalidHead(req.downloadHandler.text) == "hello");
         }
 
         #region Customizable_Default_Function
