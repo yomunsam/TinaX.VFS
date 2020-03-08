@@ -64,6 +64,8 @@ namespace TinaX.VFSKit
         public VFSGroup(VFSGroupOption option)
         {
             this.SetOptions(option);
+            ABLoader = new Loader.AssetBundleLoader();
+
         }
 
         public void SetOptions(VFSGroupOption option)

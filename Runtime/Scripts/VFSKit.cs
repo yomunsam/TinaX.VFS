@@ -98,7 +98,7 @@ namespace TinaX.VFSKit
         {
             get
             {
-                if (mManifest_VirtualDisk == null) return mManifest_VirtualDisk;
+                if (mManifest_VirtualDisk != null) return mManifest_VirtualDisk;
                 return mManifest_StreamingAssets;
             }
         }
@@ -119,6 +119,7 @@ namespace TinaX.VFSKit
         /// </summary>
         internal GetFileHashUrlDalegate GetWebFileHashBookUrl;
         internal BundlesManager Bundles { get; private set; } = new BundlesManager();
+        internal AssetsManager Assets { get; private set; } = new AssetsManager();
         internal ExtensionGroupsManager ExtensionGroups { get; private set; }
 
         private bool mInited = false;
@@ -564,6 +565,7 @@ namespace TinaX.VFSKit
                 //可被加载
                 //那就加载吧，首先加载Bundle
                 VFSBundle bundle = await loadAssetBundleAndDependenciesAsync(result.AssetBundleName, group, true);
+                //然后加载Asset
                 Debug.Log("加载完成");
                 foreach(var a in bundle.AssetBundle.GetAllAssetNames())
                 {
@@ -576,6 +578,10 @@ namespace TinaX.VFSKit
                 throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + assetPath, VFSErrorCode.ValidLoadPath);
             }
         }
+
+        //private UniTask<VFSAsset> loadAssetFromAssetBundle<T>(string assetPath)
+        //{
+        //}
 
         #endregion 
 
@@ -673,6 +679,8 @@ namespace TinaX.VFSKit
             my_bundle.DownloadTimeout = this.DownloadWebAssetTimeout;
             my_bundle.VirtualDiskPath = vdisk_path;
             my_bundle.GroupHandleMode = group.HandleMode;
+
+            this.Bundles.Register(my_bundle);
 
             //加载
             await my_bundle.Load();
