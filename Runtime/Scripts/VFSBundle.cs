@@ -4,17 +4,25 @@ using System.Collections.Generic;
 using TinaX.VFSKit.Loader;
 using UniRx.Async;
 using System;
+using TinaX.VFSKit.Exceptions;
 
 namespace TinaX.VFSKitInternal
 {
     /// <summary>
     /// AssetBundle 内部类
     /// </summary>
-    public class VFSBundle : IRefCounter
+    public class VFSBundle : IBundle, IDisposable
     {
+        /// <summary>
+        /// 存放的是直接依赖，如果有需要请递归
+        /// </summary>
         public List<VFSBundle> Dependencies { get; set; } = new List<VFSBundle>();
+        /// <summary>
+        /// 这里是直接依赖，如果有需要请递归
+        /// </summary>
+        public string[] DependenciesNames { get; set; } = new string[0];    
         public AssetBundle AssetBundle { get; private set; }
-        public AssetLoadState LoadState { get; private set; } = AssetLoadState.Idle;
+        public AssetLoadState LoadState { get; internal set; } = AssetLoadState.Idle;
         public string AssetBundleName { get; set; } // Path: assets/xxx/xxx.xxx
 
         public string LoadedPath { get; set; } //file://xxx/xxx or https://xxx/xxx or xxx://xxx/xxx
@@ -22,23 +30,39 @@ namespace TinaX.VFSKitInternal
 
         public GroupHandleMode GroupHandleMode { get; set; }
 
-        public int RefCount { get; private set; } = 0;
+        public int RefCount { get; internal set; } = 0;
 
-        public UniTask LoadTask { get; private set; }
+        public UniTask LoadTask { get; internal set; }
+
 
         public void Release()
         {
             RefCount--;
+            foreach (var dep in this.Dependencies)
+                dep.Release();
+
             if (RefCount <= 0 && LoadState != AssetLoadState.Unloaded)
             {
-                AssetBundle?.Unload(true);
-                LoadState = AssetLoadState.Unloaded;
-                foreach(var item in Dependencies)
-                    item.Release();
-
-                Dependencies.Clear();
+                this.Unload();
             }
         }
+
+        public void Unload()
+        {
+            if(this.AssetBundle != null)
+            {
+                this.AssetBundle.Unload(true);
+                this.AssetBundle = null;
+            }
+            LoadState = AssetLoadState.Unloaded;
+            foreach (var item in Dependencies)
+                item.Release();
+            Dependencies.Clear();
+            DependenciesNames = null;
+            this.ABLoader = null;
+            this.LoadTask = UniTask.CompletedTask;
+        }
+
 
         /// <summary>
         ///  +1s, 苟...
@@ -46,6 +70,8 @@ namespace TinaX.VFSKitInternal
         public void Retain()
         {
             RefCount++;
+            foreach (var dep in this.Dependencies)
+                dep.Retain();
         }
 
         public IAssetBundleLoader ABLoader { get; internal set; }
@@ -53,14 +79,43 @@ namespace TinaX.VFSKitInternal
         internal int DownloadTimeout { get; set; } = 10;
         //private BundlesManager bundlesManager;
 
-        internal UniTask Load()
+        /// <summary>
+        /// 同步加载
+        /// </summary>
+        internal void Load()
         {
-            if (LoadState == AssetLoadState.Loaded || LoadState == AssetLoadState.Unloaded) return UniTask.CompletedTask;
-            LoadTask = DoLoad();
-            return LoadTask;
+            LoadState = AssetLoadState.Loading; //其实这时候改没啥用
+            if (LoadedPath.StartsWith("jar:file://", StringComparison.Ordinal))
+            {
+                this.AssetBundle = this.ABLoader.LoadAssetBundleFromAndroidStreamingAssets(this.LoadedPath, this.AssetBundleName, this.VirtualDiskPath);
+            }
+            else if (LoadedPath.StartsWith("http://", StringComparison.Ordinal) ||
+                LoadedPath.StartsWith("https://", StringComparison.Ordinal) ||
+                //LoadedPath.StartsWith("file://", StringComparison.Ordinal)||
+                LoadedPath.StartsWith("ftp://", StringComparison.Ordinal))
+            {
+                throw new VFSException("[TinaX.VFS] Error: Connot load from network sync");
+            }
+            else
+            {
+                this.AssetBundle = ABLoader.LoadAssetBundleFromFile(this.LoadedPath, this.AssetBundleName);
+            }
+
+            LoadState = AssetLoadState.Loaded;
+        }
+        internal async UniTask LoadAsync()
+        {
+            if (LoadState == AssetLoadState.Loaded && this.AssetBundle != null) return; //已加载
+            if(LoadState == AssetLoadState.Unloaded)
+                throw new VFSException("[TinaX.VFS] Error: Attempt to load an unloaded assetbundle :" + this.AssetBundleName);
+            //开始加载
+            await DoLoadAsync();
+
+            this.LoadState = AssetLoadState.Loaded;
+            this.LoadTask = UniTask.CompletedTask;
         }
 
-        private async UniTask DoLoad()
+        private async UniTask DoLoadAsync()
         {
             LoadState = AssetLoadState.Loading;
             //正儿八经的开始加载了
@@ -89,5 +144,17 @@ namespace TinaX.VFSKitInternal
             }
         }
 
+        public void Dispose()
+        {
+            if(this.AssetBundle != null)
+            {
+                this.AssetBundle.Unload(true);
+                this.AssetBundle = null;
+            }
+            this.ABLoader = null;
+            this.LoadTask = UniTask.CompletedTask;
+            this.Dependencies = null;
+            this.DependenciesNames = null;
+        }
     }
 }

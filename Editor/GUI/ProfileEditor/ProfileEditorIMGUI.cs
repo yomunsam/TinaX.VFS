@@ -9,6 +9,7 @@ using TinaX.VFSKit;
 using TinaX;
 using TinaX.Internal;
 using TinaXEditor;
+using TinaXEditor.VFSKit;
 using TinaXEditor.VFSKitInternal;
 using UnityEditorInternal;
 
@@ -152,7 +153,7 @@ namespace TinaXEditor.VFSKit.UI
 
         //private string[] groupNames;
         //private Dictionary<string, GroupHandleMode> groups_handlemode_cache = new Dictionary<string, GroupHandleMode>(); //string: groupName
-        private List<VFSGroup> groups;
+        private List<VFSEditorGroup> groups;
 
         /// <summary>
         /// 编辑缓存 [Profile] -> [Group] -> E_GroupAssetsLocation

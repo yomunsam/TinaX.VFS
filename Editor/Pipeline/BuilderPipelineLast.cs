@@ -10,19 +10,8 @@ namespace TinaXEditor.VFSKit.Pipeline.Builtin
 {
     public class BuilderPipelineLast : IBuildHandler
     {
-        public bool BeforeAssetBundleFileSavedByGroup(ref VFSGroup group, string assetBundleFileName, string assetName, ref FileStream fileStream)
-        {
-            return true;
-        }
+        public bool BeforeAssetBundleFileSavedByGroup(ref VFSEditorGroup group, string assetBundleFileName, ref FileStream fileStream) => true;
 
-        /// <summary>
-        /// 在设置AssetBundle之前
-        /// </summary>
-        /// <param name="assetbundleName"></param>
-        /// <param name="assetQueryResult"></param>
-        public bool BeforeSetAssetBundleSign(ref string assetbundleName, ref AssetsStatusQueryResult assetQueryResult)
-        {
-            return true;
-        }
+        public bool BeforeSetAssetBundleSign(ref string assetbundleName, ref AssetsStatusQueryResult assetQueryResult) => true;
     }
 }

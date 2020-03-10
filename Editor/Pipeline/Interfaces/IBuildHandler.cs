@@ -23,9 +23,8 @@ namespace TinaXEditor.VFSKit.Pipeline
         /// </summary>
         /// <param name="group">Group by which the current file is processed | 处理当前文件依据的组</param>
         /// <param name="assetBundleFileName">The name of the AssetBundle file currently being processed | 当前处理的AssetBundle文件名。</param>
-        /// <param name="assetName">The assetbundle file currently processed is queried based on which asset | 当前处理的AssetBundle文件是依据哪个asset资产查询出来的</param>
         /// <param name="fileStream">Current AssetBundle fileStream | 当前AssetBundle文件的FileStream</param>
         /// <returns></returns>
-        bool BeforeAssetBundleFileSavedByGroup(ref VFSGroup group, string assetBundleFileName, string assetName, ref FileStream fileStream);
+        bool BeforeAssetBundleFileSavedByGroup(ref VFSEditorGroup group, string assetBundleFileName, ref FileStream fileStream);
     }
 }

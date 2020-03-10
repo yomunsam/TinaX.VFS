@@ -18,14 +18,19 @@ namespace TinaX.VFSKitInternal
         /// Get download url of web asset.
         /// </summary>
         /// <param name="func"></param>
-        public void GetWebAssetUrl(TinaX.VFSKit.GetWebAssetUrlDelegate func)
+        public void GetWebAssetUrl(TinaX.VFSKit.GetWebAssetDownloadUrlDelegate func)
         {
             mVFS.GetWebAssetUrl = func;
         }
 
-        public void GetWebFileHashUrl(TinaX.VFSKit.GetFileHashUrlDalegate func)
+        public void GetWebFilesHashUrl(TinaX.VFSKit.GetFileHashDownloadUrlDalegate func)
         {
             mVFS.GetWebFileHashBookUrl = func;
+        }
+
+        public void GetWebAssetBundleManifestUrl(TinaX.VFSKit.GetAssetBundleManifestDownloadUrlDalegate func)
+        {
+            mVFS.GetAssetBundleManifestDoanloadUrl = func;
         }
     }
 }

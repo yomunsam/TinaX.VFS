@@ -40,7 +40,8 @@ namespace TinaXEditor.VFSKit.Const
         public static string VFS_VERSION_RECORD_Data_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_ROOT_FOLDER_PATH, "Data");
         public static string VFS_VERSION_RECORD_Binary_FOLDER_PATH => System.IO.Path.Combine(VFS_VERSION_ROOT_FOLDER_PATH, "Binary");
 
-        public static string VFS_VERSION_AssetsBinary_Zip_Name = "assets.zip";
+        public const string VFS_VERSION_AssetsBinary_Zip_Name = "assets.zip";
 
+        public const string VFS_EditorBuildInfo_FileName = "editor_build_info.json";
     }
 }

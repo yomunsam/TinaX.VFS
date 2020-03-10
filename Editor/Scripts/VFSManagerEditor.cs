@@ -25,7 +25,7 @@ namespace TinaXEditor.VFSKit
     {
         static VFSProfileModel VFSProfileEditor;
 
-        static List<VFSGroup> Groups = new List<VFSGroup>();
+        static List<VFSEditorGroup> Groups = new List<VFSEditorGroup>();
         /// <summary>
         /// 整个VFS中所有Group整合的FolderPaths, 以斜线“/”结束。
         /// </summary>
@@ -121,7 +121,7 @@ namespace TinaXEditor.VFSKit
 
             foreach(var group_opt in mConfig.Groups)
             {
-                var _group_obj = new VFSGroup(group_opt);
+                var _group_obj = new VFSEditorGroup(group_opt);
                 Groups.Add(_group_obj);
                 FolderPaths.AddRange(_group_obj.FolderPaths);
                 foreach(var assetPath in _group_obj.AssetPaths)
@@ -287,7 +287,7 @@ namespace TinaXEditor.VFSKit
             return false;
         }
 
-        public static List<VFSGroup> GetGroups()    //好像直接拿Groups会少很多事，反正class是引用类型
+        public static List<VFSEditorGroup> GetGroups()    //好像直接拿Groups会少很多事，反正class是引用类型
         {
             return Groups;
         }

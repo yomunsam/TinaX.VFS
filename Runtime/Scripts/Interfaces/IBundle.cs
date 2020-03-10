@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TinaX.VFSKitInternal;
+using UnityEngine;
 
 namespace TinaX.VFSKit
 {
-    public class VFSExtensionGroup : VFSGroup
+    public interface IBundle : IRefCounter
     {
-        public VFSExtensionGroup(VFSGroupOption option) : base(option) { }
+        
     }
+
+
 }

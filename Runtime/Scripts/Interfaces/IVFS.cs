@@ -1,4 +1,6 @@
-﻿using TinaX.VFSKitInternal;
+﻿using System.Threading.Tasks;
+using TinaX.VFSKitInternal;
+using UnityEngine;
 
 namespace TinaX.VFSKit
 {
@@ -13,8 +15,11 @@ namespace TinaX.VFSKit
         int DownloadWebAssetTimeout { get; set; }
 
         VFSGroup[] GetAllGroups();
-        void RunTest();
+        Task<IAsset> LoadAssetAsync<T>(string assetPath) where T : Object;
+        Task<T> LoadAsync<T>(string assetPath) where T : Object;
+        void Release(Object asset);
         bool TryGetGroup(string groupName, out VFSGroup group);
+        void UnloadUnusedAssets();
     }
 }
 

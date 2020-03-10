@@ -52,5 +52,14 @@ namespace TinaX.VFSKit.Loader
             return DownloadHandlerAssetBundle.GetContent(req);
         }
 
+        public AssetBundle LoadAssetBundleFromAndroidStreamingAssets(string path, string assetbundleName, string virtualDiskPath)
+        {
+            return AssetBundle.LoadFromFile(path);
+        }
+
+        public AssetBundle LoadAssetBundleFromFile(string path, string assetbundleName)
+        {
+            return AssetBundle.LoadFromFile(path);
+        }
     }
 }

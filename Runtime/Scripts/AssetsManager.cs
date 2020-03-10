@@ -18,16 +18,25 @@ namespace TinaX.VFSKitInternal
             if (!mAssets.Contains(asset))
                 mAssets.Add(asset);
 
-            if (mDict_Assets_KeyName.ContainsKey(asset.AssetPath))
-                mDict_Assets_KeyName[asset.AssetPath] = asset;
+            if (mDict_Assets_KeyName.ContainsKey(asset.AssetPathLower))
+                mDict_Assets_KeyName[asset.AssetPathLower] = asset;
             else
-                mDict_Assets_KeyName.Add(asset.AssetPath, asset);
+                mDict_Assets_KeyName.Add(asset.AssetPathLower, asset);
+        }
 
-            int hashCode = asset.GetHashCode();
-            if (mDict_Assets_KeyHashCode.ContainsKey(hashCode))
-                mDict_Assets_KeyHashCode[hashCode] = asset;
-            else
+        /// <summary>
+        /// 资源在加载完成之后，调用一次这个
+        /// </summary>
+        /// <param name="asset"></param>
+        public void RegisterHashCode(VFSAsset asset)
+        {
+            if (asset == null || asset.Asset == null) return;
+
+            int hashCode = asset.Asset.GetHashCode();
+            if (!mDict_Assets_KeyHashCode.ContainsKey(hashCode))
+            {
                 mDict_Assets_KeyHashCode.Add(hashCode, asset);
+            }
         }
 
 
@@ -41,7 +50,7 @@ namespace TinaX.VFSKitInternal
                     {
                         mAssets.Remove(asset);
                         mDict_Assets_KeyHashCode.Remove(asset.GetHashCode());
-                        mDict_Assets_KeyName.Remove(asset.AssetPath);
+                        mDict_Assets_KeyName.Remove(asset.AssetPathLower);
                         asset = null;
                         return false;
                     }
@@ -63,7 +72,7 @@ namespace TinaX.VFSKitInternal
                     {
                         mAssets.Remove(asset);
                         mDict_Assets_KeyHashCode.Remove(hashCode);
-                        mDict_Assets_KeyName.Remove(asset.AssetPath);
+                        mDict_Assets_KeyName.Remove(asset.AssetPathLower);
                         asset = null;
                         return false;
                     }
@@ -78,13 +87,19 @@ namespace TinaX.VFSKitInternal
 
         public void Refresh()
         {
-            for(var i = mAssets.Count -1; i>=0; i--)
+            lock (this)
             {
-                if(mAssets[i].LoadState == AssetLoadState.Unloaded)
+                for (var i = mAssets.Count - 1; i >= 0; i--)
                 {
-                    mDict_Assets_KeyName.Remove(mAssets[i].AssetPath);
-                    mDict_Assets_KeyHashCode.Remove(mAssets[i].GetHashCode());
-                    mAssets.RemoveAt(i);
+                    if (mAssets[i].LoadState == AssetLoadState.Unloaded)
+                    {
+                        mDict_Assets_KeyName.Remove(mAssets[i].AssetPathLower);
+                        if (mDict_Assets_KeyHashCode.ContainsKey(mAssets[i].AssetHashCode))
+                        {
+                            mDict_Assets_KeyHashCode.Remove(mAssets[i].AssetHashCode);
+                        }
+                        mAssets.RemoveAt(i);
+                    }
                 }
             }
         }

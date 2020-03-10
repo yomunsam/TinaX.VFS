@@ -115,5 +115,24 @@ namespace TinaXEditor.VFSKitInternal.I18N
                 return "Switch ";
             }
         }
+
+        internal static string CreateVersionRecord
+        {
+            get
+            {
+                if (IsChinese) return "创建版本记录";
+                return "Create Version Record ";
+            }
+        }
+
+        internal static string RemoveAllAssetBundleSign
+        {
+            get
+            {
+                if (IsChinese) return "移除所有AssetBundle标记";
+                return "Remove All AssetBundle Sign";
+            }
+        }
+
     }
 }

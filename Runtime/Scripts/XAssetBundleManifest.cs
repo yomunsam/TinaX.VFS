@@ -59,6 +59,7 @@ namespace TinaX.VFSKit
                 this.RemoveCollaborationManifest(manifest.GetHashCode());
         }
 
+        
         public string[] GetAllAssetBundles()
         {
             List<string> names = new List<string>();
@@ -92,6 +93,7 @@ namespace TinaX.VFSKit
             }
         }
 
+        [Obsolete]
         public string[] GetAllDependencies(string assetBundleName)
         {
             List<string> Dependencies = new List<string>();
@@ -105,6 +107,7 @@ namespace TinaX.VFSKit
             }
         }
 
+        [Obsolete]
         public bool TryGetAllDependencies(string assetBundleName, out string[] dependencies)
         {
             List<string> list_dependencies = new List<string>();

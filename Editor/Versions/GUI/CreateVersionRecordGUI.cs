@@ -98,7 +98,7 @@ namespace TinaXEditor.VFSKit.Versions
                     match_branches_from_param.AddRange(main_package_branches);
                 string platform_name = XPlatformUtil.GetNameText(platform_from_param);
                 string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platform_name);
-                string[] extension_groups_in_source_package_folder = VFSEditorUtil.GetValidExtensionGroupNamesFromSourcePackage(source_packages_folder_path);
+                string[] extension_groups_in_source_package_folder = VFSEditorUtil.GetValidExtensionGroupNamesFromSourcePackages(source_packages_folder_path);
                 foreach(var groupName in extension_groups_in_source_package_folder)
                 {
                     string[] group_branches = VFSManagerEditor.VersionManager.GetBranchNamesByExtensionGroup(platform_from_param, groupName);
@@ -239,6 +239,10 @@ namespace TinaXEditor.VFSKit.Versions
 
                 if(IsSourcePackagesValidByCurBranch_BranchName == null || IsSourcePackagesValidByCurBranch_BranchName != mCurBranch.BranchName)
                 {
+                    if (mCurBranch == null || mCurBranch.BranchName != mCurSelectBranchName)
+                    {
+                        VFSManagerEditor.VersionManager.TryGetVersionBranch(mCurSelectBranchName, out mCurBranch);
+                    }
                     string platformName = XPlatformUtil.GetNameText(mCurBranch.Platform);
                     string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platformName);
                     if (mCurBranch.BType == VersionBranch.BranchType.MainPackage)

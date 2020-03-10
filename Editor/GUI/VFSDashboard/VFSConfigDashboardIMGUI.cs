@@ -255,9 +255,7 @@ namespace TinaXEditor.VFSKit.UI
                             {
                                 var this_platform_name = XPlatformUtil.GetNameText(XPlatformUtil.GetXRuntimePlatform(Application.platform));
                                 ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.Override_StreamingAssetsPath;
-                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_MainPackagePath_InStreamingAssets = VFSEditorUtil.GetMainPackageManifestFilePathInSourcePackagesFolder(ref this_platform_name);
-                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_DataFolderPath_InStreamingAssets = VFSEditorUtil.Get_PackagesDataFolderPath_InSourcePackages(ref this_platform_name);
-                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_ExtensionGroupRootPath_InStreamingAssets = VFSEditorUtil.Get_ExtensionGroupsRootFolder_InSourcePackages(ref this_platform_name);
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_StreamingAssets_PackagesRootFolderPath = VFSEditorUtil.GetSourcePackagesFolderPath(ref this_platform_name);
                             });
                         menu.ShowAsContext();
                     }
@@ -474,7 +472,7 @@ namespace TinaXEditor.VFSKit.UI
             {
                 //enable
                 if(sp_enable_webvfs == null)
-                    sp_enable_webvfs = mVFSConfigSerializedObject.FindProperty("EnableWebVFS");
+                    sp_enable_webvfs = mVFSConfigSerializedObject.FindProperty("InitWebVFSOnStart");
                 EditorGUILayout.PropertyField(sp_enable_webvfs, new GUIContent(VFSConfigDashboardI18N.Enable_WebVFS));
 
                 //default url

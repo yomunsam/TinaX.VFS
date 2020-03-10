@@ -13,6 +13,7 @@ using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.Const;
 using TinaXEditor.VFSKit.Pipeline;
 using TinaXEditor.VFSKit.Pipeline.Builtin;
+using TinaXEditor.VFSKit.Versions;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -128,6 +129,7 @@ namespace TinaXEditor.VFSKit.UI
         //private string cur_preview_profileName;
 
         private bool isBuilding = false;
+        private bool mBuilded = false;
 
         private void OnDestroy()
         {
@@ -279,11 +281,20 @@ namespace TinaXEditor.VFSKit.UI
             {
                 runBuild();
             }
-            if(GUILayout.Button("Clear All AssetBundle Signs"))
+            if(GUILayout.Button(VFSBuilderI18N.RemoveAllAssetBundleSign))
             {
-                VFSEditorUtil.RemoveAllAssetbundleSigns(true);
+                if(EditorUtility.DisplayDialog("Clear?", "Are you sure?", "yes", "no"))
+                {
+                    VFSEditorUtil.RemoveAllAssetbundleSigns(true);
+                }
+            }
+            if (GUILayout.Button(VFSBuilderI18N.CreateVersionRecord))
+            {
+                CreateVersionRecordGUI.VFS_Platform = cur_select_platform;
+                CreateVersionRecordGUI.OpenUI();
             }
             EditorGUILayout.Space();
+
             GUILayout.EndVertical();
         }
 
@@ -390,7 +401,7 @@ namespace TinaXEditor.VFSKit.UI
 
                 this.ShowNotification(new GUIContent("Build Finish"));
                 isBuilding = false;
-
+                mBuilded = true;
             }
             catch (Exception e)
             {

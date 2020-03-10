@@ -34,32 +34,16 @@ namespace TinaX.VFSKitInternal
          * 之所以把#if UNITY_EDITOR 的宏包在方法里面，是为了防止一些自动生成代码的工具把这些方法生成进去，导致报错。（比如xlua）
          * 但是任何时候不要在Runtime下真正去使用这些方法。
          */
-        public static string Get_Override_MainPackagePath() 
+        public static string Get_Override_StreamingAssets_PackasgeRootFolderPath() 
         {
 #if UNITY_EDITOR
-            return ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_MainPackagePath_InStreamingAssets;
+            return ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_StreamingAssets_PackagesRootFolderPath;
 #else
             return null;
 #endif
         }
 
-        public static string Get_Override_ExtensionGroupRootFolderPath()
-        {
-#if UNITY_EDITOR
-            return ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_ExtensionGroupRootPath_InStreamingAssets;
-#else
-            return null;
-#endif
-        }
 
-        public static string Get_Override_DataFolderPath()
-        {
-#if UNITY_EDITOR
-            return ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_DataFolderPath_InStreamingAssets;
-#else
-            return null;
-#endif
-        }
 
     }
 
@@ -69,20 +53,8 @@ namespace TinaX.VFSKitInternal
     {
         //private RuntimeAssetsLoadModeInEditor _loadMode;
         public RuntimeAssetsLoadModeInEditor LoadMode = RuntimeAssetsLoadModeInEditor.LoadByAssetDatabase;
-        //{
-        //    get
-        //    {
-        //        return _loadMode;
-        //    }
-        //    set
-        //    {
-        //        Debug.Log($"<color=#66ccff>Load Mode 被设置 {value.ToString()} </color>");
-        //        _loadMode = value;
-        //    }
-        //}
-        public string Override_MainPackagePath_InStreamingAssets;
-        public string Override_ExtensionGroupRootPath_InStreamingAssets;
-        public string Override_DataFolderPath_InStreamingAssets;
+
+        public string Override_StreamingAssets_PackagesRootFolderPath;
     }
 
 #endif

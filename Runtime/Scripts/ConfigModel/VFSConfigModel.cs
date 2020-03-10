@@ -78,7 +78,7 @@ namespace TinaX.VFSKit
         }
 
         #region Web VFS
-        public bool EnableWebVFS = true;
+        public bool InitWebVFSOnStart = true;
 
         public string DefaultWebVFSBaseUrl = "http://127.0.0.1:8080";
 

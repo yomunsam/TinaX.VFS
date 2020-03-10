@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using TinaX.VFSKitInternal.Utils;
 using TinaX.IO;
+using System.IO;
+using TinaX.VFSKit.Const;
+using TinaX.VFSKitInternal;
+using TinaX.VFSKitInternal.Utils;
 
 
 namespace TinaX.VFSKit
 {
-    public class VFSGroup
+    public class VFSGroup : IGroup
     {
         public string GroupName { get; set; }
 
@@ -52,14 +56,35 @@ namespace TinaX.VFSKit
         public List<FolderBuildRule> SpecialFolderBuildRules { get; private set; } = new List<FolderBuildRule>();
         public List<FolderBuildRule> SpecialFolderBuildRulesLower { get; private set; } = new List<FolderBuildRule>();
 
+        public XAssetBundleManifest AssetBundleManifest
+        {
+            get
+            {
+                if (Manifest_Remote != null) return Manifest_Remote;
+                if (Manifest_VirtualDisk != null) return Manifest_VirtualDisk;
+                return Manifest_StreamingAssets;
+            }
+        }
+        public XAssetBundleManifest Manifest_StreamingAssets { get; protected internal set; }
+        public XAssetBundleManifest Manifest_VirtualDisk { get; protected internal set; }
+        public XAssetBundleManifest Manifest_Remote { get; protected internal set; }
+
+        public FilesHashBook FilesHash_StreamingAssets { get; protected internal set; }
+        public FilesHashBook FilesHash_VirtualDisk { get; protected internal set; }
+        public FilesHashBook FilesHash_Remote { get; protected internal set; }
+        public FilesHashBook FilesHash
+        {
+            get
+            {
+                if (FilesHash_Remote != null) return FilesHash_Remote;
+                if (FilesHash_VirtualDisk != null) return FilesHash_VirtualDisk;
+                return FilesHash_StreamingAssets;
+            }
+        }
+
         private VFSGroupOption mOption;
 
         internal Loader.IAssetBundleLoader ABLoader;
-
-        public VFSGroup()
-        {
-            ABLoader = new Loader.AssetBundleLoader();
-        }
 
         public VFSGroup(VFSGroupOption option)
         {
@@ -197,21 +222,7 @@ namespace TinaX.VFSKit
             return true;
         }
 
-        public bool IsAssetBundleMatch(string abPath)
-        {
-            foreach(var folder in FolderPathsLower)
-            {
-                if (abPath.StartsWith(folder))
-                    return true;
-            }
-
-            foreach(var asset in AssetPathsLower)
-            {
-                if (GetAssetBundleNameOfAsset(asset).Equals(abPath))
-                    return true;
-            }
-            return false;
-        }
+        
 
         //给定的资源path是否包含在Folder中
         private bool _IsAssetPathMatchFolder(ref string assetPath, string folderPath)
@@ -358,6 +369,37 @@ namespace TinaX.VFSKit
             return false;
         }
 
+        /// <summary>
+        /// AssetBundle是否在这个组里
+        /// </summary>
+        /// <param name="assetbundleName"></param>
+        /// <returns></returns>
+        public bool IsAssetBundleBelongGroup(string assetbundleName)
+        {
+            return FilesHash.IsPathExist(assetbundleName);
+        }
+
+        /// <summary>
+        /// 获取Manifest的文件地址
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public string GetManifestFilePath(string packages_root_path)
+        {
+            if (this.ExtensionGroup)
+                return VFSUtil.GetExtensionGroups_AssetBundleManifests_Folder(packages_root_path, this.GroupName);
+            else
+                return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundleManifests_Folder, this.GroupName.GetMD5(true, true) + ".json");
+        }
+
+        public string GetAssetBundleHashsFilePath(string packages_root_path)
+        {
+            if (this.ExtensionGroup)
+                return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, this.GroupName, VFSConst.AssetBundleFilesHash_FileName);
+            else
+                return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundle_Hash_Files_Folder, this.GroupName.GetMD5(true, true) + ".json");
+        }
+
 
         /// <summary>
         /// 是否是FolderPathsLower的子目录
@@ -379,6 +421,10 @@ namespace TinaX.VFSKit
             string md5_32 = sourceAssetbundleName.GetMD5(true, false);
             return md5_32.Substring(0, 2) + "/" + md5_32.Substring(8,16);
         }
+
+
+
+
     }
 }
 

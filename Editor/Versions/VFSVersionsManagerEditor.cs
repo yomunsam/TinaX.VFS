@@ -14,6 +14,7 @@ using TinaX.VFSKitInternal;
 using TinaXEditor.VFSKit;
 using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.VFSKit.Const;
+using TinaX.VFSKitInternal.Utils;
 
 namespace TinaXEditor.VFSKit.Versions
 {
@@ -296,89 +297,148 @@ namespace TinaXEditor.VFSKit.Versions
 
                     bool isMainPackage = (branch.BType == VersionBranch.BranchType.MainPackage);
                     bool flag_process_error = false; //处理文件过程中如果出错则中断操作且不记录数据
-                    Exception process_exception = null;
 
-                    //记录数据
                     string platform_name = XPlatformUtil.GetNameText(branch.Platform);
                     string source_packages_folder_path = VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name);
                     string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref branch.BranchName, ref versionCode); //存放数据的地方
-                    XDirectory.DeleteIfExists(data_folder, true);
-                    Directory.CreateDirectory(data_folder);
 
-                    //复制并存档assets_hash文件
-                    string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
-                    string assets_hash_target_path = Path.Combine(data_folder, VFSConst.AssetsHashFileName);
+
                     try
                     {
+                        XDirectory.DeleteIfExists(data_folder, true);
+                        Directory.CreateDirectory(data_folder);
+
+                        //复制并存档assets_hash文件
+                        string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
+                        string assets_hash_target_path = Path.Combine(data_folder, VFSConst.AssetsHashFileName);
                         if (File.Exists(assets_hash_path))
                         {
                             File.Copy(assets_hash_path, assets_hash_target_path, true);
                         }
+
+                        //复制并存档Manifest文件
+                        string manifest_target_path = VFSEditorUtil.GetVersionData_Manifest_FolderOrFilePath(!isMainPackage, branchName, versionCode);
+                        string manifest_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetBundleManifestsFolderPath_InSourcePackagesFolder(platform_name) : VFSEditorUtil.GetExtensionGroup_AssetBundleManifestPath_InInSourcePackagesFolder(platform_name, branch.ExtensionGroupName);
+                        if (isMainPackage)
+                        {
+                            if (Directory.Exists(manifest_path))
+                                XDirectory.CopyDir(manifest_path, manifest_target_path);
+                        }
+                        else
+                        {
+                            if (File.Exists(manifest_path))
+                                File.Copy(manifest_path, manifest_target_path);
+                        }
+
+                        //复制并存档AssetBundleHashs
+                        string ab_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetBundle_HashFiles_FolderPath_InSourcePackagesFolder(platform_name) : VFSEditorUtil.GetExtensionGroup_AssetBundle_HashFiles_Path_InInSourcePackagesFolder(platform_name, branch.ExtensionGroupName);
+                        string ab_hash_target_path = VFSEditorUtil.GetVersionData_AssetBundle_HashFile_FolderOrFilePath(!isMainPackage, branchName, versionCode);
+                        if (isMainPackage)
+                        {
+                            if (Directory.Exists(ab_hash_path))
+                                XDirectory.CopyDir(ab_hash_path, ab_hash_target_path);
+                        }
+                        else
+                        {
+                            if (File.Exists(ab_hash_path))
+                                File.Copy(ab_hash_path, ab_hash_target_path);
+                        }
+
+                        //复制并存档editor build info
+                        string editor_build_info_path = VFSEditorUtil.Get_EditorBuildInfoPath(VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name));
+                        if (File.Exists(editor_build_info_path))
+                        {
+                            string target_path = VFSEditorUtil.GetVersionData_EditorBuildInfo_Path(branchName, versionCode);
+                            File.Copy(editor_build_info_path, target_path);
+                        }
+
+                        //复制并存档 build info
+                        string build_info_path = VFSUtil.GetMainPackage_BuildInfo_Path(VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name));
+                        if (File.Exists(build_info_path))
+                        {
+                            //存档
+                            string target_path = VFSEditorUtil.GetVersionData_BuildInfo_Path(branchName, versionCode);
+                            File.Copy(build_info_path, target_path);
+
+                            //反写版本信息到source package
+                            string build_info_json = File.ReadAllText(target_path, Encoding.UTF8);
+                            var obj = JsonUtility.FromJson<BuildInfo>(build_info_json);
+
+                            //写出版本信息
+                            var version_info = new PackageVersionInfo
+                            {
+                                version = versionCode,
+                                versionName = versionName,
+                                buildId = obj.BuildID
+                            };
+                            string version_info_path = isMainPackage ? VFSEditorUtil.Get_MainPackage_PackageVersionFilePath_InSourcePackages(ref platform_name) : VFSEditorUtil.Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
+                            XFile.DeleteIfExists(version_info_path);
+                            XConfig.SaveJson(version_info, version_info_path, AssetLoadType.SystemIO);
+
+                            //检查当前StreamingAssets中是否有与之build id一致的情况，如果有，也写出
+                            if (isMainPackage)
+                            {
+                                string buildinfo_in_stream = VFSUtil.GetMainPackage_BuildInfo_Path(VFSUtil.GetPackagesRootFolderInStreamingAssets(platform_name));
+                                if (File.Exists(buildinfo_in_stream))
+                                {
+                                    try
+                                    {
+                                        var obj_stream = XConfig.GetJson<BuildInfo>(buildinfo_in_stream, AssetLoadType.SystemIO, false);
+                                        if(obj_stream.BuildID == obj.BuildID)
+                                        {
+                                            //一致，写出
+                                            string target_stream = VFSUtil.GetMainPackage_VersionInfo_Path(VFSUtil.GetPackagesRootFolderInStreamingAssets(platform_name));
+                                            XConfig.SaveJson(version_info, target_stream, AssetLoadType.SystemIO);
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                            else
+                            {
+                                string buildinfo_in_stream = VFSUtil.GetExtensionGroup_BuildInfo_Path(VFSUtil.GetPackagesRootFolderInStreamingAssets(platform_name), branch.ExtensionGroupName);
+                                if (File.Exists(buildinfo_in_stream))
+                                {
+                                    try
+                                    {
+                                        var obj_stream = XConfig.GetJson<BuildInfo>(buildinfo_in_stream, AssetLoadType.SystemIO, false);
+                                        if (obj_stream.BuildID == obj.BuildID)
+                                        {
+                                            //一致，写出
+                                            string target_stream = VFSUtil.GetExtensionGroup_VersionInfo_Path(VFSUtil.GetPackagesRootFolderInStreamingAssets(platform_name), branch.ExtensionGroupName);
+                                            XConfig.SaveJson(version_info, target_stream, AssetLoadType.SystemIO);
+                                        }
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+
                     }
                     catch(Exception e)
                     {
-                        process_exception = e;
+                        XDirectory.DeleteIfExists(data_folder, true);
                         flag_process_error = true;
-                    }
-
-                    //复制并存档Manifest文件
-                    string manifest_target_path = VFSEditorUtil.GetManifestFilePathInVersionData(ref branchName, ref versionCode);
-                    string version_info_path = isMainPackage ? VFSEditorUtil.Get_MainPackage_PackageVersionFilePath_InSourcePackages(ref platform_name) : VFSEditorUtil.Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
-                    if (!flag_process_error)
-                    {
-                        string manifest_path = isMainPackage ? VFSEditorUtil.GetMainPackageManifestFilePathInSourcePackagesFolder(ref platform_name) : VFSEditorUtil.GetExtensionGroup_ManifestFilePath_IsSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
-                        try
-                        {
-                            if (File.Exists(manifest_path))
-                            {
-                                File.Copy(manifest_path, manifest_target_path);
-                            }
-
-                        }
-                        catch(Exception e)
-                        {
-                            process_exception = e;
-                            flag_process_error = true;
-                        }
-                        if (!flag_process_error)
-                        {
-                            try
-                            {
-                                //写出版本信息
-                                var version_info = new PackageVersionInfo
-                                {
-                                    version = versionCode,
-                                    versionName = versionName,
-                                    mainifestFileHash = XFile.GetMD5(manifest_path, true)
-                                };
-                                if (File.Exists(version_info_path)) File.Delete(version_info_path);
-                                XConfig.SaveJson(version_info, version_info_path, AssetLoadType.SystemIO);
-                            }
-                            catch (Exception e)
-                            {
-                                process_exception = e;
-                                flag_process_error = true;
-                            }
-                        }
-                            
+                        throw e;
                     }
 
                     //保存二进制文件
-                    string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref branchName, ref versionCode);
-                    if (saveBinary && !flag_process_error)
+                    if(saveBinary && !flag_process_error)
                     {
-                        long total_count = 0;
-                        //把所有二进制文件直接全拷进去
-                        string binary_path_temp = Path.Combine(binary_path, "temp");
-                        XDirectory.DeleteIfExists(binary_path_temp, true);
-                        Directory.CreateDirectory(binary_path_temp);
-                        /*
-                         * 首先，先把vfs_root和vfs_remote的文件得都还原到temp目录下，
-                         * 然后，把temp目录里的东西整体打包成zip，存储在binary_path
-                         */
+                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref branchName, ref versionCode);
 
                         try
                         {
+                            long total_count = 0;
+                            //把所有二进制文件直接全拷进去
+                            string binary_path_temp = Path.Combine(binary_path, "temp");
+                            XDirectory.DeleteIfExists(binary_path_temp, true);
+                            Directory.CreateDirectory(binary_path_temp);
+                            /*
+                             * 首先，先把vfs_root和vfs_remote的文件得都还原到temp目录下，
+                             * 然后，把temp目录里的东西整体打包成zip，存储在binary_path
+                             */
+
                             //移动文件
                             if (isMainPackage)
                             {
@@ -472,20 +532,10 @@ namespace TinaXEditor.VFSKit.Versions
                         }
                         catch(Exception e)
                         {
-                            process_exception = e;
                             flag_process_error = true;
+                            XDirectory.DeleteIfExists(binary_path);
+                            throw e;
                         }
-                        
-
-                    }
-
-                    if (flag_process_error)
-                    {
-                        //处理下错误：如果出错了，把之前创建的数据都删了。
-                        XDirectory.DeleteIfExists(data_folder);
-                        XDirectory.DeleteIfExists(binary_path);
-                        if (process_exception != null)
-                            throw process_exception;
                     }
 
                     if (!flag_process_error)

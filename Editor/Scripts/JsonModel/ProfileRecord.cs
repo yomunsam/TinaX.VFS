@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TinaX.VFSKit;
+using TinaXEditor.VFSKit;
 
 namespace TinaXEditor.VFSKitInternal
 {
@@ -35,7 +36,7 @@ namespace TinaXEditor.VFSKitInternal
         public S_GroupProfileRecord[] GroupProfileRecords = { };
 
 
-        public ProfileRecord DefaultByGrousp(List<VFSGroup> groups)
+        public ProfileRecord DefaultByGrousp(List<VFSEditorGroup> groups)
         {
             List<S_GroupProfileRecord> temp = new List<S_GroupProfileRecord>();
             foreach(var group in groups)

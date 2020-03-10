@@ -18,7 +18,12 @@
 #endif
         };
 
-        public const string ABsHashFileName = "filehashs.json";
+        public const string AssetBundleFilesHash_FileName = "FilesHash.json";
+
+        /// <summary>
+        /// vfs_data下，存放main package 中所有组的assetbundle的hash文件的目录名
+        /// </summary>
+        public const string MainPackage_AssetBundle_Hash_Files_Folder = "Hashs";
 
         public static readonly string AssetsHashFileName = "assets_hash.json";
         public static readonly string ExtensionGroupAssetsHashFolderName = "ExtensionGroupAssetsHash";
@@ -35,7 +40,8 @@
 
         public const string VFS_STREAMINGASSETS_PATH = "TinaX_VFS"; //Assets/StreamingAssets/TinaX_VFS
 
-        public const string AssetsManifestFileName = "VFSManifest.json";
+        public const string AssetBundleManifestFileName = "VFSManifest.json";
+        public const string MainPackage_AssetBundleManifests_Folder = "Manifests";
 
         /// <summary>
         /// 放在扩展组根目录下，表示扩展组信息的文件
@@ -43,6 +49,8 @@
         public static readonly string VFS_Data_ExtensionGroupInfo_FileName = "GroupInfo.json";
 
         public const string PakcageVersionFileName = "package_version.json";
+
+        public const string BuildInfoFileName = "build_info.json";
 
     }
 }

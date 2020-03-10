@@ -447,8 +447,8 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "启用Web VFS：";
-                return "Enable Web VFS:";
+                if (IsChinese) return "启用时初始化Web VFS：";
+                return "init Web VFS OnStart:";
             }
         }
 

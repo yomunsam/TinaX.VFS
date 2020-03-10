@@ -272,14 +272,19 @@ namespace TinaX.VFSKitInternal.Utils
 
         }
 
-        public static string GetSourcePackagesRootFolderInStreamingAssets(string platform_name)
+        /// <summary>
+        /// 获取StreamingAssets下的存放packages的根目录 （eg: streamingassets/TinaX_VFS/android）
+        /// </summary>
+        /// <param name="platform_name"></param>
+        /// <returns></returns>
+        public static string GetPackagesRootFolderInStreamingAssets(string platform_name)
         {
             return Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH, platform_name);
         }
-        public static string GetSourcePackagesRootFolderInStreamingAssets()
+        public static string GetPackagesRootFolderInStreamingAssets()
         {
             var pname = XPlatformUtil.GetNameText(XPlatformUtil.GetXRuntimePlatform(Application.platform));
-            return GetSourcePackagesRootFolderInStreamingAssets(pname);
+            return GetPackagesRootFolderInStreamingAssets(pname);
         }
 
         /// <summary>
@@ -288,7 +293,16 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetMainPackageFolderInStreamingAssets()
         {
-            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_MAIN);
+            return GetMainPackageFolderInPackages(GetPackagesRootFolderInStreamingAssets());
+        }
+        /// <summary>
+        /// 给定路径里的main package 路径（vfs_root)
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackageFolderInPackages(string packages_root_path)
+        {
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_MAIN);
         }
 
         /// <summary>
@@ -297,7 +311,11 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetDataFolderInStreamingAssets()
         {
-            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_DATA);
+            return GetDataFolderInPackages(GetPackagesRootFolderInStreamingAssets());
+        }
+        public static string GetDataFolderInPackages(string packages_root_path)
+        {
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA);
         }
 
         /// <summary>
@@ -306,18 +324,25 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroupRootFolderInStreamingAssets()
         {
-            return Path.Combine(GetSourcePackagesRootFolderInStreamingAssets(), VFSConst.VFS_FOLDER_EXTENSION);
+            return GetExtensionGroupRootFolderInPackages(GetPackagesRootFolderInStreamingAssets());
+        }
+        public static string GetExtensionGroupRootFolderInPackages(string packages_root_path)
+        {
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION);
         }
 
-        public static string GetAssetBundleManifestInPackage(string package_path)
+        /// <summary>
+        /// 在给定的根目录中，获取到某个扩展组的根目录
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroupFolder(string packages_root_path, string groupName)
         {
-            return Path.Combine(package_path, VFSConst.AssetsManifestFileName);
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, groupName);
         }
         
-        public static string GetAssetBundleFileHashBookInPackage(string package_path)
-        {
-            return Path.Combine(package_path, VFSConst.ABsHashFileName);
-        }
+
 
         public static string GetAssetPathInExtensionGroup(string extension_root_folder,string groupName,string assetbundleName)
         {
@@ -332,6 +357,100 @@ namespace TinaX.VFSKitInternal.Utils
                 return Path.Combine(main_or_extension_folder, assetBundleName);
         }
 
+        /// <summary>
+        /// 获取Main Package中某个组的AssetBundle的Hash记录文件
+        /// </summary>
+        /// <param name="root_path"></param>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        public static string GetMainPackageAssetBundleHashFilePath(string root_path, string groupName)
+        {
+            return Path.Combine(GetMainPackageAssetBundleHashFilesRootPath(root_path), groupName.GetMD5(true,true));
+        }
+
+        /// <summary>
+        /// 获取Main Package中所有AssetBundle的hash记录文件存放的根目录（vfs_data/main_hashs/）
+        /// </summary>
+        /// <param name="root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackageAssetBundleHashFilesRootPath(string root_path)
+        {
+            return Path.Combine(root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundle_Hash_Files_Folder);
+        }
+
+        /// <summary>
+        /// 获取给定的根目录中  扩展组的AssetBundle的 Hash 记录文件
+        /// </summary>
+        /// <param name="root_path"></param>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroup_AssetBundleHashFileFilePath(string root_path,string groupName)
+        {
+            return Path.Combine(root_path, VFSConst.VFS_FOLDER_EXTENSION, groupName, VFSConst.AssetBundleFilesHash_FileName);
+        }
+
+        /// <summary>
+        /// 在给定的跟路径下获取记录MainPackage存放所有AssetBundleManifest文件的目录
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackage_AssetBundleManifests_Folder(string packages_root_path)
+        {
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundleManifests_Folder);
+        }
+
+        /// <summary>
+        /// 在给定的路径下获取记录 扩展组 的 AssetBundleManifest 的路径
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <param name="group_name"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroups_AssetBundleManifests_Folder(string packages_root_path, string group_name)
+        {
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, group_name, VFSConst.AssetBundleManifestFileName);
+        }
+
+        /// <summary>
+        /// 在给定的路径下 获取 MainPackage的 BuildInfo 的路径
+        /// </summary>
+        /// <param name="package_root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackage_BuildInfo_Path(string package_root_path)
+        {
+            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.BuildInfoFileName);
+        }
+
+        /// <summary>
+        /// 在给定的路径下 获取 扩展组的 BuildInfo 的路径
+        /// </summary>
+        /// <param name="package_root_path"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroup_BuildInfo_Path(string package_root_path, string group)
+        {
+            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, group, VFSConst.BuildInfoFileName);
+        }
+
+        /// <summary>
+        /// 在给定的路径下 获取 MainPackage的 版本信息 的路径
+        /// </summary>
+        /// <param name="package_root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackage_VersionInfo_Path(string package_root_path)
+        {
+            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.PakcageVersionFileName);
+        }
+
+        /// <summary>
+        /// 在给定的路径下 获取 扩展组的 版本信息 的路径
+        /// </summary>
+        /// <param name="package_root_path"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroup_VersionInfo_Path(string package_root_path, string group)
+        {
+            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, group, VFSConst.PakcageVersionFileName);
+        }
 
         private static readonly int head_code = 65279;
         private static readonly char head_char = (char)head_code;

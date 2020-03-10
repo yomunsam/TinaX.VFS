@@ -14,5 +14,8 @@ namespace TinaX.VFSKit.Loader
         UniTask<AssetBundle> LoadAssetBundleFromAndroidStreamingAssetsAsync(string path, string assetbundleName, string virtualDiskPath);
         UniTask<AssetBundle> LoadAssetBundleFromFileAsync(string path, string assetbundleName);
         UniTask<AssetBundle> LoadAssetBundleFromWebAsync(string path, string assetBundleName, int timeout);
+
+        AssetBundle LoadAssetBundleFromAndroidStreamingAssets(string path, string assetbundleName, string virtualDiskPath);
+        AssetBundle LoadAssetBundleFromFile(string path, string assetbundleName);
     }
 }
