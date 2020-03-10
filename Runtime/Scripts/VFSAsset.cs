@@ -90,6 +90,23 @@ namespace TinaX.VFSKitInternal
             this.AssetHashCode = this._asset.GetHashCode();
         }
 
+        public async UniTask LoadAsync(Type type)
+        {
+            if (this.Bundle == null)
+                throw new VFSException("[TinaX.VFS] Error: Load asset but assetbundle is null, asset :" + AssetPathLower);
+            if (this.Bundle.LoadState != AssetLoadState.Loaded)
+                throw new VFSException("[TinaX.VFS] Error: Load asset but assetbundle not ready, asset :" + AssetPathLower);
+            if (this.LoadState == AssetLoadState.Unloaded)
+                throw new VFSException("[TinaX.VFS] Error: Attempt to load an unloaded asset :" + AssetPathLower);
+            if (this._asset == null || this.LoadState != AssetLoadState.Loaded)
+            {
+                this._asset = await this.Bundle.AssetBundle.LoadAssetAsync(this.AssetPathLower,type);
+            }
+            this.LoadState = AssetLoadState.Loaded;
+            this.LoadTask = UniTask.CompletedTask;
+            this.AssetHashCode = this._asset.GetHashCode();
+        }
+
     }
 
 

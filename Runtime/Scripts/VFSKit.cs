@@ -288,6 +288,35 @@ namespace TinaX.VFSKit
             return asset.Get<T>();
         }
 
+        public void LoadAsync<T>(string assetPath,Action<T> callback) where T : UnityEngine.Object
+        {
+            this.LoadAsync<T>(assetPath)
+                .ToObservable<T>()
+                .SubscribeOnMainThread()
+                .Subscribe(t =>
+                {
+                    callback?.Invoke(t);
+                });
+        }
+
+        public void LoadAsync<T>(string assetPath, Action<T,VFSException> callback) where T : UnityEngine.Object
+        {
+            this.LoadAsync<T>(assetPath)
+                .ToObservable<T>()
+                .SubscribeOnMainThread()
+                .Subscribe(t =>
+                {
+                    callback?.Invoke(t,null);
+                },
+                e=>
+                {
+                    if (e is VFSException)
+                        callback?.Invoke(null, e as VFSException);
+                    else
+                        throw e;
+                });
+        }
+
         public async Task<IAsset> LoadAssetAsync<T> (string assetPath) where T : UnityEngine.Object
         {
 #if UNITY_EDITOR
@@ -307,6 +336,57 @@ namespace TinaX.VFSKit
             }
 #endif
             return await this.loadAssetAsync<T>(assetPath);
+        }
+
+        public async Task<IAsset> LoadAssetAsync(string assetPath, Type type)
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+            {
+                //要查询的
+                if (this.QueryAsset(assetPath, out var result, out var group))
+                {
+                    return await loadAssetFromAssetDatabase(assetPath,type);
+                }
+                else
+                {
+                    throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS")
+                                           + "Path:"
+                                           + assetPath, VFSErrorCode.ValidLoadPath);
+                }
+            }
+#endif
+            return await this.loadAssetAsync(assetPath, type);
+        }
+
+        public void LoadAssetAsync<T>(string assetPath, Action<IAsset> callback) where T : UnityEngine.Object
+        {
+            this.LoadAssetAsync<T>(assetPath)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset);
+                });
+        }
+
+        public void LoadAssetAsync<T>(string assetPath, Action<IAsset,VFSException> callback) where T : UnityEngine.Object
+        {
+            this.LoadAssetAsync<T>(assetPath)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset, null);
+                }, e =>
+                {
+                    if (e is VFSException)
+                    {
+                        callback?.Invoke(null, (VFSException)e);
+                    }
+                    else
+                        throw e;
+                });
         }
 
         public void Release(UnityEngine.Object asset)
@@ -635,6 +715,37 @@ namespace TinaX.VFSKit
             }
         }
 
+        private async UniTask<IAsset> loadAssetAsync(string assetPath, Type type)
+        {
+            if (QueryAsset(assetPath, out var result, out var group))
+            {
+                VFSAsset asset;
+                //是否已加载
+                lock (this)
+                {
+                    bool load_flag = this.IsAssetLoadedOrLoading(result.AssetPathLower, out asset);
+                    if (!load_flag)
+                    {
+                        asset = new VFSAsset(group, result);
+                        asset.LoadTask = doLoadAssetAsync(asset,type);
+                        this.Assets.Register(asset);
+                    }
+                    else
+                        asset.Retain();
+                }
+
+                if (asset.LoadState != AssetLoadState.Loaded)
+                {
+                    await asset.LoadTask;
+                }
+                return asset;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+        }
+
         //只执行加载，不做判断，啥也不干
         private async UniTask doLoadAssetAsync<T>(VFSAsset asset)
         {
@@ -648,6 +759,17 @@ namespace TinaX.VFSKit
             this.Assets.RegisterHashCode(asset);
         }
 
+        private async UniTask doLoadAssetAsync(VFSAsset asset, Type type)
+        {
+            if (asset.LoadState != AssetLoadState.Loaded && asset.LoadState != AssetLoadState.Unloaded) asset.LoadState = AssetLoadState.Loading;
+            if (asset.Bundle == null)
+            {
+                //来加载bundle吧
+                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group, true);
+            }
+            await asset.LoadAsync(type);
+            this.Assets.RegisterHashCode(asset);
+        }
         #endregion 
 
         #region 加载AssetBundle_Async
@@ -1260,6 +1382,13 @@ namespace TinaX.VFSKit
         {
             await UniTask.DelayFrame(1);
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(asset_path);
+            return new EditorAsset(asset);
+        }
+
+        private async Task<IAsset> loadAssetFromAssetDatabase(string asset_path, Type type) 
+        {
+            await UniTask.DelayFrame(1);
+            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath(asset_path, type);
             return new EditorAsset(asset);
         }
 
