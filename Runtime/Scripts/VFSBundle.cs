@@ -34,6 +34,7 @@ namespace TinaX.VFSKitInternal
 
         public UniTask LoadTask { get; internal set; }
 
+        public List<VFSAsset> Assets = new List<VFSAsset>();
 
         public void Release()
         {
@@ -84,6 +85,11 @@ namespace TinaX.VFSKitInternal
         /// </summary>
         internal void Load()
         {
+            if (this.LoadState == AssetLoadState.Loaded && this.AssetBundle != null) return;
+            if (LoadState == AssetLoadState.Unloaded)
+                throw new VFSException("[TinaX.VFS] Error: Attempt to load an unloaded assetbundle :" + this.AssetBundleName);
+
+
             LoadState = AssetLoadState.Loading; //其实这时候改没啥用
             if (LoadedPath.StartsWith("jar:file://", StringComparison.Ordinal))
             {
@@ -156,5 +162,27 @@ namespace TinaX.VFSKitInternal
             this.Dependencies = null;
             this.DependenciesNames = null;
         }
+
+        /// <summary>
+        /// 当某个asset有此bundle成功load之后，将其注册进来
+        /// </summary>
+        /// <param name="asset"></param>
+        internal protected void RegisterAsset(VFSAsset asset)
+        {
+            if (!this.Assets.Contains(asset))
+            {
+                this.Assets.Add(asset);
+            }
+        }
+
+        internal protected void UnRegisterAsset(VFSAsset asset)
+        {
+            if (this.Assets.Contains(asset))
+            {
+                this.Assets.Remove(asset);
+            }
+        }
+
+
     }
 }

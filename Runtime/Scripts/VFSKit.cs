@@ -1,4 +1,9 @@
-﻿using System.IO;
+﻿/*
+ * 你看啊，所有加载方法在最终实现的时候都按照泛型和非泛型写了两套，
+ * 那为什么不直接把泛型的T用typeof(T)传给带Type参数的非泛型方法呢，这样就可以少写一遍了
+ * 因为作者有强迫症，这么搞会觉得难受。
+ */
+using System.IO;
 using System.Text;
 using System.Linq;
 using System.Collections;
@@ -270,43 +275,124 @@ namespace TinaX.VFSKit
             return Task.CompletedTask;
         }
 
-
-
+        #region 各种各样的对外的资源加载方法
+        //同步加载======================================================================================================
+        
+        /// <summary>
+        /// 加载资源，同步 泛型
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
         public T Load<T>(string assetPath) where T : UnityEngine.Object
         {
-            throw new NotImplementedException();
+            return this.LoadAsset<T>(assetPath).Get<T>();
         }
 
+        /// <summary>
+        /// 加载资源，同步，非泛型
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public UnityEngine.Object Load(string assetPath, Type type)
         {
-            throw new NotImplementedException();
+            return this.LoadAsset(assetPath, type).Asset;
         }
 
+
+        /// <summary>
+        /// 加载【IAsset】,同步，泛型 【所有的同步泛型方法从这儿封装】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        public IAsset LoadAsset<T>(string assetPath) where T : UnityEngine.Object
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+            {
+                return this.loadAssetFromAssetDatabase<T>(assetPath);   //资源查询之类的判定在这个里面处理了
+            }
+#endif
+            return this.loadAsset<T>(assetPath); //资源查询之类的判定在内部实现
+        }
+
+        /// <summary>
+        /// 加载【IAsset】,同步，非泛型 【所有的同步非泛型方法从这儿封装】
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public IAsset LoadAsset(string assetPath, Type type)
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+            {
+                return this.loadAssetFromAssetDatabase(assetPath, type);   //资源查询之类的判定在这个里面处理了
+            }
+#endif
+            return this.loadAsset(assetPath, type); //资源查询之类的判定在内部实现
+        }
+
+        //异步加载======================================================================================================
+        
+        /// <summary>
+        /// 加载资源 ， 异步Task， 泛型
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
         public async Task<T> LoadAsync<T>(string assetPath) where T : UnityEngine.Object
         {
             var asset = await this.LoadAssetAsync<T>(assetPath);
             return asset.Get<T>();
         }
 
-        public void LoadAsync<T>(string assetPath,Action<T> callback) where T : UnityEngine.Object
+        /// <summary>
+        /// 加载资源 ， 异步Task， 非泛型
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public async Task<UnityEngine.Object> LoadAsync(string assetPath, Type type)
         {
-            this.LoadAsync<T>(assetPath)
-                .ToObservable<T>()
-                .SubscribeOnMainThread()
-                .Subscribe(t =>
-                {
-                    callback?.Invoke(t);
-                });
+            var asset = await this.LoadAssetAsync(assetPath, type);
+            return asset.Asset;
         }
 
+        /// <summary>
+        /// 加载资源，异步callback，泛型，
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <param name="callback"></param>
+        public void LoadAsync<T>(string assetPath,Action<T> callback) where T : UnityEngine.Object
+        {
+            this.LoadAssetAsync<T>(assetPath)
+                .ToObservable<IAsset>()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset.Get<T>());
+                },
+                e => { throw e; });
+        }
+
+        /// <summary>
+        /// 加载资源，异步callback,携带异常，泛型
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <param name="callback"></param>
         public void LoadAsync<T>(string assetPath, Action<T,VFSException> callback) where T : UnityEngine.Object
         {
-            this.LoadAsync<T>(assetPath)
-                .ToObservable<T>()
+            this.LoadAssetAsync<T>(assetPath)
+                .ToObservable<IAsset>()
                 .SubscribeOnMainThread()
-                .Subscribe(t =>
+                .Subscribe(asset =>
                 {
-                    callback?.Invoke(t,null);
+                    callback?.Invoke(asset.Get<T>(), null);
                 },
                 e=>
                 {
@@ -317,43 +403,78 @@ namespace TinaX.VFSKit
                 });
         }
 
-        public async Task<IAsset> LoadAssetAsync<T> (string assetPath) where T : UnityEngine.Object
+        /// <summary>
+        /// 加载资源， 异步callback ，非泛型
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <param name="callback"></param>
+        public void LoadAsync(string assetPath,Type type, Action<UnityEngine.Object> callback)
+        {
+            this.LoadAssetAsync(assetPath, type)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset.Asset);
+                },
+                e => { throw e; });
+        }
+
+        /// <summary>
+        /// 加载资源， 异步callback ，非泛型
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <param name="callback"></param>
+        public void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object, VFSException> callback)
+        {
+            this.LoadAssetAsync(assetPath, type)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset.Asset, null);
+                },
+                e => 
+                {
+                    if (e is VFSException)
+                        callback?.Invoke(null, e as VFSException);
+                    else
+                        throw e;
+                });
+        }
+
+        //
+        /// <summary>
+        /// 加载【IAsset】,异步Task， 泛型，【所有 泛型 异步 方法都是从这里封装出去的】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        public async Task<IAsset> LoadAssetAsync<T> (string assetPath) where T : UnityEngine.Object 
         {
 #if UNITY_EDITOR
             if (mLoadByAssetDatabaseInEditor)
             {
-                //要查询的
-                if (this.QueryAsset(assetPath, out var result, out var group))
-                {
-                    return await loadAssetFromAssetDatabase<T>(assetPath);
-                }
-                else
-                {
-                    throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS")
-                                           + "Path:"
-                                           + assetPath, VFSErrorCode.ValidLoadPath);
-                }
+                return await this.loadAssetFromAssetDatabaseAsync<T>(assetPath);
             }
 #endif
             return await this.loadAssetAsync<T>(assetPath);
         }
 
-        public async Task<IAsset> LoadAssetAsync(string assetPath, Type type)
+        /// <summary>
+        /// 加载【IAsset】,异步Task， 非泛型，【所有 非泛型 异步方法都是从这里封装出去的】
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public async Task<IAsset> LoadAssetAsync(string assetPath, Type type) //
         {
 #if UNITY_EDITOR
             if (mLoadByAssetDatabaseInEditor)
             {
-                //要查询的
-                if (this.QueryAsset(assetPath, out var result, out var group))
-                {
-                    return await loadAssetFromAssetDatabase(assetPath,type);
-                }
-                else
-                {
-                    throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS")
-                                           + "Path:"
-                                           + assetPath, VFSErrorCode.ValidLoadPath);
-                }
+                return await this.loadAssetFromAssetDatabaseAsync(assetPath, type);
             }
 #endif
             return await this.loadAssetAsync(assetPath, type);
@@ -389,14 +510,53 @@ namespace TinaX.VFSKit
                 });
         }
 
+        public void LoadAssetAsync(string assetPath,Type type, Action<IAsset> callback)
+        {
+            this.LoadAssetAsync(assetPath,type)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset);
+                });
+        }
+
+        public void LoadAssetAsync(string assetPath, Type type, Action<IAsset,VFSException > callback)
+        {
+            this.LoadAssetAsync(assetPath,type)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset, null);
+                }, e =>
+                {
+                    if (e is VFSException)
+                    {
+                        callback?.Invoke(null, (VFSException)e);
+                    }
+                    else
+                        throw e;
+                });
+        }
+
+        #endregion
+
+        #region GC相关
         public void Release(UnityEngine.Object asset)
         {
 #if UNITY_EDITOR
-            if (mLoadByAssetDatabaseInEditor) return;
+            if (mLoadByAssetDatabaseInEditor)
+            {
+                if (this.Assets.TryGetEditorAsset(asset.GetHashCode(), out var editor_asset))
+                    editor_asset.Release();
+                return;
+            }
 #endif
-            if(this.Assets.TryGetAsset(asset.GetHashCode(),out var vfs_asset))
+            if (this.Assets.TryGetAsset(asset.GetHashCode(), out var vfs_asset))
                 vfs_asset.Release();
-
+            else if (this.Assets.TryGetAssetSync(asset.GetHashCode(), out var vfs_asset_sync))
+                vfs_asset_sync.Release();
         }
 
         public void UnloadUnusedAssets()
@@ -404,6 +564,13 @@ namespace TinaX.VFSKit
             this.Assets.Refresh();
             this.Bundles.Refresh();
         }
+
+        #endregion
+
+
+
+
+
 
         public VFSException GetStartException()
         {
@@ -873,6 +1040,147 @@ namespace TinaX.VFSKit
 
         #region VFS Asset 同步加载
 
+        /// <summary>
+        /// 同步加载【IAsset】，正常AssetBundle模式，泛型，【私有方法总入口】
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        private IAsset loadAsset<T>(string assetPath) where T : UnityEngine.Object
+        {
+            if(QueryAsset(assetPath,out var result, out var group))
+            {
+                VFSAsset asset;
+                lock (this)
+                {
+                    if(this.Assets.TryGetAsset(result.AssetPathLower,out asset))
+                    {
+                        if(asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            asset.Retain();
+                            return asset;
+                        }
+                    }
+                }
+                //同步cache检查
+                lock (this)
+                {
+                    if(this.Assets.TryGetAssetSync(result.AssetPathLower,out asset))
+                    {
+                        if(asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            asset.Retain();
+                            return asset;
+                        }
+                    }
+                }
+
+                //两次检查都没有return的话，开始同步加载
+                asset = new VFSAsset(group, result);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Load<T>();
+
+                //加载结束，检查
+                if (this.Assets.TryGetAsset(result.AssetPathLower,out var _asset))
+                {
+                    if(_asset.LoadState == AssetLoadState.Loaded)
+                    {
+                        asset.Unload();
+                        _asset.Retain();
+                        return _asset;
+                    }
+                    else
+                    {
+                        this.Assets.RegisterSync(asset);
+                        this.Assets.RegisterHashCodeSync(asset);
+                        return asset;
+                    }
+                }
+                else
+                {
+                    this.Assets.Register(asset);
+                    this.Assets.RegisterHashCode(asset);
+                    return asset;
+                }
+
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+        }
+
+        /// <summary>
+        /// 同步加载【IAsset】，正常AssetBundle模式，非泛型，【私有方法总入口】
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private IAsset loadAsset(string assetPath, Type type)
+        {
+            if (QueryAsset(assetPath, out var result, out var group))
+            {
+                VFSAsset asset;
+                lock (this)
+                {
+                    if (this.Assets.TryGetAsset(result.AssetPathLower, out asset))
+                    {
+                        if (asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            asset.Retain();
+                            return asset;
+                        }
+                    }
+                }
+                //同步cache检查
+                lock (this)
+                {
+                    if (this.Assets.TryGetAssetSync(result.AssetPathLower, out asset))
+                    {
+                        if (asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            asset.Retain();
+                            return asset;
+                        }
+                    }
+                }
+
+                //两次检查都没有return的话，开始同步加载
+                asset = new VFSAsset(group, result);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Load(type);
+
+                //加载结束，检查
+                if (this.Assets.TryGetAsset(result.AssetPathLower, out var _asset))
+                {
+                    if (_asset.LoadState == AssetLoadState.Loaded)
+                    {
+                        asset.Unload();
+                        _asset.Retain();
+                        return _asset;
+                    }
+                    else
+                    {
+                        this.Assets.RegisterSync(asset);
+                        this.Assets.RegisterHashCodeSync(asset);
+                        return asset;
+                    }
+                }
+                else
+                {
+                    this.Assets.Register(asset);
+                    this.Assets.RegisterHashCode(asset);
+                    return asset;
+                }
+
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+        }
+        
+        
         #endregion
 
         #region 同步加载AssetBundle
@@ -1378,20 +1686,74 @@ namespace TinaX.VFSKit
 
 #if UNITY_EDITOR
         #region 编辑器下的AssetDatabase加载
-        private async Task<IAsset> loadAssetFromAssetDatabase<T>(string asset_path) where T : UnityEngine.Object
+        private async Task<IAsset> loadAssetFromAssetDatabaseAsync<T>(string asset_path) where T : UnityEngine.Object
         {
-            await UniTask.DelayFrame(1);
-            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(asset_path);
-            return new EditorAsset(asset);
+            var asset = loadAssetFromAssetDatabase<T>(asset_path); //编辑器没提供异步接口，所以同步加载
+            await UniTask.DelayFrame(1); //为了模拟异步，我们等待一帧（总之不能让调用它的地方变成同步方法）
+            return asset;
         }
 
-        private async Task<IAsset> loadAssetFromAssetDatabase(string asset_path, Type type) 
+        private async Task<IAsset> loadAssetFromAssetDatabaseAsync(string asset_path, Type type) 
         {
-            await UniTask.DelayFrame(1);
-            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath(asset_path, type);
-            return new EditorAsset(asset);
+            var asset = loadAssetFromAssetDatabase(asset_path, type); //编辑器没提供异步接口，所以同步加载
+            await UniTask.DelayFrame(1); //为了模拟异步，我们等待一帧（总之不能让调用它的地方变成同步方法）
+            return asset;
         }
 
+
+        private IAsset loadAssetFromAssetDatabase<T>(string assetPath) where T : UnityEngine.Object
+        {
+            //要查询的
+            if (this.QueryAsset(assetPath, out var result, out var group))
+            {
+                //查重
+                if (this.Assets.TryGetEditorAsset(result.AssetPathLower,out var _editor_asset))
+                {
+                    return _editor_asset;
+                }
+                //加载
+                var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                //登记
+                var editor_asset = new EditorAsset(asset, result.AssetPathLower);
+                editor_asset.Retain();
+                this.Assets.Register(editor_asset);
+                return editor_asset;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS")
+                                       + "Path:"
+                                       + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+            
+        }
+
+        private IAsset loadAssetFromAssetDatabase(string assetPath, Type type)
+        {
+            //要查询的
+            if (this.QueryAsset(assetPath, out var result, out var group))
+            {
+                //查重
+                if (this.Assets.TryGetEditorAsset(result.AssetPathLower, out var _editor_asset))
+                {
+                    return _editor_asset;
+                }
+                //加载
+                var asset = UnityEditor.AssetDatabase.LoadAssetAtPath(assetPath, type);
+                //登记
+                var editor_asset = new EditorAsset(asset, result.AssetPathLower);
+                editor_asset.Retain();
+                this.Assets.Register(editor_asset);
+                return editor_asset;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS")
+                                       + "Path:"
+                                       + assetPath, VFSErrorCode.ValidLoadPath);
+            }
+
+        }
 
         #endregion
 #endif
