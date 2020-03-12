@@ -506,5 +506,14 @@ namespace TinaXEditor.VFSKitInternal.I18N
             }
         }
 
+        internal static string FileManager
+        {
+            get
+            {
+                if (IsChinese) return "已打包资源管理";
+                return "Built Files Manager";
+            }
+        }
+
     }
 }

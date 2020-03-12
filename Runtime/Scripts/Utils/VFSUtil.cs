@@ -302,6 +302,7 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns>组名 数组</returns>
         public static string[] GetValidExtensionGroupNames(string extensions_root_path, long? main_package_version = null)
         {
+            if (!Directory.Exists(extensions_root_path)) return Array.Empty<string>();
             List<string> groups = new List<string>();
             string[] folders = Directory.GetDirectories(extensions_root_path, "*", SearchOption.TopDirectoryOnly);
             foreach (var folder in folders)

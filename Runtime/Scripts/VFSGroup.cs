@@ -412,7 +412,6 @@ namespace TinaX.VFSKit
                 return VFSUtil.GetAssetBundlePathFromPackages(this.ExtensionGroup, packages_root_path, assetbundleName,this.GroupName);
             else
                 return VFSUtil.GetAssetBundlePathFromPackages(this.ExtensionGroup, packages_root_path, assetbundleName);
-
         }
 
 

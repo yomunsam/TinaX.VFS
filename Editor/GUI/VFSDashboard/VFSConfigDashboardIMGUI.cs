@@ -122,6 +122,13 @@ namespace TinaXEditor.VFSKit.UI
                             VFSManagerEditor.RefreshManager(true); 
                             VFSBuilderIMGUI.OpenUI(); 
                         });
+                    _build_menu.AddItem(
+                        new GUIContent(VFSConfigDashboardI18N.FileManager),
+                        false,
+                        () =>
+                        {
+                            UI.VFSFilesManagerGUI.OpenUI();
+                        });
                 }
                 return _build_menu;
             }

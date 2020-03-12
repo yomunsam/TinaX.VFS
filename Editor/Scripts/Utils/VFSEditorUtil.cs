@@ -90,18 +90,23 @@ namespace TinaXEditor.VFSKit.Utils
         /// 检查在给定的根目录下，是否有有效的MainPackage文件
         /// </summary>
         /// <returns></returns>
-        internal static bool IsValid_MainPackage_InPackages(string packages_root_path)
+        internal static bool IsValid_MainPackage_InPackages(string packages_root_path,bool runtime_used = false)
         {
             //检查是否有vfs_root目录
-            if (!File.Exists(VFSUtil.GetMainPackageFolderInPackages(packages_root_path))) return false;
+            string vfs_root = VFSUtil.GetMainPackageFolderInPackages(packages_root_path);
+            if (!Directory.Exists(vfs_root)) return false;
             //检查data目录
-            if (!File.Exists(VFSUtil.GetDataFolderInPackages(packages_root_path))) return false;
-            //检查asset_hash
-            if (!File.Exists(VFSEditorUtil.GetMainPackage_AssetsHash_FilePath_InPackages(packages_root_path))) return false;
+            if (!Directory.Exists(VFSUtil.GetDataFolderInPackages(packages_root_path))) return false;
             //检查build_info
             if (!File.Exists(VFSUtil.GetMainPackage_BuildInfo_Path(packages_root_path))) return false;
-            //检查editor build_info
-            if (!File.Exists(VFSEditorUtil.Get_EditorBuildInfoPath(packages_root_path))) return false;
+            
+            if (!runtime_used)
+            {
+                //检查asset_hash
+                if (!File.Exists(VFSEditorUtil.GetMainPackage_AssetsHash_FilePath_InPackages(packages_root_path))) return false;
+                //检查editor build_info
+                if (!File.Exists(VFSEditorUtil.Get_EditorBuildInfoPath(packages_root_path))) return false;
+            }
 
             return true;
         }
@@ -117,9 +122,21 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         internal static bool IsValid_ExtensionGroup_InPackages(string packages_root_path,string group_name)
         {
-            var arr = VFSUtil.GetValidExtensionGroupNames(packages_root_path);
+            var arr = VFSUtil.GetValidExtensionGroupNames(VFSUtil.GetExtensionPackageRootFolderInPackages(packages_root_path));
             if (arr == null || arr.Length ==0) return false;
             return arr.Contains(group_name);
+        }
+
+        /// <summary>
+        /// 在给定的目录下，是否有任何一个有效的扩展组
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        internal static bool IsAnyValidExtensionGroup_InPackages(string packages_root_path)
+        {
+            var arr = VFSUtil.GetValidExtensionGroupNames(VFSUtil.GetExtensionPackageRootFolderInPackages(packages_root_path));
+            if (arr == null || arr.Length == 0) return false;
+            return true;
         }
 
         
