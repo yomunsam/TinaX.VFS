@@ -421,6 +421,8 @@ namespace TinaXEditor.VFSKit
                         //给独立的组生成一份hash
                         group.MakeAssetBundleFilesHash(root_path, extension_group_root_path, mDict_Group_AssetBundleNames[group.GroupName]);
                         SaveExtensionGroupInfo(extension_group_root_path, group.GroupName, platform, group.ExtensionGroup_MainPackageVersionLimit);
+                        //保存Options
+                        group.SaveGroupOptionFile(root_path);
                     }
 
                     #endregion
@@ -540,7 +542,7 @@ namespace TinaXEditor.VFSKit
 
         private void SaveExtensionGroupInfo(string group_path, string group_name, XRuntimePlatform platform , long mainPackageVersionLimit)
         {
-            string file_path = Path.Combine(group_path, VFSConst.VFS_Data_ExtensionGroupInfo_FileName);
+            string file_path = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(group_path);
             var obj = new ExtensionGroupInfo();
             obj.Platform = platform;
             obj.GroupName = group_name;

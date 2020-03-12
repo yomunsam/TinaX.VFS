@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEditor;
 using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.VFSKit.Const;
+using TinaX.VFSKitInternal.Utils;
 
 
 namespace TinaXEditor.VFSKit.Versions
@@ -98,7 +99,7 @@ namespace TinaXEditor.VFSKit.Versions
                     match_branches_from_param.AddRange(main_package_branches);
                 string platform_name = XPlatformUtil.GetNameText(platform_from_param);
                 string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platform_name);
-                string[] extension_groups_in_source_package_folder = VFSEditorUtil.GetValidExtensionGroupNamesFromSourcePackages(source_packages_folder_path);
+                string[] extension_groups_in_source_package_folder = VFSUtil.GetValidExtensionGroupNames(VFSUtil.GetExtensionPackageRootFolderInPackages(source_packages_folder_path));
                 foreach(var groupName in extension_groups_in_source_package_folder)
                 {
                     string[] group_branches = VFSManagerEditor.VersionManager.GetBranchNamesByExtensionGroup(platform_from_param, groupName);
@@ -247,11 +248,11 @@ namespace TinaXEditor.VFSKit.Versions
                     string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platformName);
                     if (mCurBranch.BType == VersionBranch.BranchType.MainPackage)
                     {
-                        IsSourcePackagesValidByCurBranch = VFSEditorUtil.CheckSourcePackagesValid_MainPackage(source_packages_folder_path);
+                        IsSourcePackagesValidByCurBranch = VFSEditorUtil.IsValid_MainPackage_InPackages(source_packages_folder_path);
                     }
                     else
                     {
-                        IsSourcePackagesValidByCurBranch = VFSEditorUtil.CheckSourcePackagesValid_ExtensionGroups(source_packages_folder_path, mCurBranch.ExtensionGroupName);
+                        IsSourcePackagesValidByCurBranch = VFSEditorUtil.IsValid_ExtensionGroup_InPackages(source_packages_folder_path, mCurBranch.ExtensionGroupName);
                     }
 
                     IsSourcePackagesValidByCurBranch_BranchName = mCurBranch.BranchName;

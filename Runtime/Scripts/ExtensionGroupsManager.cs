@@ -20,14 +20,27 @@ namespace TinaX.VFSKitInternal
             mVFS = vfs;
         }
 
+        public void Register(VFSExtensionGroup group)
+        {
+            lock (this)
+            {
+                if (!mGroups.Contains(group))
+                    mGroups.Add(group);
+                if (mDict_Groups.ContainsKey(group.GroupName.ToLower()))
+                    mDict_Groups[group.GroupName.ToLower()] = group;
+                else
+                    mDict_Groups.Add(group.GroupName.ToLower(), group);
+            }
+        }
+
         public bool TryGetExtensionGroup(string groupName, out VFSExtensionGroup group)
         {
             return mDict_Groups.TryGetValue(groupName, out group);
         }
 
-        public bool IsGroupEnabled(string groupName)
+        public bool IsExists(string groupName)
         {
-            return mDict_Groups.ContainsKey(groupName);
+            return mDict_Groups.ContainsKey(groupName.ToLower());
         }
 
     }

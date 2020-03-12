@@ -299,7 +299,7 @@ namespace TinaXEditor.VFSKit.Versions
                     bool flag_process_error = false; //处理文件过程中如果出错则中断操作且不记录数据
 
                     string platform_name = XPlatformUtil.GetNameText(branch.Platform);
-                    string source_packages_folder_path = VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name);
+                    string source_packages_folder_path = VFSEditorUtil.GetSourcePackagesFolderPath(platform_name);
                     string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref branch.BranchName, ref versionCode); //存放数据的地方
 
 
@@ -309,7 +309,7 @@ namespace TinaXEditor.VFSKit.Versions
                         Directory.CreateDirectory(data_folder);
 
                         //复制并存档assets_hash文件
-                        string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
+                        string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
                         string assets_hash_target_path = Path.Combine(data_folder, VFSConst.AssetsHashFileName);
                         if (File.Exists(assets_hash_path))
                         {
@@ -345,7 +345,7 @@ namespace TinaXEditor.VFSKit.Versions
                         }
 
                         //复制并存档editor build info
-                        string editor_build_info_path = VFSEditorUtil.Get_EditorBuildInfoPath(VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name));
+                        string editor_build_info_path = VFSEditorUtil.Get_EditorBuildInfoPath(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name));
                         if (File.Exists(editor_build_info_path))
                         {
                             string target_path = VFSEditorUtil.GetVersionData_EditorBuildInfo_Path(branchName, versionCode);
@@ -353,7 +353,7 @@ namespace TinaXEditor.VFSKit.Versions
                         }
 
                         //复制并存档 build info
-                        string build_info_path = VFSUtil.GetMainPackage_BuildInfo_Path(VFSEditorUtil.GetSourcePackagesFolderPath(ref platform_name));
+                        string build_info_path = VFSUtil.GetMainPackage_BuildInfo_Path(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name));
                         if (File.Exists(build_info_path))
                         {
                             //存档
@@ -371,7 +371,7 @@ namespace TinaXEditor.VFSKit.Versions
                                 versionName = versionName,
                                 buildId = obj.BuildID
                             };
-                            string version_info_path = isMainPackage ? VFSEditorUtil.Get_MainPackage_PackageVersionFilePath_InSourcePackages(ref platform_name) : VFSEditorUtil.Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
+                            string version_info_path = isMainPackage ? VFSEditorUtil.Get_MainPackage_PackageVersionFilePath_InSourcePackages(platform_name) : VFSEditorUtil.Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
                             XFile.DeleteIfExists(version_info_path);
                             XConfig.SaveJson(version_info, version_info_path, AssetLoadType.SystemIO);
 
@@ -442,7 +442,7 @@ namespace TinaXEditor.VFSKit.Versions
                             //移动文件
                             if (isMainPackage)
                             {
-                                string local_path = VFSEditorUtil.Get_MainPackage_LocalAssetsFolderPath_InSourcePackages(ref platform_name);
+                                string local_path = VFSEditorUtil.Get_MainPackage_AssetsFolderPath_InSourcePackages(platform_name);
                                 int local_path_len = local_path.Length + 1;
                                 string[] local_files = Directory.GetFiles(local_path, "*.*", SearchOption.AllDirectories);
                                 if (local_files != null && local_files.Length > 0)
@@ -458,7 +458,7 @@ namespace TinaXEditor.VFSKit.Versions
                                     }
                                 }
 
-                                string remote_path = VFSEditorUtil.Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(ref platform_name);
+                                string remote_path = VFSEditorUtil.Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(platform_name);
                                 int remote_path_len = remote_path.Length + 1;
                                 string[] remote_files = Directory.GetFiles(remote_path, "*.*", SearchOption.AllDirectories);
                                 if (remote_files != null && remote_files.Length > 0)
@@ -477,7 +477,7 @@ namespace TinaXEditor.VFSKit.Versions
                             }
                             else
                             {
-                                string group_path = VFSEditorUtil.Get_ExtensionGroupFolderPath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
+                                string group_path = VFSEditorUtil.Get_ExtensionGroupFolderPath_InSourcePackages(platform_name, branch.ExtensionGroupName);
                                 int group_path_len = group_path.Length + 1;
                                 string[] group_files = Directory.GetFiles(group_path, "*.*", SearchOption.AllDirectories);
                                 if (group_files != null && group_files.Length > 0)

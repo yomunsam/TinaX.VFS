@@ -9,6 +9,7 @@ using UnityEngine;
 using System.IO;
 using TinaX.IO;
 using TinaX.VFSKitInternal;
+using TinaX.VFSKitInternal.Utils;
 
 namespace TinaXEditor.VFSKit
 {
@@ -67,6 +68,16 @@ namespace TinaXEditor.VFSKit
 
             string save_path = base.GetAssetBundleHashsFilePath(package_root_path);
             XConfig.SaveJson(hashbook, save_path, AssetLoadType.SystemIO);
+        }
+
+        public void SaveGroupOptionFile(string package_root_path)
+        {
+            string target_path = VFSUtil.GetExtensionPackages_GroupOptions_FilePath(package_root_path, this.GroupName);
+            XFile.DeleteIfExists(target_path);
+            XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+
+            string json = JsonUtility.ToJson(base.mOption);
+            File.WriteAllText(target_path, json);
         }
 
     }

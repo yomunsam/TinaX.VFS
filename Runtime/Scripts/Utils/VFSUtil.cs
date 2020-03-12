@@ -273,6 +273,77 @@ namespace TinaX.VFSKitInternal.Utils
         }
 
         /// <summary>
+        /// 判断给定的路径是否是个有效的扩展包（每个扩展组是一个独立的扩展包）
+        /// </summary>
+        /// <param name="package_path"></param>
+        /// <returns></returns>
+        public static bool IsValidExtensionPackage(string package_path)
+        {
+            if (!Directory.Exists(package_path)) return false;
+            //检查，扩展包的根目录下会有的几个东西
+            //FileHash
+            string hash_path = Path.Combine(package_path, VFSConst.AssetBundleFilesHash_FileName);
+            if (!File.Exists(hash_path)) return false;
+            //group_option
+            if (!File.Exists(VFSUtil.Get_GroupOptions_InExtensionPackage(package_path))) return false;
+            //groupInfo
+            if (!File.Exists(VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(package_path))) return false;
+            //manifest
+            if (!File.Exists(Path.Combine(package_path, VFSConst.AssetBundleManifestFileName))) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 在给定的目录下，寻找有效可用的扩展组信息，返回组数组
+        /// </summary>
+        /// <param name="extensions_root_path">存放扩展组的根目录，该方法只会搜寻它的直接子目录</param>
+        /// <param name="main_package_version">如果提供Main Package版本信息，将只会返回满足扩展组对MainPackage最低版本限制的扩展组列表</param>
+        /// <returns>组名 数组</returns>
+        public static string[] GetValidExtensionGroupNames(string extensions_root_path, long? main_package_version = null)
+        {
+            List<string> groups = new List<string>();
+            string[] folders = Directory.GetDirectories(extensions_root_path, "*", SearchOption.TopDirectoryOnly);
+            foreach (var folder in folders)
+            {
+                if (VFSUtil.IsValidExtensionPackage(folder))
+                {
+                    //读取groupName
+                    try
+                    {
+                        string group_info_path = Path.Combine(folder, VFSConst.VFS_ExtensionGroupInfo_FileName);
+                        string group_info_json = File.ReadAllText(group_info_path);
+                        var group_info_obj = JsonUtility.FromJson<ExtensionGroupInfo>(group_info_json);
+                        if (main_package_version != null)
+                        {
+                            //判断版本
+                            if (main_package_version.Value >= group_info_obj.MainPackageVersionLimit)
+                                groups.Add(group_info_obj.GroupName);
+                        }
+                        else
+                            groups.Add(group_info_obj.GroupName);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError("[TinaX.VFS] Exception while load extension package info : " + folder + "\n" + e.Message);
+                    }
+                }
+            }
+            return groups.ToArray();
+        }
+
+
+        /// <summary>
+        /// 获取扩展组的那个文件夹的名字，（不是完整路径）
+        /// </summary>
+        /// <param name="group_name"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroupFolderName(string group_name)
+        {
+            return group_name.ToLower();
+        }
+
+        /// <summary>
         /// 获取StreamingAssets下的存放packages的根目录 （eg: streamingassets/TinaX_VFS/android）
         /// </summary>
         /// <param name="platform_name"></param>
@@ -313,6 +384,11 @@ namespace TinaX.VFSKitInternal.Utils
         {
             return GetDataFolderInPackages(GetPackagesRootFolderInStreamingAssets());
         }
+        /// <summary>
+        /// 获取给定路径里的data目录(vfs_data) 
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
         public static string GetDataFolderInPackages(string packages_root_path)
         {
             return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA);
@@ -322,11 +398,16 @@ namespace TinaX.VFSKitInternal.Utils
         /// StreamingAssets 里的 vfs_extension
         /// </summary>
         /// <returns></returns>
-        public static string GetExtensionGroupRootFolderInStreamingAssets()
+        public static string GetExtensionPackageRootFolderInStreamingAssets()
         {
-            return GetExtensionGroupRootFolderInPackages(GetPackagesRootFolderInStreamingAssets());
+            return GetExtensionPackageRootFolderInPackages(GetPackagesRootFolderInStreamingAssets());
         }
-        public static string GetExtensionGroupRootFolderInPackages(string packages_root_path)
+        /// <summary>
+        /// 在给定的根目录中，获取存放扩展包的文件夹的路径（vfs_extension)
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public static string GetExtensionPackageRootFolderInPackages(string packages_root_path)
         {
             return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION);
         }
@@ -339,22 +420,37 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroupFolder(string packages_root_path, string groupName)
         {
-            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, groupName);
+            return Path.Combine(VFSUtil.GetExtensionPackageRootFolderInPackages(packages_root_path), GetExtensionGroupFolderName(groupName));
         }
         
 
-
-        public static string GetAssetPathInExtensionGroup(string extension_root_folder,string groupName,string assetbundleName)
+        /// <summary>
+        /// 在给定的“扩展包根目录”中，获取某个扩展包中的assetbundle的路径
+        /// </summary>
+        /// <param name="extension_root_folder"></param>
+        /// <param name="groupName"></param>
+        /// <param name="assetbundleName"></param>
+        /// <returns></returns>
+        public static string GetAssetBundlePathFromExtensionGroup_InExtensionPackagesRootFolder(string extension_root_folder,string groupName,string assetbundleName)
         {
-            return Path.Combine(extension_root_folder, groupName, assetbundleName);
+            return Path.Combine(extension_root_folder, GetExtensionGroupFolderName(groupName), assetbundleName);
         }
 
-        public static string GetAssetPath(bool isExtensionGroup, string main_or_extension_folder, string assetBundleName, string group_name = null)
+        /// <summary>
+        /// 获取给定的根目录中（Packages root path），某个AssetBundle的位置
+        /// </summary>
+        /// <param name="isExtensionGroup"></param>
+        /// <param name="packages_root_path"></param>
+        /// <param name="assetBundleName"></param>
+        /// <param name="group_name"></param>
+        /// <returns></returns>
+        public static string GetAssetBundlePathFromPackages(bool isExtensionGroup, string packages_root_path, string assetBundleName, string group_name = null)
         {
             if (isExtensionGroup)
-                return Path.Combine(main_or_extension_folder, group_name, assetBundleName);
+                return GetAssetBundlePathFromExtensionGroup_InExtensionPackagesRootFolder(GetExtensionPackageRootFolderInPackages(packages_root_path), group_name, assetBundleName);
             else
-                return Path.Combine(main_or_extension_folder, assetBundleName);
+                return Path.Combine(VFSUtil.GetMainPackageFolderInPackages(packages_root_path), assetBundleName);
+            
         }
 
         /// <summary>
@@ -386,7 +482,7 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_AssetBundleHashFileFilePath(string root_path,string groupName)
         {
-            return Path.Combine(root_path, VFSConst.VFS_FOLDER_EXTENSION, groupName, VFSConst.AssetBundleFilesHash_FileName);
+            return Path.Combine(root_path, VFSConst.VFS_FOLDER_EXTENSION, GetExtensionGroupFolderName(groupName), VFSConst.AssetBundleFilesHash_FileName);
         }
 
         /// <summary>
@@ -407,7 +503,7 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroups_AssetBundleManifests_Folder(string packages_root_path, string group_name)
         {
-            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, group_name, VFSConst.AssetBundleManifestFileName);
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, GetExtensionGroupFolderName(group_name), VFSConst.AssetBundleManifestFileName);
         }
 
         /// <summary>
@@ -428,7 +524,27 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_BuildInfo_Path(string package_root_path, string group)
         {
-            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, group, VFSConst.BuildInfoFileName);
+            return GetExtensionGroup_BuildInfo_Path_InGroupPath(GetExtensionGroupFolder(package_root_path, group));
+        }
+
+        /// <summary>
+        /// 在给定的 扩展组的根目录下 获取扩展组的 BuildInfo 文件路径
+        /// </summary>
+        /// <param name="group_path"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroup_BuildInfo_Path_InGroupPath(string group_path)
+        {
+            return Path.Combine(group_path, VFSConst.BuildInfoFileName);
+        }
+
+        /// <summary>
+        /// 在给定的 扩展组的根目录下 获取扩展组的 GroupInfo 文件路径
+        /// </summary>
+        /// <param name="group_path"></param>
+        /// <returns></returns>
+        public static string GetExtensionGroup_GroupInfo_Path_InGroupPath(string group_path)
+        {
+            return Path.Combine(group_path, VFSConst.VFS_ExtensionGroupInfo_FileName);
         }
 
         /// <summary>
@@ -436,9 +552,27 @@ namespace TinaX.VFSKitInternal.Utils
         /// </summary>
         /// <param name="package_root_path"></param>
         /// <returns></returns>
-        public static string GetMainPackage_VersionInfo_Path(string package_root_path)
+        public static string GetMainPackage_VersionInfo_Path(string packages_root_path)
         {
-            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.PakcageVersionFileName);
+            return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.PakcageVersionFileName);
+        }
+
+        /// <summary>
+        /// 在给定的根目录中获取扩展组的option文件路径
+        /// </summary>
+        public static string GetExtensionPackages_GroupOptions_FilePath(string packages_root_path, string group_name)
+        {
+            return Get_GroupOptions_InExtensionPackage(GetExtensionGroupFolder(packages_root_path, group_name));
+        }
+
+        /// <summary>
+        /// 在给定的扩展包（组）的根目录中，获取GroupOptions文件的路径
+        /// </summary>
+        /// <param name="extension_group_path"></param>
+        /// <returns></returns>
+        public static string Get_GroupOptions_InExtensionPackage(string extension_group_path)
+        {
+            return Path.Combine(extension_group_path, VFSConst.GetExtensionGroup_GroupOption_FileName);
         }
 
         /// <summary>
@@ -449,26 +583,11 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_VersionInfo_Path(string package_root_path, string group)
         {
-            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, group, VFSConst.PakcageVersionFileName);
+            return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, GetExtensionGroupFolderName(group), VFSConst.PakcageVersionFileName);
         }
 
-        private static readonly int head_code = 65279;
-        private static readonly char head_char = (char)head_code;
-        private static readonly string head_str = new string(new char[1] { head_char });
 
-        public static void RemoveInvalidHead(ref string text)
-        {
-            if (text.StartsWith(head_str))
-                text = text.Substring(1, text.Length - 1);
-        }
 
-        public static string RemoveInvalidHead(string text)
-        {
-            if (text.StartsWith(head_str))
-                return text.Substring(1, text.Length - 1);
-            else
-                return text;
-        }
 
     }
 

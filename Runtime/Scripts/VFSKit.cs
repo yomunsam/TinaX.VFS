@@ -41,6 +41,7 @@ namespace TinaX.VFSKit
 
         public int DownloadWebAssetTimeout { get; set; } = 10;
         public int DownloadAssetBundleManifestTimeout { get; set; } = 5;
+        public int DownloadAssetBundleFilesHashTimeout { get; set; } = 5;
 
         public bool Override_StreamingAssetsPath { get; private set; } = false;
 
@@ -117,6 +118,7 @@ namespace TinaX.VFSKit
         internal BundlesManager Bundles { get; private set; } = new BundlesManager();
         internal AssetsManager Assets { get; private set; } = new AssetsManager();
         internal ExtensionGroupsManager ExtensionGroups { get; private set; }
+        private PackageVersionInfo MainPackage_Version;
 
         private bool mInited = false;
         private bool mWebVFSReady = false;
@@ -133,7 +135,7 @@ namespace TinaX.VFSKit
             mStreamingAssets_PackagesRootFolderPath = VFSUtil.GetPackagesRootFolderInStreamingAssets();
             mStreamingAssets_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInStreamingAssets();
             mStreamingAssets_DataRootFolderPath = VFSUtil.GetDataFolderInStreamingAssets();
-            mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionGroupRootFolderInStreamingAssets();
+            mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionPackageRootFolderInStreamingAssets();
 
             Platform = XPlatformUtil.GetXRuntimePlatform(Application.platform);
             PlatformText = XPlatformUtil.GetNameText(Platform);
@@ -155,11 +157,13 @@ namespace TinaX.VFSKit
                     mStreamingAssets_PackagesRootFolderPath = VFSLoadModeInEditor.Get_Override_StreamingAssets_PackasgeRootFolderPath();
                     mStreamingAssets_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInPackages(mStreamingAssets_PackagesRootFolderPath);
                     mStreamingAssets_DataRootFolderPath = VFSUtil.GetDataFolderInPackages(mStreamingAssets_PackagesRootFolderPath);
-                    mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionGroupRootFolderInPackages(mStreamingAssets_PackagesRootFolderPath);
+                    mStreamingAssets_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionPackageRootFolderInPackages(mStreamingAssets_PackagesRootFolderPath);
                     break;
             }
 #endif
         }
+
+        #region 生命周期
 
         /// <summary>
         /// 启动，如果初始化失败，则返回false.
@@ -167,7 +171,6 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         public async Task<bool> Start()
         {
-            Debug.Log("启动VFS");
             if (mInited) return true;
             #region Configs
             // load config by xconfig | VFS not ready, so vfs config can not load by vfs.
@@ -190,7 +193,7 @@ namespace TinaX.VFSKit
             XDirectory.CreateIfNotExists(VirtualDiskPath);
             mVirtualDisk_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInPackages(VirtualDiskPath);
             mVirtualDisk_DataFolderPath = VFSUtil.GetDataFolderInPackages(VirtualDiskPath);
-            mVirtualDisk_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionGroupRootFolderInPackages(VirtualDiskPath);
+            mVirtualDisk_ExtensionGroupRootFolderPath = VFSUtil.GetExtensionPackageRootFolderInPackages(VirtualDiskPath);
 
             #region Manifest and FilesHash ...
             try
@@ -208,7 +211,7 @@ namespace TinaX.VFSKit
                 }
                 await Task.WhenAll(list_init_manifest_and_hashs_tasks);
             }
-            catch(VFSException e)
+            catch (VFSException e)
             {
                 mStartException = e;
 #if UNITY_EDITOR
@@ -216,9 +219,44 @@ namespace TinaX.VFSKit
 #endif
                 return false;
             }
-            
+
             #endregion
 
+            #region VersionInfo
+            bool init_version_info = true;
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor) init_version_info = false;
+#endif
+            if (init_version_info)
+            {
+                try
+                {
+                    string path_vdisk = VFSUtil.GetMainPackage_VersionInfo_Path(VirtualDiskPath);
+                    if (File.Exists(path_vdisk))
+                    {
+                        string json = File.ReadAllText(path_vdisk, Encoding.UTF8);
+                        if (!json.IsNullOrEmpty())
+                        {
+                            this.MainPackage_Version = JsonUtility.FromJson<PackageVersionInfo>(json);
+                        }
+                    }
+
+                    if (this.MainPackage_Version == null)
+                    {
+                        string path_stream = VFSUtil.GetMainPackage_AssetBundleManifests_Folder(mStreamingAssets_PackagesRootFolderPath);
+                        string json = await this.LoadTextFromStreamingAssetsAsync(path_stream);
+                        this.MainPackage_Version = JsonUtility.FromJson<PackageVersionInfo>(json);
+                    }
+                }
+                catch (FileNotFoundException) { }
+                catch (VFSException e)
+                {
+                    mStartException = e;
+                    return false;
+                }
+            }
+
+            #endregion
 
 
             bool need_init_webvfs = false;
@@ -249,6 +287,17 @@ namespace TinaX.VFSKit
             return true;
         }
 
+        public VFSException GetStartException()
+        {
+            return mStartException;
+        }
+
+        public Task OnServiceClose()
+        {
+            return Task.CompletedTask;
+        }
+        #endregion
+
         public async Task InitWebVFS()
         {
             #region WebVFS Url
@@ -270,10 +319,7 @@ namespace TinaX.VFSKit
             mWebVFSReady = true;
         }
 
-        public Task OnServiceClose()
-        {
-            return Task.CompletedTask;
-        }
+        
 
         #region 各种各样的对外的资源加载方法
         //同步加载======================================================================================================
@@ -568,22 +614,217 @@ namespace TinaX.VFSKit
         #endregion
 
 
-
-
-
-
-        public VFSException GetStartException()
+        #region 组 相关
+        public IGroup[] GetAllGroups()
         {
-            return mStartException;
+            List<IGroup> groups = new List<IGroup>();
+            foreach (var group in mGroups)
+                groups.Add(group);
+            foreach (var group in this.ExtensionGroups.mGroups)
+                groups.Add(group);
+            return groups.ToArray();
         }
 
-
-
-
-        public VFSGroup[] GetAllGroups()
+        public bool TryGetGroup(string groupName, out IGroup group)
         {
-            return mGroups.ToArray();
+            if (this.mDict_Groups.TryGetValue(groupName, out var _group))
+            {
+                group = _group;
+                return true;
+            }
+            else
+            {
+                if (this.ExtensionGroups.TryGetExtensionGroup(groupName, out var ex_group))
+                {
+                    group = ex_group;
+                    return true;
+                }
+                else
+                {
+                    group = null;
+                    return false;
+                }
+            }
         }
+        #endregion
+
+        #region 扩展组
+
+        /// <summary>
+        /// 寻找本地（VirtualDisk）存在的扩展组
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetExtensionPackagesInVirtualDisk()
+        {
+            if (this.MainPackage_Version == null)
+                return VFSUtil.GetValidExtensionGroupNames(mVirtualDisk_ExtensionGroupRootFolderPath);
+            else
+                return VFSUtil.GetValidExtensionGroupNames(mVirtualDisk_ExtensionGroupRootFolderPath, this.MainPackage_Version.version);
+        }
+
+        /// <summary>
+        /// 往VFS中加入扩展包（扩展组）
+        /// </summary>
+        /// <param name="group_name"></param>
+        /// <returns></returns>
+        public async Task<bool> AddExtensionPackage(string group_name)
+        {
+            if (this.ExtensionGroups.IsExists(group_name)) return true;
+            VFSGroupOption group_options = null;
+            //在VirtualDisk中寻找扩展包
+            string folder_path_vdisk = VFSUtil.GetExtensionGroupFolder(VirtualDiskPath, group_name);
+            if (VFSUtil.IsValidExtensionPackage(folder_path_vdisk))
+            {
+                string group_info = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(folder_path_vdisk);
+                string group_info_json = File.ReadAllText(group_info, Encoding.UTF8);
+                var group_info_obj = JsonUtility.FromJson<ExtensionGroupInfo>(group_info_json);
+
+                if(this.MainPackage_Version != null)
+                {
+                    if (this.MainPackage_Version.version < group_info_obj.MainPackageVersionLimit)
+                        throw new VFSException("[TinaX.VFS] The extension package need to ensure that the version of Main Package is greater than " + group_info_obj.MainPackageVersionLimit.ToString() + " , Extension Group Name: " + group_name + "\nPackage Path:" + folder_path_vdisk, VFSErrorCode.ExtensionPackageVersionConflict);
+                }
+                string group_option_path = VFSUtil.Get_GroupOptions_InExtensionPackage(folder_path_vdisk);
+                string group_option_json = File.ReadAllText(group_option_path, Encoding.UTF8);
+                group_options = JsonUtility.FromJson<VFSGroupOption>(group_option_json);
+            }
+            else
+            {
+                bool find_package_in_streamingassets = true;
+#if UNITY_EDITOR
+                if (mLoadByAssetDatabaseInEditor) find_package_in_streamingassets = false;
+#endif
+                if (find_package_in_streamingassets)
+                {
+                    try
+                    {
+                        string folder_path_stream = VFSUtil.GetExtensionGroupFolder(mStreamingAssets_PackagesRootFolderPath, group_name);
+                        string group_info_path = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(folder_path_stream);
+                        string group_info_json_stream = await LoadTextFromStreamingAssetsAsync(group_info_path);
+                        var group_info = JsonUtility.FromJson<ExtensionGroupInfo>(group_info_json_stream);
+                        if (this.MainPackage_Version != null)
+                        {
+                            if (this.MainPackage_Version.version < group_info.MainPackageVersionLimit)
+                                throw new VFSException("[TinaX.VFS] The extension package need to ensure that the version of Main Package is greater than " + group_info.MainPackageVersionLimit.ToString() + " , Extension Group Name: " + group_name + "\nPackage Path:" + folder_path_stream, VFSErrorCode.ExtensionPackageVersionConflict);
+                        }
+                        string group_option_path_stream = VFSUtil.Get_GroupOptions_InExtensionPackage(folder_path_stream);
+                        string group_option_json_stream = await LoadTextFromStreamingAssetsAsync(group_option_path_stream);
+                        group_options = JsonUtility.FromJson<VFSGroupOption>(group_option_json_stream);
+                    }
+                    catch (FileNotFoundException) { }
+
+                }
+
+#if UNITY_EDITOR
+                if (mLoadByAssetDatabaseInEditor)
+                {
+                    //在编辑器模式下，我们直接去config里找找有没有
+                    var options = mConfig.Groups.Where(o => o.GroupName.ToLower() == group_name.ToLower());
+                    if (options.Count() > 0)
+                    {
+                        group_options = options.First();
+                    }
+                }
+#endif
+            }
+
+            if (group_options == null) return false;
+
+            VFSExtensionGroup group = new VFSExtensionGroup(group_options);
+            //登记
+            lock (this)
+            {
+                if (this.ExtensionGroups.IsExists(group.GroupName))
+                    return true;
+                else
+                    this.ExtensionGroups.Register(group);
+            }
+
+            //Manifest and FileHash
+            bool init_manifest_and_filehash = true;
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor) init_manifest_and_filehash = false;
+#endif
+            if (init_manifest_and_filehash)
+            {
+                Task[] task_manifest_filehash = new Task[2];
+                task_manifest_filehash[0] = InitExtensionGroupManifest(group);
+                task_manifest_filehash[1] = InitExtensionGroupFilesHash(group);
+                await Task.WhenAll(task_manifest_filehash);
+            }
+            
+
+            return true;
+        }
+
+        public void AddExtensionPackage(string group_name, Action<bool,VFSException> callback)
+        {
+            this.AddExtensionPackage(group_name)
+                .ToObservable()
+                .SubscribeOnMainThread()
+                .Subscribe(isSuccess =>
+                {
+                    callback?.Invoke(isSuccess,null);
+                },
+                e=> {
+                    if (e is VFSException)
+                        callback(false, e as VFSException);
+                    else
+                        Debug.LogException(e);
+                });
+        }
+
+        public async Task<bool> AddExtensionPackageByPath(string extension_package_path, bool available_web_vfs = true)
+        {
+#if UNITY_EDITOR
+            if(mLoadByAssetDatabaseInEditor)
+            {
+                UnityEditor.EditorUtility.DisplayDialog(
+                    IsChinese ? "喵" : "Oops",
+                    IsChinese ? "您当前正在使用编辑器方式模拟资源加载功能，在该模式下您不能从加载工程外部的扩展包。\n如有需要，请在编辑器中将VFS切换自“AssetBundle”加载模式。" : "You are currently using the editor mode to simulate the resource loading function. \nIn this mode, you cannot load extension packages from outside the project. \nIf necessary, switch the VFS from \"AssetBundle\" load mode in the editor.",
+                    "Okey");
+                return false;
+            }
+#endif
+            //检查给定的目录是否有效
+            if (!VFSUtil.IsValidExtensionPackage(extension_package_path)) return false;
+            string group_info_path = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(extension_package_path);
+            var group_info = XConfig.GetJson<ExtensionGroupInfo>(group_info_path, AssetLoadType.SystemIO, false);
+            if (this.MainPackage_Version != null)
+            {
+                if (this.MainPackage_Version.version < group_info.MainPackageVersionLimit)
+                    throw new VFSException($"[TinaX.VFS] The extension package need to ensure that the version of Main Package is greater than {group_info.MainPackageVersionLimit.ToString()}, Group Name: {group_info.GroupName}\nPackage Path:{extension_package_path}", VFSErrorCode.ExtensionPackageVersionConflict);
+            }
+            string group_option_path = VFSUtil.Get_GroupOptions_InExtensionPackage(extension_package_path);
+            var group_option = XConfig.GetJson<VFSGroupOption>(group_option_path);
+            VFSExtensionGroup ext_group = new VFSExtensionGroup(group_option, extension_package_path, available_web_vfs);
+
+            Task[] task_manifest_filehash = new Task[2];
+            task_manifest_filehash[0] = InitExtensionGroupManifest(ext_group);
+            task_manifest_filehash[1] = InitExtensionGroupFilesHash(ext_group);
+            await Task.WhenAll(task_manifest_filehash);
+
+            return true;
+        }
+        
+        public string[] GetActiveExtensionGroupNames()
+        {
+            List<string> groups = new List<string>();
+            foreach(var item in this.ExtensionGroups.mGroups)
+            {
+                groups.Add(item.GroupName);
+            }
+            return groups.ToArray();
+        }
+
+        #endregion
+
+
+
+
+
+
+
 
         /// <summary>
         /// 使用配置，如果有效，返回true
@@ -709,7 +950,7 @@ namespace TinaX.VFSKit
                 if (req.responseCode == 404)
                     throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
             }
-            return VFSUtil.RemoveInvalidHead(req.downloadHandler.text);
+            return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
         }
 
 
@@ -728,9 +969,14 @@ namespace TinaX.VFSKit
                     throw new VFSException("Failed to get text from web:" + uri.ToString());
             }
             if (encoding == null)
-                return VFSUtil.RemoveInvalidHead(req.downloadHandler.text);
+                return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
             else
-                return VFSUtil.RemoveInvalidHead(encoding.GetString(req.downloadHandler.data));
+            {
+                if (encoding == Encoding.UTF8)
+                    return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+                else
+                    return encoding.GetString(req.downloadHandler.data);
+            }
 
         }
 
@@ -842,10 +1088,86 @@ namespace TinaX.VFSKit
                 string uri = this.GetWebHashsFileDownloadUrl(this.PlatformText, group.ExtensionGroup, group.GroupName);
                 try
                 {
-                    string json = await LoadTextFromWebAsync(new Uri(uri), this.DownloadAssetBundleManifestTimeout);
+                    string json = await LoadTextFromWebAsync(new Uri(uri), this.DownloadAssetBundleFilesHashTimeout);
                     group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
                 }
                 catch (FileNotFoundException) { /* do nothing */ }
+            }
+        }
+
+        /// <summary>
+        /// Editor Assetdatabase加载模式下别调用这里
+        /// </summary>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        private async Task InitExtensionGroupManifest(VFSExtensionGroup group)
+        {
+            if (!group.OverridePackagePath)
+            {
+                //没有重写路径，就当成普通的group处理就完事了
+                await this.InitGroupManifests(group);
+                return;
+            }
+
+            //处理重写路径的，程序里把它算作virtual disk的数据
+            string manifest_path = group.GetManifestFilePath(VirtualDiskPath);
+            if (File.Exists(manifest_path))
+            {
+                group.Manifest_VirtualDisk = new XAssetBundleManifest(XConfig.GetJson<BundleManifest>(manifest_path, AssetLoadType.SystemIO, false));
+            }
+            else
+            {
+                throw new VFSException($"[TinaX.VFS] Cannot found AssetBundleManifest file from extension group: {group.GroupName} , folder path: {group.PackagePathSpecified}");
+            }
+
+            bool init_remote = false;
+            if (group.HandleMode == GroupHandleMode.LocalAndUpdatable || group.HandleMode == GroupHandleMode.LocalOnly) init_remote = false;
+            if (!group.WebVFS_Available) init_remote = false;
+            if(init_remote && mWebVFSReady)
+            {
+                string uri = this.GetWebAssetBundleManifestDoanloadUrl(this.PlatformText, true, group.GroupName);
+                try
+                {
+                    string json = await LoadTextFromWebAsync(new Uri(uri), this.DownloadAssetBundleManifestTimeout);
+                    group.Manifest_Remote = new XAssetBundleManifest(JsonUtility.FromJson<BundleManifest>(json));
+                }
+                catch (FileNotFoundException) { }
+            }
+        }
+
+
+        private async Task InitExtensionGroupFilesHash(VFSExtensionGroup group)
+        {
+            if (!group.OverridePackagePath)
+            {
+                //没有重写路径，就当成普通的group处理就完事了
+                await this.InitGroupFilesHash(group);
+                return;
+            }
+
+            //处理重写路径的，程序里把它算作virtual disk的数据
+            string manifest_path = group.GetManifestFilePath(VirtualDiskPath);
+            if (File.Exists(manifest_path))
+            {
+                group.FilesHash_VirtualDisk = XConfig.GetJson<FilesHashBook>(manifest_path);
+            }
+            else
+            {
+                throw new VFSException($"[TinaX.VFS] Cannot found AssetBundleManifest file from extension group: {group.GroupName} , folder path: {group.PackagePathSpecified}");
+            }
+
+            bool init_remote = false;
+            if (group.HandleMode == GroupHandleMode.LocalAndUpdatable || group.HandleMode == GroupHandleMode.LocalOnly) init_remote = false;
+            if (!group.WebVFS_Available) init_remote = false;
+            if (init_remote && mWebVFSReady)
+            {
+                string uri = this.GetWebAssetBundleManifestDoanloadUrl(this.PlatformText, true, group.GroupName);
+                try
+                {
+                    string json = await LoadTextFromWebAsync(new Uri(uri), this.DownloadAssetBundleFilesHashTimeout);
+                    group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
+                }
+                catch (FileNotFoundException) { }
             }
         }
 
@@ -1415,25 +1737,7 @@ namespace TinaX.VFSKit
             return false;
         }
 
-        public bool TryGetGroup(string groupName, out VFSGroup group)
-        {
-            if(this.mDict_Groups.TryGetValue(groupName,out group))
-            {
-                return true;
-            }
-            else
-            {
-                if(this.ExtensionGroups.TryGetExtensionGroup(groupName, out var ex_group))
-                {
-                    group = ex_group;
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
+        
 
         /// <summary>
         /// 是否被全局配置项所忽略
@@ -1492,7 +1796,6 @@ namespace TinaX.VFSKit
         {
             if (group == null) { vdisk_path = string.Empty; return string.Empty; }
             //没有匹配的组，无效
-
             if(group.HandleMode == GroupHandleMode.RemoteOnly)
             {
                 //资源只有可能在web,
@@ -1501,7 +1804,11 @@ namespace TinaX.VFSKit
             }
 
             //检查资源是否在Virtual Disk
-            string asset_path_vdisk = group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mVirtualDisk_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mVirtualDisk_MainPackageFolderPath, assetbundle);
+            string asset_path_vdisk;
+            if (group.ExtensionGroup)
+                asset_path_vdisk = ((VFSExtensionGroup)group).GetAssetBundlePath(VirtualDiskPath, assetbundle);
+            else
+                asset_path_vdisk = group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
             vdisk_path = asset_path_vdisk;
 
             if (File.Exists(asset_path_vdisk))
@@ -1532,7 +1839,10 @@ namespace TinaX.VFSKit
                                     else
                                     {
                                         //用steram的
-                                        return VFSUtil.GetAssetPath(true, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle, group.GroupName);
+                                        if (group.ExtensionGroup)
+                                            return ((VFSExtensionGroup)group).GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
+                                        else
+                                            group.GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
                                     }
                                 }
                                 else
@@ -1551,7 +1861,11 @@ namespace TinaX.VFSKit
             }
 
             //已知文件不在Virtual Disk
-            string asset_path_streamingassets = group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mStreamingAssets_MainPackageFolderPath, assetbundle);
+            string asset_path_streamingassets;
+            if (group.ExtensionGroup)
+                asset_path_streamingassets = ((VFSExtensionGroup)group).GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
+            else
+                asset_path_streamingassets = group.GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
 
             //有没有可能这个文件在web?
             if (group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
@@ -1598,11 +1912,18 @@ namespace TinaX.VFSKit
             //检查资源是否在Virtual Disk
             if (group == null) { vdisk_path = string.Empty; return string.Empty; }
             if(group.HandleMode == GroupHandleMode.RemoteOnly) { vdisk_path = string.Empty; return string.Empty; }
-            
-            vdisk_path = group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mVirtualDisk_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mVirtualDisk_MainPackageFolderPath, assetbundle);
+
+            if (group.ExtensionGroup)
+                vdisk_path = ((VFSExtensionGroup)group).GetAssetBundlePath(VirtualDiskPath, assetbundle);
+            else
+                vdisk_path = group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
+
             if (File.Exists(vdisk_path)) return vdisk_path;
 
-            return group.ExtensionGroup ? VFSUtil.GetAssetPath(true, mStreamingAssets_ExtensionGroupRootFolderPath, assetbundle, group.GroupName) : VFSUtil.GetAssetPath(false, mStreamingAssets_MainPackageFolderPath, assetbundle);
+            if(group.ExtensionGroup)
+                return ((VFSExtensionGroup)group).GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
+            else
+                return group.GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
         }
 
         /// <summary>
@@ -1651,7 +1972,7 @@ namespace TinaX.VFSKit
             if (req.isNetworkError || req.isHttpError)
                 return false;
 
-            return (VFSUtil.RemoveInvalidHead(req.downloadHandler.text) == "hello");
+            return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
         }
 
         #region Customizable_Default_Function
@@ -1755,7 +2076,17 @@ namespace TinaX.VFSKit
 
         }
 
+
+
+
         #endregion
+
+        #region 编辑器下的扩展组操作
+
+
+
+        #endregion
+
 #endif
 
     }

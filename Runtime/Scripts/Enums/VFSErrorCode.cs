@@ -24,6 +24,7 @@ namespace TinaX.VFSKit
         InitWebVFSError             = 4,
 
         DownloadNetworkError        = 5,
+        ExtensionPackageVersionConflict = 6,    //扩展包版本冲突
 
         /// <summary>
         /// 资源组规则冲突

@@ -16,7 +16,6 @@ namespace TinaX.VFSKit
         string PlatformText { get; }
         int DownloadWebAssetTimeout { get; set; }
 
-        VFSGroup[] GetAllGroups();
 
 
 
@@ -27,8 +26,21 @@ namespace TinaX.VFSKit
         #endregion
 
 
+        #region Groups
+        IGroup[] GetAllGroups();
 
-        bool TryGetGroup(string groupName, out VFSGroup group);
+        bool TryGetGroup(string groupName, out IGroup group);
+
+        #endregion
+
+        #region Extension Packages and Groups
+
+        string[] GetExtensionPackagesInVirtualDisk();
+        Task<bool> AddExtensionPackage(string group_name);
+        Task<bool> AddExtensionPackageByPath(string extension_package_path, bool available_web_vfs = true);
+        void AddExtensionPackage(string group_name, Action<bool,VFSException> callback);
+        string[] GetActiveExtensionGroupNames();
+        #endregion
 
         #region Load IAsset Sync
         IAsset LoadAsset<T>(string assetPath) where T : UnityEngine.Object;
@@ -64,7 +76,7 @@ namespace TinaX.VFSKit
         void LoadAsync<T>(string assetPath, Action<T, VFSException> callback) where T : UnityEngine.Object;
         void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object, VFSException> callback);
         void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object> callback);
-
+        
 
         #endregion
 

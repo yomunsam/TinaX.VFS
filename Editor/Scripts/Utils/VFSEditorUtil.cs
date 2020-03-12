@@ -87,67 +87,42 @@ namespace TinaXEditor.VFSKit.Utils
         //Source packages 是指 VFS打包资源后的输出目录，里面包括"vfs_root"，"vfs_data"什么的那个目录
 
         /// <summary>
-        /// 检查Source packages的有效性——是否含有mainPakcage的有效信息
+        /// 检查在给定的根目录下，是否有有效的MainPackage文件
         /// </summary>
         /// <returns></returns>
-        internal static bool CheckSourcePackagesValid_MainPackage(string root_path)
+        internal static bool IsValid_MainPackage_InPackages(string packages_root_path)
         {
-            //main_package检查
-            //if (!File.Exists(main_package_assets_hash_path)) return false;
+            //检查是否有vfs_root目录
+            if (!File.Exists(VFSUtil.GetMainPackageFolderInPackages(packages_root_path))) return false;
+            //检查data目录
+            if (!File.Exists(VFSUtil.GetDataFolderInPackages(packages_root_path))) return false;
+            //检查asset_hash
+            if (!File.Exists(VFSEditorUtil.GetMainPackage_AssetsHash_FilePath_InPackages(packages_root_path))) return false;
+            //检查build_info
+            if (!File.Exists(VFSUtil.GetMainPackage_BuildInfo_Path(packages_root_path))) return false;
+            //检查editor build_info
+            if (!File.Exists(VFSEditorUtil.Get_EditorBuildInfoPath(packages_root_path))) return false;
 
             return true;
         }
         
         
-
-        internal static bool CheckSourcePackagesValid_AnyExtensionGroups(string root_path)
-        {
-            var arr = GetValidExtensionGroupNamesFromSourcePackages(root_path);
-            return (arr != null && arr.Length > 0);
-        }
-
-        internal static bool CheckSourcePackagesValid_ExtensionGroups(string root_path,string extensionGroupName)
-        {
-            var arr = GetValidExtensionGroupNamesFromSourcePackages(root_path);
-            if (arr == null) return false;
-            if (arr.Length == 0) return false;
-            string g_lower = extensionGroupName.ToLower();
-            foreach(var item in arr)
-            {
-                if (item.ToLower() == g_lower) return true;
-            }
-            return false;
-        }
+        
 
         /// <summary>
-        /// 获取Source Packages中的有效的扩展组
+        /// 在给定的根目录下，根据组名检查某个扩展包（组）是否有效
         /// </summary>
-        /// <param name="root_path"></param>
+        /// <param name="packages_root_path"></param>
+        /// <param name="group_name"></param>
         /// <returns></returns>
-        internal static string[] GetValidExtensionGroupNamesFromSourcePackages(string root_path)
+        internal static bool IsValid_ExtensionGroup_InPackages(string packages_root_path,string group_name)
         {
-            //TODO
-            List<string> groupNames = new List<string>();
-            string extensionGroupRootFolder = Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILES_FOLDER_EXTENSION);
-            if (!Directory.Exists(extensionGroupRootFolder)) return Array.Empty<string>();
-            string[] folders = Directory.GetDirectories(extensionGroupRootFolder, "*", SearchOption.TopDirectoryOnly);
-            if (folders == null || folders.Length == 0) return Array.Empty<string>();
-            foreach(var path in folders)
-            {
-                string group_name = Path.GetFileName(path);
-                bool flag = true;
-
-                if (!File.Exists(Path.Combine(path, VFSConst.VFS_Data_ExtensionGroupInfo_FileName)))
-                    flag = false;
-                if (!File.Exists(Path.Combine(root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA, VFSConst.ExtensionGroupAssetsHashFolderName, group_name + ".json")))
-                    flag = false;
-
-                if (flag)
-                    groupNames.Add(group_name);
-            }
-
-            return groupNames.ToArray();
+            var arr = VFSUtil.GetValidExtensionGroupNames(packages_root_path);
+            if (arr == null || arr.Length ==0) return false;
+            return arr.Contains(group_name);
         }
+
+        
         
         /// <summary>
         /// 复制到StreamingAssets
@@ -212,7 +187,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string GetSourcePackagesFolderPath(ref string platform_name)
+        public static string GetSourcePackagesFolderPath(string platform_name)
         {
             return Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platform_name);
         }
@@ -222,20 +197,9 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string Get_MainPackage_LocalAssetsFolderPath_InSourcePackages(ref string platform_name)
+        public static string Get_MainPackage_AssetsFolderPath_InSourcePackages(string platform_name)
         {
-            return Path.Combine(GetSourcePackagesFolderPath(ref platform_name), VFSEditorConst.PROJECT_VFS_FILES_FOLDER_MAIN);
-        }
-
-        /// <summary>
-        /// 获取 Source Pakcages 下的 Main Package 的 本地文件存放目录 (vfs_root)
-        /// </summary>
-        /// <param name="platform_name"></param>
-        /// <returns></returns>
-        public static string Get_MainPackage_LocalAssetsFolderPath_InSourcePackages(ref XRuntimePlatform platform)
-        {
-            string platform_name = XPlatformUtil.GetNameText(platform);
-            return Get_MainPackage_LocalAssetsFolderPath_InSourcePackages(ref platform_name);
+            return VFSUtil.GetMainPackageFolderInPackages(GetSourcePackagesFolderPath(platform_name));
         }
 
 
@@ -244,31 +208,19 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(ref string platform_name)
+        public static string Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(string platform_name)
         {
-            return Path.Combine(GetSourcePackagesFolderPath(ref platform_name), VFSEditorConst.PROJECT_VFS_FILE_FOLDER_REMOTE);
+            return Path.Combine(GetSourcePackagesFolderPath(platform_name), VFSEditorConst.PROJECT_VFS_FILE_FOLDER_REMOTE);
         }
-
-        /// <summary>
-        /// 获取 Source Pakcages 下的 Main Package 的 远程文件存放目录 (vfs_remote)
-        /// </summary>
-        /// <param name="platform_name"></param>
-        /// <returns></returns>
-        public static string Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(ref XRuntimePlatform platform)
-        {
-            string platform_name = XPlatformUtil.GetNameText(platform);
-            return Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(ref platform_name);
-        }
-
 
         /// <summary>
         /// 获取 Source Pakcages 下存放打包数据文件的根目录 (vfs_data)
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string Get_PackagesDataFolderPath_InSourcePackages(ref string platform_name)
+        public static string Get_PackagesDataFolderPath_InSourcePackages(string platform_name)
         {
-            return Path.Combine(GetSourcePackagesFolderPath(ref platform_name), VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA);
+            return VFSUtil.GetDataFolderInPackages(GetSourcePackagesFolderPath(platform_name));
         }
 
         /// <summary>
@@ -276,23 +228,20 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string Get_ExtensionGroupsRootFolder_InSourcePackages(ref string platform_name)
+        public static string Get_ExtensionGroupsRootFolder_InSourcePackages(string platform_name)
         {
-            return Path.Combine(GetSourcePackagesFolderPath(ref platform_name), VFSEditorConst.PROJECT_VFS_FILES_FOLDER_EXTENSION);
+            return VFSUtil.GetExtensionPackageRootFolderInPackages(GetSourcePackagesFolderPath(platform_name));
         }
 
         /// <summary>
-        /// 获取 Source Pakcages 下main package的根目录 (vfs_root)
+        /// 获取SourcePackages 下 某个 扩展包（组）的根目录
         /// </summary>
         /// <param name="platform_name"></param>
+        /// <param name="group_name"></param>
         /// <returns></returns>
-        public static string Get_MainPackageFolderPath_InSourcePackages(ref string platform_name)
+        public static string Get_ExtensionGroupFolderPath_InSourcePackages(string platform_name, string group_name)
         {
-            return Path.Combine(GetSourcePackagesFolderPath(ref platform_name), VFSEditorConst.PROJECT_VFS_FILES_FOLDER_MAIN);
-        }
-        public static string Get_ExtensionGroupFolderPath_InSourcePackages(ref string platform_name, ref string groupName)
-        {
-            return Path.Combine(Get_ExtensionGroupsRootFolder_InSourcePackages(ref platform_name), groupName);
+            return VFSUtil.GetExtensionGroupFolder(GetSourcePackagesFolderPath(platform_name), group_name);
         }
 
 
@@ -301,9 +250,19 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(ref string platform_name)
+        public static string GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(string platform_name)
         {
-            return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(ref platform_name), VFSConst.AssetsHashFileName);
+            return GetMainPackage_AssetsHash_FilePath_InPackages(GetSourcePackagesFolderPath(platform_name));
+        }
+
+        /// <summary>
+        /// 在给定的目录下获取 MainPackage 的 原始Assets的hash记录文件 的路径
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public static string GetMainPackage_AssetsHash_FilePath_InPackages(string packages_root_path)
+        {
+            return Path.Combine(VFSUtil.GetDataFolderInPackages(packages_root_path), VFSConst.AssetsHashFileName);
         }
 
         /// <summary>
@@ -313,7 +272,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref string platform_name,ref string groupName)
         {
-            return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(ref platform_name), VFSConst.ExtensionGroupAssetsHashFolderName, groupName + ".json");
+            return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(platform_name), VFSConst.ExtensionGroupAssetsHashFolderName, groupName + ".json");
         }
 
         /// <summary>
@@ -323,7 +282,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetMainPackage_AssetBundleManifestsFolderPath_InSourcePackagesFolder(string platform)
         {
-            return VFSUtil.GetMainPackage_AssetBundleManifests_Folder(GetSourcePackagesFolderPath(ref platform));
+            return VFSUtil.GetMainPackage_AssetBundleManifests_Folder(GetSourcePackagesFolderPath(platform));
         }
 
         /// <summary>
@@ -334,7 +293,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_AssetBundleManifestPath_InInSourcePackagesFolder(string platform, string group_name)
         {
-            return VFSUtil.GetExtensionGroups_AssetBundleManifests_Folder(GetSourcePackagesFolderPath(ref platform), group_name);
+            return VFSUtil.GetExtensionGroups_AssetBundleManifests_Folder(GetSourcePackagesFolderPath(platform), group_name);
         }
 
         /// <summary>
@@ -344,7 +303,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetMainPackage_AssetBundle_HashFiles_FolderPath_InSourcePackagesFolder(string platform)
         {
-            return VFSUtil.GetMainPackageAssetBundleHashFilesRootPath(GetSourcePackagesFolderPath(ref platform));
+            return VFSUtil.GetMainPackageAssetBundleHashFilesRootPath(GetSourcePackagesFolderPath(platform));
         }
 
         /// <summary>
@@ -355,7 +314,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_AssetBundle_HashFiles_Path_InInSourcePackagesFolder(string platform, string group_name)
         {
-            return VFSUtil.GetExtensionGroup_AssetBundleHashFileFilePath(GetSourcePackagesFolderPath(ref platform), group_name);
+            return VFSUtil.GetExtensionGroup_AssetBundleHashFileFilePath(GetSourcePackagesFolderPath(platform), group_name);
         }
 
 
@@ -439,9 +398,9 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string Get_MainPackage_PackageVersionFilePath_InSourcePackages(ref string platform_name)
+        public static string Get_MainPackage_PackageVersionFilePath_InSourcePackages(string platform_name)
         {
-            return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(ref platform_name), VFSConst.PakcageVersionFileName);
+            return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(platform_name), VFSConst.PakcageVersionFileName);
         }
 
         
@@ -462,7 +421,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref string platform_name,ref string groupName)
         {
-            return Path.Combine(Get_ExtensionGroupsRootFolder_InSourcePackages(ref platform_name), groupName, VFSConst.PakcageVersionFileName);
+            return Path.Combine(VFSUtil.GetExtensionGroupFolder(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name), groupName), VFSConst.PakcageVersionFileName);
         }
 
         /// <summary>

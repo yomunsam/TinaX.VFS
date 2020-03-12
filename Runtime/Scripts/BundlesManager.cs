@@ -83,7 +83,7 @@ namespace TinaX.VFSKitInternal
 
         public void Refresh()
         {
-            for(var i = mList_AssetBundles.Count; i >= 0; i--)
+            for(var i = mList_AssetBundles.Count -1 ; i >= 0; i--)
             {
                 if(mList_AssetBundles[i].LoadState == AssetLoadState.Unloaded)
                 {

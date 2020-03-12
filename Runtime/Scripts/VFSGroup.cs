@@ -6,7 +6,6 @@ using TinaX.IO;
 using System.IO;
 using TinaX.VFSKit.Const;
 using TinaX.VFSKitInternal;
-using TinaX.VFSKitInternal.Utils;
 
 
 namespace TinaX.VFSKit
@@ -82,7 +81,8 @@ namespace TinaX.VFSKit
             }
         }
 
-        private VFSGroupOption mOption;
+
+        protected VFSGroupOption mOption;
 
         internal Loader.IAssetBundleLoader ABLoader;
 
@@ -399,6 +399,22 @@ namespace TinaX.VFSKit
             else
                 return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundle_Hash_Files_Folder, this.GroupName.GetMD5(true, true) + ".json");
         }
+
+        /// <summary>
+        /// 在给定的目录中获取AssetBundle的路径
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <param name="assetbundleName"></param>
+        /// <returns></returns>
+        public string GetAssetBundlePath(string packages_root_path,string assetbundleName)
+        {
+            if (this.ExtensionGroup)
+                return VFSUtil.GetAssetBundlePathFromPackages(this.ExtensionGroup, packages_root_path, assetbundleName,this.GroupName);
+            else
+                return VFSUtil.GetAssetBundlePathFromPackages(this.ExtensionGroup, packages_root_path, assetbundleName);
+
+        }
+
 
 
         /// <summary>

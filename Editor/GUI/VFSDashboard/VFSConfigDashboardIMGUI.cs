@@ -255,7 +255,7 @@ namespace TinaXEditor.VFSKit.UI
                             {
                                 var this_platform_name = XPlatformUtil.GetNameText(XPlatformUtil.GetXRuntimePlatform(Application.platform));
                                 ScriptableSingleton<VFSLoadModeInEditorCache>.instance.LoadMode = RuntimeAssetsLoadModeInEditor.Override_StreamingAssetsPath;
-                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_StreamingAssets_PackagesRootFolderPath = VFSEditorUtil.GetSourcePackagesFolderPath(ref this_platform_name);
+                                ScriptableSingleton<VFSLoadModeInEditorCache>.instance.Override_StreamingAssets_PackagesRootFolderPath = VFSEditorUtil.GetSourcePackagesFolderPath(this_platform_name);
                             });
                         menu.ShowAsContext();
                     }

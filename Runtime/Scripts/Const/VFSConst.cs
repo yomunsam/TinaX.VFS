@@ -18,7 +18,7 @@
 #endif
         };
 
-        public const string AssetBundleFilesHash_FileName = "FilesHash.json";
+        public const string AssetBundleFilesHash_FileName = "files_hash.json";
 
         /// <summary>
         /// vfs_data下，存放main package 中所有组的assetbundle的hash文件的目录名
@@ -46,11 +46,13 @@
         /// <summary>
         /// 放在扩展组根目录下，表示扩展组信息的文件
         /// </summary>
-        public static readonly string VFS_Data_ExtensionGroupInfo_FileName = "GroupInfo.json";
+        public const string VFS_ExtensionGroupInfo_FileName = "group_info.json";
 
         public const string PakcageVersionFileName = "package_version.json";
 
         public const string BuildInfoFileName = "build_info.json";
+
+        public const string GetExtensionGroup_GroupOption_FileName = "group_option.json";
 
     }
 }
