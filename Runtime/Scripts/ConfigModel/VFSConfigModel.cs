@@ -80,7 +80,7 @@ namespace TinaX.VFSKit
         #region Web VFS
         public bool InitWebVFSOnStart = true;
 
-        public string DefaultWebVFSBaseUrl = "http://127.0.0.1:8080";
+        public string DefaultWebVFSBaseUrl = "http://127.0.0.1:8080/files";
 
 
         #endregion

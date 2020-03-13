@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net;
+using TinaX;
 
 namespace TinaXEditor.VFSKit.FileServer
 {
@@ -37,10 +38,14 @@ namespace TinaXEditor.VFSKit.FileServer
             mHttp.Prefixes.Add($"http://*:{this.Port}/");
             mHttp.Start();
 
-            if (!UrlHead.StartsWith("/"))
-                UrlHead = "/" + UrlHead;
-            if (!UrlHead.EndsWith("/"))
-                UrlHead += "/";
+
+            if (UrlHead.StartsWith("/"))
+                UrlHead = UrlHead.Substring(1, UrlHead.Length - 1);
+
+            if (UrlHead.EndsWith("/"))
+                UrlHead = UrlHead.Substring(0, UrlHead.Length - 1);
+
+            UrlHead = UrlHead.ToLower();
 
             mHttp.BeginGetContext(Result, null);
 
@@ -70,8 +75,22 @@ namespace TinaXEditor.VFSKit.FileServer
             }
             else
             {
-                //Handle Url
-                if (req.RawUrl.ToLower().StartsWith(UrlHead))
+                string[] arr_url = req.RawUrl.Split('/');
+                string url_head = string.Empty;
+                if (req.RawUrl.StartsWith("/"))
+                {
+                    if (arr_url != null && arr_url.Length >= 2)
+                        url_head = arr_url[1].ToLower();
+                }
+                else
+                {
+                    if (arr_url != null && arr_url.Length >= 1)
+                        url_head = arr_url[0].ToLower();
+                }
+
+                if (!url_head.IsNullOrEmpty() && url_head == "hello")
+                    resp_bytes = "hello".GetBytes();
+                else if(!url_head.IsNullOrEmpty() && url_head == UrlHead)
                 {
                     //请求文件，
                     //首先检查文件服务器自身指定的文件根目录是否存在

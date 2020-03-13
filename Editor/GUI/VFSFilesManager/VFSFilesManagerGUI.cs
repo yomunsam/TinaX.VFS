@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -39,14 +40,29 @@ namespace TinaXEditor.VFSKit.UI
         private Dictionary<XRuntimePlatform, bool> mDict_Extensions_StreamingAssets;
 
         private bool mFlag_RefreshData = false;
+        private bool mFlag_RefreshData_left = false;
+        private XRuntimePlatform? mFlag_RefreshData_left_platform = null;
+        private bool mFlag_RefreshData_right = false;
+        private XRuntimePlatform? mFlag_RefreshData_right_platform = null;
+
+        /*
+         * key会列出当前选择平台的source package中所有的扩展组，
+         * value为0代表这个组在streamingassets中没有，
+         * value 为1代表在streamingasset中有，但build_id不同
+         * valud 为2代表在streamingasset中有，并且build_id一致（或者没检查到build_id）
+         */
+        private Dictionary<string, int> mDict_ExtensionGroups_Info = new Dictionary<string, int>();
+
+
+        private bool main_package_not_same = false; //source package 和 streamingasset的 main package不一致
 
         private XRuntimePlatform? mLeft_Select_Platform;
         private XRuntimePlatform? mRight_Select_Platform;
 
         private int width_left_area = 220;
-        private int width_center_area = 250;
+        private float width_center_area => width_total - width_left_area - width_right_area - 10;
         private int width_right_area = 220;
-        private int width_total => width_left_area + width_center_area + width_right_area;
+        private float width_total => this.position.width - 10;
 
         private Vector2 v2_list_left;
         private Vector2 v2_list_right;
@@ -98,6 +114,7 @@ namespace TinaXEditor.VFSKit.UI
                     _style_select_label = new GUIStyle(EditorStyles.label);
                     _style_select_label.normal.textColor = TinaX.Internal.XEditorColorDefine.Color_Normal_Pure;
                     _style_select_label.fontStyle = FontStyle.Bold;
+                    _style_select_label.alignment = TextAnchor.MiddleCenter;
                 }
                 return _style_select_label;
             }
@@ -141,7 +158,8 @@ namespace TinaXEditor.VFSKit.UI
         private void OnFocus()
         {
             mFlag_RefreshData = false;
-
+            mFlag_RefreshData_left = false;
+            mFlag_RefreshData_right = false;
         }
 
 
@@ -200,7 +218,71 @@ namespace TinaXEditor.VFSKit.UI
             }
             else
             {
+                if (!mFlag_RefreshData_left || mFlag_RefreshData_left_platform == null || mFlag_RefreshData_left_platform.Value != mLeft_Select_Platform.Value) RefreshData_Left_list();
+                string platform_name = XPlatformUtil.GetNameText(mLeft_Select_Platform.Value);
+
                 GUILayout.Label(IsChinese ? "已构建的资源" : "Built Assets");
+                GUILayout.Label((IsChinese ? "平台：" : "Platform: ") + mLeft_Select_Platform.ToString() + " / " + platform_name);
+                if (mDict_MainPackage_SourcePackage[mLeft_Select_Platform.Value])
+                {
+                    if (!mDict_MainPackage_StreamingAssets[mLeft_Select_Platform.Value])
+                    {
+                        //source有，stream没有，显示复制选项
+                        if (GUILayout.Button(IsChinese?"复制 主包 到StreamingAssets":"Copy Main Package To StreamingAssets"))
+                        {
+                            VFSEditorUtil.CopyToStreamingAssets(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name), platform_name, false, true);
+                            AssetDatabase.Refresh();
+                            RefreshDatas();
+                        }
+
+                        //source有，stream没有，显示复制选项
+                        if (GUILayout.Button(IsChinese ? "复制 全部 到StreamingAssets" : "Copy All Packages To StreamingAssets"))
+                        {
+                            VFSEditorUtil.CopyToStreamingAssets(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name), platform_name, false, false);
+                            AssetDatabase.Refresh();
+                            RefreshDatas();
+                        }
+                    }
+                    else
+                    {
+                        if (main_package_not_same)
+                        {
+                            EditorGUILayout.HelpBox(IsChinese?"StreamingAssets有 主包 资源，但与构建目录中的资源不一致。": "StreamingAssets has the main package resource, but it is not consistent with the resources in the build directory.", MessageType.None);
+                            //source有，stream没有，显示复制选项
+                            if (GUILayout.Button(IsChinese ? "复制 主包 到StreamingAssets" : "Copy Main Package To StreamingAssets"))
+                            {
+                                VFSEditorUtil.CopyToStreamingAssets(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name), platform_name, false, true);
+                                AssetDatabase.Refresh();
+                                RefreshDatas();
+                            }
+                        }
+                    }
+                    
+                    
+                }
+                if (mDict_Extensions_SourcePackage[mLeft_Select_Platform.Value])
+                {
+                    if (mDict_ExtensionGroups_Info.Count > 0)
+                    {
+                        GUILayout.Space(5);
+                        foreach (var item in mDict_ExtensionGroups_Info)
+                        {
+                            if (item.Value != 2)
+                            {
+                                if (GUILayout.Button(IsChinese ? $"复制扩展组 {item.Key} 到StreamingAssets" : $"Copy Extension Group \"{item.Key}\" To StreamingAsssets"))
+                                {
+                                    string extension_group_source_path = VFSUtil.GetExtensionGroupFolder(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name), item.Key);
+                                    VFSEditorUtil.CopyExtensionPackageToSreamingAssets(extension_group_source_path, platform_name, item.Key);
+                                    AssetDatabase.Refresh();
+                                    RefreshDatas();
+                                    RefreshData_Left_list();
+                                    Refresh_Right_list();
+                                }
+                            }
+                        }
+                    }
+                }
+                
             }
             EditorGUILayout.EndVertical();
             GUILayout.Space(10);
@@ -215,9 +297,20 @@ namespace TinaXEditor.VFSKit.UI
             else
             {
                 GUILayout.Label("StreamingAssets");
+                GUILayout.Label((IsChinese ? "平台：" : "Platform: ") + mRight_Select_Platform.ToString() + " / " + XPlatformUtil.GetNameText(mRight_Select_Platform.Value));
                 if (GUILayout.Button(IsChinese ? "删除资源" : "Delete Assets"))
                 {
-
+                    if(EditorUtility.DisplayDialog("sure?",IsChinese?"确定要删除吗":"Are you sure to delete?", IsChinese ? "删它！" : "Delete", IsChinese ? "取消" : "Cancel"))
+                    {
+                        VFSEditorUtil.DeletePackagesFromStreamingAssets(XPlatformUtil.GetNameText(mRight_Select_Platform.Value));
+                        mDict_Extensions_StreamingAssets[mRight_Select_Platform.Value] = false;
+                        mDict_MainPackage_StreamingAssets[mRight_Select_Platform.Value] = false;
+                        mRight_Select_Platform = null;
+                        mFlag_RefreshData_right = false;
+                        AssetDatabase.Refresh();
+                        RefreshDatas();
+                        RefreshData_Left_list();
+                    }
                 }
 
             }
@@ -310,6 +403,87 @@ namespace TinaXEditor.VFSKit.UI
             }
 
             mFlag_RefreshData = true;
+        }
+
+        private void RefreshData_Left_list()
+        {
+            if (mLeft_Select_Platform == null) return;
+            var platform_name = XPlatformUtil.GetNameText(mLeft_Select_Platform.Value);
+            string source_packages_root_path = VFSEditorUtil.GetSourcePackagesFolderPath(platform_name);
+            string package_stream_root_path = VFSUtil.GetPackagesRootFolderInStreamingAssets(platform_name);
+            //检查，StreamingAssets
+            if (mDict_MainPackage_SourcePackage[mLeft_Select_Platform.Value] && mDict_MainPackage_StreamingAssets[mLeft_Select_Platform.Value])
+            {
+                //两边都有，我们来看看两边的build_id是否一致
+                string build_info_source_path = VFSUtil.GetMainPackage_BuildInfo_Path(source_packages_root_path);
+                string build_info_stream_path = VFSUtil.GetMainPackage_BuildInfo_Path(package_stream_root_path);
+                if(File.Exists(build_info_stream_path) && File.Exists(build_info_source_path))
+                {
+                    try
+                    {
+                        var build_info_source = JsonUtility.FromJson<TinaX.VFSKitInternal.BuildInfo>(File.ReadAllText(build_info_source_path));
+                        var build_info_stream = JsonUtility.FromJson<TinaX.VFSKitInternal.BuildInfo>(File.ReadAllText(build_info_stream_path));
+                    
+                        if(build_info_source.BuildID != build_info_stream.BuildID)
+                        {
+                            main_package_not_same = true;
+                        }
+                    }
+                    catch { }
+                }
+            }
+            else
+                main_package_not_same = false;
+
+            //扩展组的处理
+            mDict_ExtensionGroups_Info.Clear();
+            if (mDict_Extensions_SourcePackage[mLeft_Select_Platform.Value])
+            {
+                string source_extensions_root_path = VFSUtil.GetExtensionPackageRootFolderInPackages(source_packages_root_path);
+                string[] group_names = VFSUtil.GetValidExtensionGroupNames(source_extensions_root_path);
+                foreach(var group in group_names)
+                {
+                    //streamingassets 中存在嘛
+                    if(VFSUtil.IsValidExtensionPackage(VFSUtil.GetExtensionGroupFolder(package_stream_root_path, group)))
+                    {
+                        //存在,检查build_id
+                        string build_id_path_source = VFSUtil.GetExtensionGroup_BuildInfo_Path(source_packages_root_path,group);
+                        string build_id_path_stream = VFSUtil.GetExtensionGroup_BuildInfo_Path(package_stream_root_path, group);
+                        try
+                        {
+                            var b_info_source = JsonUtility.FromJson<TinaX.VFSKitInternal.BuildInfo>(File.ReadAllText(build_id_path_source));
+                            var b_info_stream = JsonUtility.FromJson<TinaX.VFSKitInternal.BuildInfo>(File.ReadAllText(build_id_path_stream));
+                            if (b_info_source.BuildID == b_info_stream.BuildID)
+                                mDict_ExtensionGroups_Info.Add(group, 2);
+                            else
+                                mDict_ExtensionGroups_Info.Add(group, 1);
+                        }
+                        catch { }
+                        if (!mDict_ExtensionGroups_Info.ContainsKey(group))
+                        {
+                            mDict_ExtensionGroups_Info.Add(group, 2);
+                        }
+                    }
+                    else
+                    {
+                        // 不存在
+                        mDict_ExtensionGroups_Info.Add(group, 0);
+                    }
+                }
+            }
+
+
+            mFlag_RefreshData_left_platform = mLeft_Select_Platform;
+            mFlag_RefreshData_left = true;
+        }
+
+        private void Refresh_Right_list()
+        {
+            if (mRight_Select_Platform == null) return;
+
+
+            mFlag_RefreshData_right = true;
+            mFlag_RefreshData_right_platform = mRight_Select_Platform;
         }
 
     }

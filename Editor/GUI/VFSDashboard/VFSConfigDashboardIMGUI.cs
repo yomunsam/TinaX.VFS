@@ -270,13 +270,13 @@ namespace TinaXEditor.VFSKit.UI
                     GUILayout.FlexibleSpace();
 
                     #region file server
-                    if (!FileServerEditorInstance.IsSupported)
+                    if (!FileServerEditorManager.IsSupported)
                     {
                         GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_NotSupport, EditorStyles.toolbarTextField);
                     }
                     else
                     {
-                        if (FileServerEditorInstance.IsServerRunning)
+                        if (FileServerEditorManager.IsServerRunning)
                             GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_Running, EditorStyles.toolbarTextField);
                         else
                             GUILayout.Label(VFSConfigDashboardI18N.Toolbar_FileServer_Stopped, EditorStyles.toolbarTextField);

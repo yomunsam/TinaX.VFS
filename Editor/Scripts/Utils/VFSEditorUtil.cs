@@ -139,14 +139,17 @@ namespace TinaXEditor.VFSKit.Utils
             return true;
         }
 
-        
-        
+        public static string GetPackagesRootFolderInStreamingAssets(string platform_name)
+        {
+            return Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH, platform_name);
+        }
+
         /// <summary>
         /// 复制到StreamingAssets
         /// </summary>
         /// <param name="packages_root_path">Packages根目录（有vfs_root,vfs_data之类的那个目录）</param>
         /// <param name="platform_name">平台名</param>
-        public static void CopyToStreamingAssets(string packages_root_path, string platform_name, bool clearOtherPlatformFiles = false)
+        public static void CopyToStreamingAssets(string packages_root_path, string platform_name, bool clearOtherPlatformFiles = false, bool OnlyMainPackage = false)
         {
             VFSEditorUtil.InitVFSFoldersInStreamingAssets(platform_name, clearOtherPlatformFiles);
             var stream_root_path = Path.Combine(Application.streamingAssetsPath, VFSConst.VFS_STREAMINGASSETS_PATH);
@@ -158,12 +161,15 @@ namespace TinaXEditor.VFSKit.Utils
                 XDirectory.CopyDir(project_vfs_root_path, target_vfs_root);
             }
 
-            var project_vfs_extension_group = Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION);
-            if (Directory.Exists(project_vfs_extension_group))
+            if (!OnlyMainPackage)
             {
-                string target_vfs_extension = Path.Combine(stream_root_path, platform_name, VFSConst.VFS_FOLDER_EXTENSION);
-                XDirectory.DeleteIfExists(target_vfs_extension);
-                XDirectory.CopyDir(project_vfs_extension_group, target_vfs_extension);
+                var project_vfs_extension_group = Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION);
+                if (Directory.Exists(project_vfs_extension_group))
+                {
+                    string target_vfs_extension = Path.Combine(stream_root_path, platform_name, VFSConst.VFS_FOLDER_EXTENSION);
+                    XDirectory.DeleteIfExists(target_vfs_extension);
+                    XDirectory.CopyDir(project_vfs_extension_group, target_vfs_extension);
+                }
             }
 
             //Data目录处理----------------------------------------------------------
@@ -194,6 +200,29 @@ namespace TinaXEditor.VFSKit.Utils
                 File.Copy(main_package_build_info, target_path);
             }
         }
+
+        public static void CopyExtensionPackageToSreamingAssets(string extension_package_path,string platform,string group_name)
+        {
+            var target_path = VFSUtil.GetExtensionGroupFolder(VFSUtil.GetPackagesRootFolderInStreamingAssets(platform), group_name);
+            XDirectory.DeleteIfExists(target_path);
+            Directory.CreateDirectory(target_path);
+            XDirectory.CopyDir(extension_package_path, extension_package_path);
+        }
+
+        /// <summary>
+        /// 根据平台，删除StreamingAsset中的相关Packages
+        /// </summary>
+        /// <param name="platform_name"></param>
+        public static void DeletePackagesFromStreamingAssets(string platform_name)
+        {
+            string path = GetPackagesRootFolderInStreamingAssets(platform_name);
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+            }
+        }
+
+        
 
         #region Get Paths
 
@@ -451,6 +480,10 @@ namespace TinaXEditor.VFSKit.Utils
             return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSEditorConst.VFS_EditorBuildInfo_FileName);
         }
         
+        public static string Get_FileServer_Default_RootFolderPath()
+        {
+            return VFSEditorConst.PROJECT_VFS_FILES_SERVER_FOLDER_PATH;
+        }
 
         #endregion
 

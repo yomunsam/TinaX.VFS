@@ -1979,25 +1979,25 @@ namespace TinaX.VFSKit
         private string default_getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
         {
             if (isExtensionGroup)
-                return $"{platform_name}/ext/{group.GroupName}/{assetBundleName}";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_EXTENSION}/{VFSUtil.GetExtensionGroupFolderName(group.GroupName)}/{assetBundleName}";
             else
-                return $"{platform_name}/main/{assetBundleName}";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_MAIN}/{assetBundleName}";
         }
 
         private string default_getWebFilesHashUrl(string platform_name, bool isExtensionGroup, string groupName)
         {
             if (isExtensionGroup)
-                return $"{platform_name}/ext/{groupName}/{VFSConst.AssetBundleFilesHash_FileName}";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_EXTENSION}/{VFSUtil.GetExtensionGroupFolderName(groupName)}/{VFSConst.AssetBundleFilesHash_FileName}";
             else
-                return $"{platform_name}/main_data/{VFSConst.MainPackage_AssetBundle_Hash_Files_Folder}/{groupName.GetMD5(true, true)}.json";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_DATA}/{VFSConst.MainPackage_AssetBundle_Hash_Files_Folder}/{groupName.GetMD5(true, true)}.json";
         }
 
         private string default_getAssetBundleManifestDoanloadUrl(string platform_name, bool isExtensionGroup, string groupName)
         {
             if (isExtensionGroup)
-                return $"{platform_name}/ext/{groupName}/{VFSConst.AssetBundleManifestFileName}";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_EXTENSION}/{VFSUtil.GetExtensionGroupFolderName(groupName)}/{VFSConst.AssetBundleManifestFileName}";
             else
-                return $"{platform_name}/main_data/{VFSConst.MainPackage_AssetBundleManifests_Folder}/{groupName.GetMD5(true, true)}.json";
+                return $"{platform_name}/{VFSConst.VFS_FOLDER_DATA}/{VFSConst.MainPackage_AssetBundleManifests_Folder}/{groupName.GetMD5(true, true)}.json";
 
         }
 
