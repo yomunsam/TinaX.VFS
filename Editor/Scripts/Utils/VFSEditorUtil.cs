@@ -199,6 +199,16 @@ namespace TinaXEditor.VFSKit.Utils
                 XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
                 File.Copy(main_package_build_info, target_path);
             }
+
+            //vfs config
+            var vfs_config_path = VFSUtil.GetVFSConfigFilePath_InPackages(packages_root_path);
+            if (File.Exists(vfs_config_path))
+            {
+                string target_path = VFSUtil.GetVFSConfigFilePath_InPackages(Path.Combine(stream_root_path, platform_name));
+                XFile.DeleteIfExists(target_path);
+                XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                File.Copy(vfs_config_path, target_path, true);
+            }
         }
 
         public static void CopyExtensionPackageToSreamingAssets(string extension_package_path,string platform,string group_name)
@@ -316,7 +326,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// </summary>
         /// <param name="platform_name"></param>
         /// <returns></returns>
-        public static string GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref string platform_name,ref string groupName)
+        public static string GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(string platform_name,string groupName)
         {
             return Path.Combine(Get_PackagesDataFolderPath_InSourcePackages(platform_name), VFSConst.ExtensionGroupAssetsHashFolderName, groupName + ".json");
         }
@@ -385,7 +395,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <param name="branchName"></param>
         /// <param name="versionCode"></param>
         /// <returns></returns>
-        public static string GetVersionDataFolderPath_InProjectVersion(ref string branchName, ref long versionCode)
+        public static string GetVersionDataFolderPath_InProjectVersion(string branchName, long versionCode)
         {
             return Path.Combine(GetVersionDataRootFolderPath_InProjectVersion(ref branchName), versionCode.ToString());
         }
@@ -408,9 +418,9 @@ namespace TinaXEditor.VFSKit.Utils
         public static string GetVersionData_Manifest_FolderOrFilePath(bool isExtensionGroup, string branchName, long versionCode)
         {
             if (isExtensionGroup)
-                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSConst.AssetBundleManifestFileName);
+                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSConst.AssetBundleManifestFileName);
             else
-                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSConst.MainPackage_AssetBundleManifests_Folder);
+                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSConst.MainPackage_AssetBundleManifests_Folder);
 
         }
 
@@ -424,19 +434,19 @@ namespace TinaXEditor.VFSKit.Utils
         public static string GetVersionData_AssetBundle_HashFile_FolderOrFilePath(bool isExtensionGroup,string branchName, long versionCode)
         {
             if (isExtensionGroup)
-                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSConst.AssetBundleFilesHash_FileName);
+                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSConst.AssetBundleFilesHash_FileName);
             else
-                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSConst.MainPackage_AssetBundle_Hash_Files_Folder);
+                return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSConst.MainPackage_AssetBundle_Hash_Files_Folder);
         }
 
         public static string GetVersionData_EditorBuildInfo_Path(string branchName, long versionCode)
         {
-            return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSEditorConst.VFS_EditorBuildInfo_FileName);
+            return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSEditorConst.VFS_EditorBuildInfo_FileName);
         }
 
         public static string GetVersionData_BuildInfo_Path(string branchName, long versionCode)
         {
-            return Path.Combine(GetVersionDataFolderPath_InProjectVersion(ref branchName, ref versionCode), VFSConst.BuildInfoFileName);
+            return Path.Combine(GetVersionDataFolderPath_InProjectVersion(branchName, versionCode), VFSConst.BuildInfoFileName);
         }
 
         /// <summary>
@@ -455,7 +465,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// 获取 存储在版本记录中的 资源原始二进制文件 文件路径
         /// </summary>
         /// <returns></returns>
-        public static string Get_AssetsBinaryFolderPath_InVersion(ref string branchName, ref long version )
+        public static string Get_AssetsBinaryFolderPath_InVersion(string branchName, long version )
         {
             return Path.Combine(GetProjectVersionRootFolderPath(), VFSEditorConst.VFS_VERSION_RECORD_Binary_FOLDER_PATH, "Branches", branchName, version.ToString());
         }

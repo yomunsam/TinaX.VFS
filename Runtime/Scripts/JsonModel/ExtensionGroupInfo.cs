@@ -12,5 +12,9 @@ namespace TinaX.VFSKit
         public XRuntimePlatform Platform;
         public string GroupName;
         public long MainPackageVersionLimit;
+        /// <summary>
+        /// Assetbundle file extension name | ab文件后缀名
+        /// </summary>
+        public string AssetBundleExtension;
     }
 }

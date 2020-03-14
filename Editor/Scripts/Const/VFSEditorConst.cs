@@ -24,7 +24,7 @@ namespace TinaXEditor.VFSKit.Const
         /// <summary>
         /// 云端资源
         /// </summary>
-        public const string PROJECT_VFS_FILE_FOLDER_REMOTE = "vfs_remote";
+        public const string PROJECT_VFS_FILE_FOLDER_REMOTE = VFSConst.VFS_FOLDER_REMOTE;
 
         /// <summary>
         /// 存放VFS每次打包的数据的文件

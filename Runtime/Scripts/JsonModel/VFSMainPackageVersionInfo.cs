@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TinaX.VFSKit.Versions
+namespace TinaX.VFSKitInternal
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [Serializable]
-    public class VFSDiskVersionInfo
+    public class VFSMainPackageVersionInfo
     {
         //母包资源版本
         public long VFSPackageVersion;

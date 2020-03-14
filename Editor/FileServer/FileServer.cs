@@ -100,7 +100,37 @@ namespace TinaXEditor.VFSKit.FileServer
                     }
                     else
                     {
-                        string file_path = req.RawUrl.Substring(UrlHead.Length, req.RawUrl.Length - UrlHead.Length);
+                        string file_path = "";
+                        if (req.RawUrl.StartsWith("/"))
+                        {
+                            if (arr_url != null && arr_url.Length >= 3)
+                            {
+                                for(int i = 2; i < arr_url.Length; i++)
+                                {
+                                    file_path += arr_url[i];
+                                    if(i != arr_url.Length-1)
+                                    {
+                                        file_path += "/";
+                                    }
+                                }
+                            }
+                            
+                        }
+                        else
+                        {
+                            if (arr_url != null && arr_url.Length >= 2)
+                            {
+                                for (int i = 1; i < arr_url.Length; i++)
+                                {
+                                    file_path += arr_url[i];
+                                    if (i != arr_url.Length-1)
+                                    {
+                                        file_path += "/";
+                                    }
+                                }
+                            }
+                        }
+
                         string sys_path = Path.Combine(FilesRootFolder, file_path);
                         if (File.Exists(sys_path))
                         {

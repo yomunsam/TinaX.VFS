@@ -373,7 +373,7 @@ namespace TinaXEditor.VFSKit.Versions
 
                         if (GUILayout.Button(IsChinese?"浏览版本数据": "View version data"))
                         {
-                            string data_path = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref mSelectBranchName, ref versionCode);
+                            string data_path = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(mSelectBranchName, versionCode);
                             if (System.IO.Directory.Exists(data_path))
                             {
                                 var uri = new Uri(data_path);
@@ -381,7 +381,7 @@ namespace TinaXEditor.VFSKit.Versions
                             }
                         }
 
-                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref mSelectBranchName, ref versionCode);
+                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(mSelectBranchName, versionCode);
                         if (System.IO.Directory.Exists(binary_path))
                         {
                             if(GUILayout.Button(IsChinese?"浏览二进制数据":"View binary files"))
@@ -391,8 +391,30 @@ namespace TinaXEditor.VFSKit.Versions
                             }
                         }
 
+                        //制作补丁
+                        //EditorGUILayout.Space();
+                        if(GUILayout.Button(IsChinese ? "制作补丁" : "Make Patch"))
+                        {
+                            List<string> display_list = new List<string>();
+                            List<long> versioncode_list = new List<long>();
+
+                            foreach(var item in mSelectedBranchObj.VersionRecords_ReadWrite)
+                            {
+                                display_list.Add($"[{item.versionCode}] {item.versionName}");
+                                versioncode_list.Add(item.versionCode);
+                            }
+
+                            ScriptableSingleton<MakePatchGUIParamCache>.instance.branchName = mSelectedBranchObj.BranchName;
+                            ScriptableSingleton<MakePatchGUIParamCache>.instance.current_version = mCurSelectVersion.Value.versionCode;
+                            ScriptableSingleton<MakePatchGUIParamCache>.instance.version_code_list = versioncode_list.ToArray();
+                            ScriptableSingleton<MakePatchGUIParamCache>.instance.version_display_list = display_list.ToArray();
+
+                            MakePatchGUI.OpenUI();
+                        }
+
                         //删除版本
-                        if(GUILayout.Button(IsChinese?"删除该版本":"Delete this version"))
+                        EditorGUILayout.Space();
+                        if (GUILayout.Button(IsChinese?"删除该版本":"Delete this version"))
                         {
                             if (EditorUtility.DisplayDialog(IsChinese ? "删除吗？" : "Delete it?", IsChinese ? $"你将删除该记录，并且不可恢复\n版本号：{versionCode}, 版本名： {mCurSelectVersion.Value.versionName}" : $"You will delete the record and it is not recoverable\nVersion:{versionCode}, Version Name: {mCurSelectVersion.Value.versionName}", IsChinese ? "删它！" : "Delete", IsChinese ? "别删" : "Cancel")) 
                             {
@@ -401,6 +423,7 @@ namespace TinaXEditor.VFSKit.Versions
                                 mCurSelectVersion = null;
                             }
                         }
+
                     }
                 }
                 else

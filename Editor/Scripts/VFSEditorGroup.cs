@@ -80,5 +80,10 @@ namespace TinaXEditor.VFSKit
             File.WriteAllText(target_path, json);
         }
 
+        public void SetVirtualDiskFileHash(FilesHashBook hashbook)
+        {
+            base.FilesHash_VirtualDisk = hashbook;
+        }
+
     }
 }

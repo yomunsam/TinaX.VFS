@@ -116,6 +116,7 @@ namespace TinaXEditor.VFSKit.Versions
                 flag_branchName_from_param = true;
                 branchName_from_param = BranchName;
                 isBrancNameFromParamValid = VFSManagerEditor.VersionManager.TryGetVersionBranch(branchName_from_param, out mCurBranch);
+                mCurSelectBranchName = BranchName;
             }
         }
 
@@ -211,6 +212,11 @@ namespace TinaXEditor.VFSKit.Versions
                     GUILayout.Label(IsChinese ? "目标平台" : "Platform :",GUILayout.Width(110));
                     GUILayout.Label(platform_from_param.ToString());
                     EditorGUILayout.EndHorizontal();
+                    //由分支决定平台
+                    if (mCurBranch == null || mCurBranch.BranchName != mCurSelectBranchName)
+                    {
+                        VFSManagerEditor.VersionManager.TryGetVersionBranch(mCurSelectBranchName, out mCurBranch);
+                    }
                 }
                 else
                 {
@@ -240,10 +246,7 @@ namespace TinaXEditor.VFSKit.Versions
 
                 if(IsSourcePackagesValidByCurBranch_BranchName == null || IsSourcePackagesValidByCurBranch_BranchName != mCurBranch.BranchName)
                 {
-                    if (mCurBranch == null || mCurBranch.BranchName != mCurSelectBranchName)
-                    {
-                        VFSManagerEditor.VersionManager.TryGetVersionBranch(mCurSelectBranchName, out mCurBranch);
-                    }
+                    
                     string platformName = XPlatformUtil.GetNameText(mCurBranch.Platform);
                     string source_packages_folder_path = Path.Combine(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH, platformName);
                     if (mCurBranch.BType == VersionBranch.BranchType.MainPackage)

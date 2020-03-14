@@ -14,7 +14,8 @@ using TinaXEditor.VFSKit.Const;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKitInternal;
 using TinaXEditor.VFSKit.Versions;
-using TinaX.VFSKit.Versions;
+using TinaX.VFSKitInternal;
+//using TinaX.VFSKit.Versions;
 using TinaXEditor.VFSKit.Utils;
 using TinaX.Utils;
 
@@ -65,10 +66,10 @@ namespace TinaXEditor.VFSKit
             if (mConfig == null) return;
             if (Normalization)
             {
-                VFSUtil.NormalizationConfig(ref mConfig);
+                VFSUtil.NormalizationConfig(mConfig);
             }
 
-            if(!VFSUtil.CheckConfiguration(ref mConfig, out var errorCode, out var folderError))
+            if(!VFSUtil.CheckConfiguration(mConfig, out var errorCode, out var folderError))
             {
                 string log_str= string.Empty;
                 //配置文件校验未通过
@@ -383,6 +384,13 @@ namespace TinaXEditor.VFSKit
         static void OpenABBuildFolder()
         {
             var uri = new System.Uri(VFSEditorConst.PROJECT_VFS_SOURCE_PACKAGES_ROOT_PATH);
+            Application.OpenURL(uri.ToString());
+        }
+
+        [MenuItem("Explor Default VirtualDisk Folder", menuItem = "TinaX/VFS/Explor Default VirtualDisk Folder", priority = 22)]
+        static void OpenVdisk()
+        {
+            var uri = new System.Uri(Path.Combine(Application.persistentDataPath, "VFS_VDisk"));
             Application.OpenURL(uri.ToString());
         }
 

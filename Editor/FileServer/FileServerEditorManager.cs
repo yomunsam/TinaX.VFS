@@ -10,38 +10,49 @@ namespace TinaXEditor.VFSKit.FileServer
 {
     public static class FileServerEditorManager
     {
-        private static FileServer mServer;
+        static FileServerEditorManager()
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                if (ScriptableSingleton<FileServerDataCache>.instance.Server_Switch)
+                {
+                    if (!IsServerRunning)
+                    {
+                        StartServer();
+                    }
+                } 
+            }
+        }
 
         public static bool IsServerRunning
         {
             get
             {
-                if (mServer == null) return false;
-                return mServer.IsRunning;
+                if (ScriptableSingleton<FileServerDataCache>.instance.FileServer == null) return false;
+                return ScriptableSingleton<FileServerDataCache>.instance.FileServer.IsRunning;
             }
         }
-
-        
-
         
 
         public static bool IsSupported = FileServer.IsSupported;
 
         public static void StartServer()
         {
-            if(mServer == null)
+            ScriptableSingleton<FileServerDataCache>.instance.Server_Switch = true;
+            if (ScriptableSingleton<FileServerDataCache>.instance.FileServer == null)
             {
-                mServer = new FileServer();
+                ScriptableSingleton<FileServerDataCache>.instance.FileServer = new FileServer();
             }
-            mServer.Port = ScriptableSingleton<FileServerDataCache>.instance.Port;
-            mServer.FilesRootFolder = ScriptableSingleton<FileServerDataCache>.instance.ServerRootFolder;
-            mServer.UrlHead = ScriptableSingleton<FileServerDataCache>.instance.Url;
-            mServer.Run();
+            ScriptableSingleton<FileServerDataCache>.instance.FileServer.Port = ScriptableSingleton<FileServerDataCache>.instance.Port;
+            ScriptableSingleton<FileServerDataCache>.instance.FileServer.FilesRootFolder = ScriptableSingleton<FileServerDataCache>.instance.ServerRootFolder;
+            ScriptableSingleton<FileServerDataCache>.instance.FileServer.UrlHead = ScriptableSingleton<FileServerDataCache>.instance.Url;
+            ScriptableSingleton<FileServerDataCache>.instance.FileServer.Run();
         }
 
         public static void StopServer()
         {
-            mServer?.Stop();
+            ScriptableSingleton<FileServerDataCache>.instance.Server_Switch = false;
+            ScriptableSingleton<FileServerDataCache>.instance.FileServer?.Stop();
         }
 
 
@@ -58,6 +69,8 @@ namespace TinaXEditor.VFSKit.FileServer
 
     public class FileServerDataCache : ScriptableSingleton<FileServerDataCache>
     {
+        public bool Server_Switch; //持久记录的一个服务器开关（打开服务器之后，编译或者运行会导致服务器关闭，所以把开关状态记录下来）
+        public FileServer FileServer;
         public int Port = 8080;
 
         public string _url = "/files/";

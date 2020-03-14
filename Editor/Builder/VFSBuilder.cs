@@ -146,6 +146,7 @@ namespace TinaXEditor.VFSKit
             string ab_extension = Config.AssetBundleFileExtension; //没有点开头的后缀名
             if (ab_extension.StartsWith("."))
                 ab_extension = ab_extension.Substring(1, ab_extension.Length - 1);
+            ab_extension = ab_extension.ToLower();
             List<string> _whiteLists_folder_list_temp = new List<string>();
             foreach(var path in _whiteLists_folder)
             {
@@ -364,9 +365,9 @@ namespace TinaXEditor.VFSKit
             RefreshAssetBundleSign();
             Debug.Log("    build assetbundles by unity editor.");
 
-            string output_root_path;    //VFS存放相关文件的根目录
+            string packages_root_path;    //VFS存放相关文件的根目录
             string output_temp_path;    //Unity自身打包后直接输出的目录
-            BuildAssetBundle(platform, compressType, out output_root_path, out output_temp_path);
+            BuildAssetBundle(platform, compressType, out packages_root_path, out output_temp_path);
 
             #region 加载Build得到的AssetbundleManifest文件
             string abmanifest_file_name = Path.GetFileName(output_temp_path);
@@ -375,13 +376,14 @@ namespace TinaXEditor.VFSKit
             mAssetBundleManifest = ab_mainifest.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
             #endregion
 
-            HandleVFSFiles(output_root_path, output_temp_path, platform);
-            SaveAssetHashFiles(Path.Combine(output_root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA));
-            MakeEditorBuildInfo(output_root_path);
-            MakeBuildInfo(output_root_path);
+            HandleVFSFiles(packages_root_path, output_temp_path, platform);
+            SaveAssetHashFiles(Path.Combine(packages_root_path, VFSEditorConst.PROJECT_VFS_FILE_FOLDER_DATA));
+            MakeEditorBuildInfo(packages_root_path);
+            MakeBuildInfo(packages_root_path);
+            MakeVFSConfig(packages_root_path,Config);
 
             if (CopyToStreamingAssetsFolder)
-                CopyToStreamingAssets(output_root_path,XPlatformUtil.GetNameText(platform));
+                CopyToStreamingAssets(packages_root_path,XPlatformUtil.GetNameText(platform));
 
             if (ClearAssetBundleSignAfterBuild)
                 VFSEditorUtil.RemoveAllAssetbundleSigns();
@@ -420,7 +422,7 @@ namespace TinaXEditor.VFSKit
                         group.MakeVFSManifest(root_path, mDict_Group_AssetBundleNames[group.GroupName], ref mAssetBundleManifest);
                         //给独立的组生成一份hash
                         group.MakeAssetBundleFilesHash(root_path, extension_group_root_path, mDict_Group_AssetBundleNames[group.GroupName]);
-                        SaveExtensionGroupInfo(extension_group_root_path, group.GroupName, platform, group.ExtensionGroup_MainPackageVersionLimit);
+                        SaveExtensionGroupInfo(extension_group_root_path, group.GroupName, platform, group.ExtensionGroup_MainPackageVersionLimit,Config.AssetBundleFileExtension);
                         //保存Options
                         group.SaveGroupOptionFile(root_path);
                     }
@@ -540,13 +542,16 @@ namespace TinaXEditor.VFSKit
             VFSEditorUtil.CopyToStreamingAssets(root_path, platform_name);
         }
 
-        private void SaveExtensionGroupInfo(string group_path, string group_name, XRuntimePlatform platform , long mainPackageVersionLimit)
+        private void SaveExtensionGroupInfo(string group_path, string group_name, XRuntimePlatform platform , long mainPackageVersionLimit, string ab_ext_name)
         {
             string file_path = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(group_path);
-            var obj = new ExtensionGroupInfo();
-            obj.Platform = platform;
-            obj.GroupName = group_name;
-            obj.MainPackageVersionLimit = mainPackageVersionLimit;
+            var obj = new ExtensionGroupInfo
+            {
+                Platform = platform,
+                GroupName = group_name,
+                MainPackageVersionLimit = mainPackageVersionLimit,
+                AssetBundleExtension = ab_ext_name
+            };
             XConfig.SaveJson(obj, file_path, AssetLoadType.SystemIO);
         }
 
@@ -702,6 +707,27 @@ namespace TinaXEditor.VFSKit
             XConfig.SaveJson(mEditorBuildInfo, path, AssetLoadType.SystemIO);
         }
 
+        private void MakeVFSConfig(string packages_root_path,VFSConfigModel config)
+        {
+            string config_path = VFSUtil.GetVFSConfigFilePath_InPackages(packages_root_path);
+            string json = JsonUtility.ToJson(config);
+            var json_obj = JsonUtility.FromJson<VFSConfigJson>(json);
+            if (json_obj.Groups != null)
+            {
+                List<VFSGroupOption> options = new List<VFSGroupOption>(json_obj.Groups);
+                for(int i = options.Count -1; i >= 0; i--)
+                {
+                    if(options[i].ExtensionGroup)
+                    {
+                        options.RemoveAt(i);
+                        continue;
+                    }
+                }
+                json_obj.Groups = options.ToArray();
+            }
+
+            XConfig.SaveJson(json_obj, config_path, AssetLoadType.SystemIO);
+        }
 
     }
 }

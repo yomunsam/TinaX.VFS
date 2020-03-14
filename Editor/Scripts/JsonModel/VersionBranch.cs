@@ -93,7 +93,20 @@ namespace TinaXEditor.VFSKit.Versions
             VersionRecords_ReadWrite.Add(vr);
             SortRecordsList(ref _list_records);
         }
-
+        public bool TryGetVersion(long version, out VersionRecord version_record)
+        {
+            var versions = VersionRecords_ReadWrite.Where(v => v.versionCode == version);
+            if (versions.Count() > 0)
+            {
+                version_record = versions.First();
+                return true;
+            }
+            else
+            {
+                version_record = default;
+                return false;
+            }
+        }
         public void ReadySave()
         {
             VersionRecords = mList_records.ToArray();
@@ -104,6 +117,7 @@ namespace TinaXEditor.VFSKit.Versions
             list.Sort((x, y) => x.versionCode.CompareTo(y.versionCode));
         }
 
+        
     }
 
     [Serializable]
@@ -112,6 +126,7 @@ namespace TinaXEditor.VFSKit.Versions
         public long versionCode;
         public string versionName;
         public string desc;
+        public string build_id;
 
     }
 }

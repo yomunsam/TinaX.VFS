@@ -1,13 +1,10 @@
 ﻿using System;
-using TinaX.VFSKitInternal;
-using UnityEngine;
+using TinaX.VFSKit;
 
-namespace TinaX.VFSKit
+namespace TinaX.VFSKitInternal
 {
-#if TINAX_DEBUG_DEV
-    [CreateAssetMenu(fileName = "vfsConfig",menuName = "TinaX/Development/VFS/创建Config文件")]
-#endif
-    public class VFSConfigModel : ScriptableObject, IVFSConfig
+    [Serializable]
+    public class VFSConfigJson : IVFSConfig
     {
         public VFSGroupOption[] Groups = { VFSGroupOption.New() };
         public bool EnableVFS = false;
@@ -88,12 +85,11 @@ namespace TinaX.VFSKit
         public VFSGroupOption[] PGroups { get => this.Groups; set { this.Groups = value; } }
         public bool PEnableVFS { get { return this.EnableVFS; } set { this.EnableVFS = value; } }
         public string PAssetBundleFileExtension { get { return this.AssetBundleFileExtension; } set { this.AssetBundleFileExtension = value; } }
-        public string[] PGlobalVFS_Ignore_ExtName { get { return GlobalVFS_Ignore_ExtName; }set { this.GlobalVFS_Ignore_ExtName = value; } }
-        public string[] PGlobalVFS_Ignore_Path_Item { get { return GlobalVFS_Ignore_Path_Item; }set { this.GlobalVFS_Ignore_Path_Item = value; } }
+        public string[] PGlobalVFS_Ignore_ExtName { get { return GlobalVFS_Ignore_ExtName; } set { this.GlobalVFS_Ignore_ExtName = value; } }
+        public string[] PGlobalVFS_Ignore_Path_Item { get { return GlobalVFS_Ignore_Path_Item; } set { this.GlobalVFS_Ignore_Path_Item = value; } }
         public bool PInitWebVFSOnStart { get { return this.InitWebVFSOnStart; } set { this.InitWebVFSOnStart = value; } }
         public string PDefaultWebVFSBaseUrl { get { return this.DefaultWebVFSBaseUrl; } set { this.DefaultWebVFSBaseUrl = value; } }
 
         #endregion
     }
-
 }

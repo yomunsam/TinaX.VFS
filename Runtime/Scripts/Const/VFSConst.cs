@@ -10,6 +10,8 @@
 
         public static string Config_WebVFS_URLs = $"{TinaX.Const.FrameworkConst.Framework_Configs_Folder_Path}/WebVFSUrl";
 
+        public const string Config_Runtime_FileName = "VFSConfig.json"; //在Runtime下，我们来加载这个
+
         public static System.Type[] IgnoreType =
         {
 #if UNITY_EDITOR
@@ -37,6 +39,7 @@
         /// </summary>
         public const string VFS_FOLDER_EXTENSION = "vfs_extensions";
         public const string VFS_FOLDER_DATA = "vfs_data";
+        public const string VFS_FOLDER_REMOTE = "vfs_remote";
 
         public const string VFS_STREAMINGASSETS_PATH = "TinaX_VFS"; //Assets/StreamingAssets/TinaX_VFS
 
@@ -54,6 +57,13 @@
 
         public const string GetExtensionGroup_GroupOption_FileName = "group_option.json";
 
+        public const string Patch_Info_FileName = "info.json";
+        public const string Patch_Record_FileName = "record.json";
+        public const string Patch_Assets_Folder_Name = "assets";
+
+        public const string Patch_File_Extension = ".xpk";
+
+        public const string VirtualDisk_Version_FileName = "virtual_disk_version.json";
     }
 }
 

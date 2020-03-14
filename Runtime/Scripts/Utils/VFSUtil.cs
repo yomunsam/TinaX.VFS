@@ -71,52 +71,53 @@ namespace TinaX.VFSKitInternal.Utils
             return path.Replace('\\', '/').ToLower().Contains("/resources/");
         }
 
+
         /// <summary>
         /// 配置规范化
         /// </summary>
         /// <param name="config"></param>
-        public static void NormalizationConfig(ref VFSConfigModel config)
+        public static void NormalizationConfig(IVFSConfig config)
         {
             if (config == null) return;
             //全局配置
 
             //后缀名配置 补全缺失的“框架内部定义的必须存在的”配置项
             #region 全局 后缀名 内部配置项
-            if (config.GlobalVFS_Ignore_ExtName == null)
-                config.GlobalVFS_Ignore_ExtName = new string[0];
+            if (config.PGlobalVFS_Ignore_ExtName == null)
+                config.PGlobalVFS_Ignore_ExtName = new string[0];
             List<string> ext_list = new List<string>();
             foreach (var item in TinaX.VFSKitInternal.InternalVFSConfig.GlobalIgnoreExtName)
             {
-                if (!config.GlobalVFS_Ignore_ExtName.Contains(item))
+                if (!config.PGlobalVFS_Ignore_ExtName.Contains(item))
                 {
                     ext_list.Add(item);
                 }
             }
             if (ext_list.Count > 0)
-                ArrayUtil.Combine(ref config.GlobalVFS_Ignore_ExtName, ext_list.ToArray());
+                config.PGlobalVFS_Ignore_ExtName = ArrayUtil.Combine(config.PGlobalVFS_Ignore_ExtName, ext_list.ToArray());
             #endregion
 
             //后缀名配置必须要以点开头，并小写
             #region 全局 后缀名 格式规范
-            if (config.GlobalVFS_Ignore_ExtName != null && config.GlobalVFS_Ignore_ExtName.Length > 0)
+            if (config.PGlobalVFS_Ignore_ExtName != null && config.PGlobalVFS_Ignore_ExtName.Length > 0)
             {
-                for (var i = 0; i < config.GlobalVFS_Ignore_ExtName.Length; i++)
+                for (var i = 0; i < config.PGlobalVFS_Ignore_ExtName.Length; i++)
                 {
-                    if (!config.GlobalVFS_Ignore_ExtName[i].StartsWith("."))
-                        config.GlobalVFS_Ignore_ExtName[i] = "." + config.GlobalVFS_Ignore_ExtName[i];
+                    if (!config.PGlobalVFS_Ignore_ExtName[i].StartsWith("."))
+                        config.PGlobalVFS_Ignore_ExtName[i] = "." + config.PGlobalVFS_Ignore_ExtName[i];
 
-                    config.GlobalVFS_Ignore_ExtName[i] = config.GlobalVFS_Ignore_ExtName[i].ToLower();
+                    config.PGlobalVFS_Ignore_ExtName[i] = config.PGlobalVFS_Ignore_ExtName[i].ToLower();
                 }
             }
             #endregion
 
             //后缀名配置 重复项
             #region 全局 后缀名 重复项
-            if (config.GlobalVFS_Ignore_ExtName != null && config.GlobalVFS_Ignore_ExtName.Length > 0)
+            if (config.PGlobalVFS_Ignore_ExtName != null && config.PGlobalVFS_Ignore_ExtName.Length > 0)
             {
-                List<string> list = new List<string>(config.GlobalVFS_Ignore_ExtName).Distinct().ToList();
-                if (list.Count != config.GlobalVFS_Ignore_ExtName.Length)
-                    config.GlobalVFS_Ignore_ExtName = list.ToArray();
+                List<string> list = new List<string>(config.PGlobalVFS_Ignore_ExtName).Distinct().ToList();
+                if (list.Count != config.PGlobalVFS_Ignore_ExtName.Length)
+                    config.PGlobalVFS_Ignore_ExtName = list.ToArray();
             }
             #endregion
 
@@ -124,50 +125,66 @@ namespace TinaX.VFSKitInternal.Utils
             #region 全局 忽略 路径 item
 
             //补全内部设定
-            if (config.GlobalVFS_Ignore_Path_Item == null)
-                config.GlobalVFS_Ignore_Path_Item = new string[0];
-            List<string> ignore_pathitem_list = new List<string>();
+            if (config.PGlobalVFS_Ignore_Path_Item == null)
+                config.PGlobalVFS_Ignore_Path_Item = new string[0];
+            List<string> tmp_path_item_list = new List<string>(config.PGlobalVFS_Ignore_Path_Item);
             foreach (var item in TinaX.VFSKitInternal.InternalVFSConfig.GlobalIgnorePathItem)
             {
-                if (!config.GlobalVFS_Ignore_Path_Item.Contains(item))
+                if (!tmp_path_item_list.Contains(item))
                 {
-                    ignore_pathitem_list.Add(item);
+                    tmp_path_item_list.Add(item);
                 }
             }
-            if (ignore_pathitem_list.Count > 0)
-                ArrayUtil.Combine(ref config.GlobalVFS_Ignore_Path_Item, ignore_pathitem_list.ToArray());
+            List<string> temp_2 = new List<string>();
+            //查重和空白项目
+            for(int i = tmp_path_item_list.Count -1; i >= 0; i--)
+            {
+                if (!tmp_path_item_list[i].IsNullOrEmpty())
+                {
+                    if(!temp_2.Any(item => item.ToLower() == tmp_path_item_list[i].ToLower()))
+                    {
+                        temp_2.Add(tmp_path_item_list[i]);
+                    }
+                }
+            }
+
+            config.PGlobalVFS_Ignore_Path_Item = temp_2.ToArray();
+
 
             #endregion
 
-            #region 全局 Assetbundle细节
-            if (config.AssetBundleFileExtension.IsNullOrEmpty() || config.AssetBundleFileExtension.IsNullOrWhiteSpace())
-                config.AssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
+                #region 全局 Assetbundle细节
+            if (config.PAssetBundleFileExtension.IsNullOrEmpty() || config.PAssetBundleFileExtension.IsNullOrWhiteSpace())
+                config.PAssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
 
-            if (!config.AssetBundleFileExtension.StartsWith("."))
+            if (!config.PAssetBundleFileExtension.StartsWith("."))
             {
-                config.AssetBundleFileExtension = "." + config.AssetBundleFileExtension;
+                config.PAssetBundleFileExtension = "." + config.PAssetBundleFileExtension;
             }
+            config.PAssetBundleFileExtension = config.PAssetBundleFileExtension.ToLower();
 
             #endregion
 
             #region WebVFS
-            if(config.DefaultWebVFSBaseUrl.IsNullOrEmpty() || config.DefaultWebVFSBaseUrl.IsNullOrWhiteSpace())
+            if (config.PDefaultWebVFSBaseUrl.IsNullOrEmpty() || config.PDefaultWebVFSBaseUrl.IsNullOrWhiteSpace())
             {
-                config.DefaultWebVFSBaseUrl = VFSKit.VFSKit.DefaultDownloadWebAssetUrl;
+                config.PDefaultWebVFSBaseUrl = VFSKit.VFSKit.DefaultDownloadWebAssetUrl;
             }
-            if (!config.DefaultWebVFSBaseUrl.EndsWith("/"))
-                config.DefaultWebVFSBaseUrl += "/";
+            if (!config.PDefaultWebVFSBaseUrl.EndsWith("/"))
+                config.PDefaultWebVFSBaseUrl += "/";
             #endregion
 
 
                 #region 至少包含一个Group
-            if (config.Groups == null || config.Groups.Length == 0)
+            if (config.PGroups == null || config.PGroups.Length == 0)
             {
-                config.Groups = new VFSGroupOption[]{ VFSGroupOption.New() };
+                config.PGroups = new VFSGroupOption[]{ VFSGroupOption.New() };
             }
             #endregion
 
         }
+
+        
 
 
         /// <summary>
@@ -177,12 +194,12 @@ namespace TinaX.VFSKitInternal.Utils
         /// <param name=""></param>
         /// <param name="errorfolders">如果有group内folder相关的错误，则在此处体现</param>
         /// <returns>if error ,return false</returns>
-        public static bool CheckConfiguration(ref VFSConfigModel config, out VFSErrorCode error, out GroupFolderInfo[] errorfolders)
+        public static bool CheckConfiguration(IVFSConfig config, out VFSErrorCode error, out GroupFolderInfo[] errorfolders)
         {
             errorfolders = null;
 
             #region 没有任何Group?
-            if(config.Groups == null || config.Groups.Length == 0)
+            if(config.PGroups == null || config.PGroups.Length == 0)
             {
                 error = VFSErrorCode.NoneGroup;
                 return false;
@@ -191,7 +208,7 @@ namespace TinaX.VFSKitInternal.Utils
 
             #region 检查组名称是否重复
             List<string> temp_list = new List<string>();
-            foreach(var group in config.Groups)
+            foreach(var group in config.PGroups)
             {
                 if (temp_list.Contains(group.GroupName))
                 {
@@ -226,20 +243,20 @@ namespace TinaX.VFSKitInternal.Utils
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        public static bool CheckConfig_GroupFolder(ref VFSConfigModel config, out GroupFolderInfo[] folders)
+        public static bool CheckConfig_GroupFolder(ref IVFSConfig config, out GroupFolderInfo[] folders)
         {
-            if (config.Groups == null || config.Groups.Length == 0)
+            if (config.PGroups == null || config.PGroups.Length == 0)
             {
                 folders = null;
                 return false;
             }
             List<GroupFolderInfo> list_folders = new List<GroupFolderInfo>();
 
-            for (var i = 0; i < config.Groups.Length; i++)
+            for (var i = 0; i < config.PGroups.Length; i++)
             {
-                string group_name = config.Groups[i].GroupName;
+                string group_name = config.PGroups[i].GroupName;
                 //检查组内部
-                if(config.Groups[i].CheckFolderConflict(out var paths))
+                if(config.PGroups[i].CheckFolderConflict(out var paths))
                 {
                     //有冲突
                     paths.ForEach(path => list_folders.Add(new GroupFolderInfo() { FolderPath = path, GroupName = group_name }));
@@ -250,12 +267,12 @@ namespace TinaX.VFSKitInternal.Utils
                 //检查当前组与之前的组之间是否存在冲突
                 if(i > 0)
                 {
-                    foreach (var path in config.Groups[i].FolderPaths)
+                    foreach (var path in config.PGroups[i].FolderPaths)
                     {
                         for (var j = 0; j < i; j++)
                         {
-                            var _g_name = config.Groups[i].GroupName;
-                            if (config.Groups[i].CheckFolderConflict(out var result_paths,true))
+                            var _g_name = config.PGroups[i].GroupName;
+                            if (config.PGroups[i].CheckFolderConflict(out var result_paths,true))
                             {
                                 //有冲突
                                 list_folders.Add(new GroupFolderInfo() { GroupName = group_name, FolderPath = path });
@@ -272,6 +289,7 @@ namespace TinaX.VFSKitInternal.Utils
 
         }
 
+       
         /// <summary>
         /// 判断给定的路径是否是个有效的扩展包（每个扩展组是一个独立的扩展包）
         /// </summary>
@@ -587,8 +605,21 @@ namespace TinaX.VFSKitInternal.Utils
             return Path.Combine(package_root_path, VFSConst.VFS_FOLDER_EXTENSION, GetExtensionGroupFolderName(group), VFSConst.PakcageVersionFileName);
         }
 
+        /// <summary>
+        /// 获取Runtime下的VFS主Config文件路径
+        /// </summary>
+        /// <param name="packages_root_path"></param>
+        /// <returns></returns>
+        public static string GetVFSConfigFilePath_InPackages(string packages_root_path)
+        {
+            return Path.Combine(GetDataFolderInPackages(packages_root_path), VFSConst.Config_Runtime_FileName);
+        }
 
 
+        public static string GetVirtualDiskVersionPath(string packages_root_path)
+        {
+            return Path.Combine(GetDataFolderInPackages(packages_root_path), VFSConst.VirtualDisk_Version_FileName);
+        }
 
     }
 

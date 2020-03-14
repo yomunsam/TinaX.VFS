@@ -300,8 +300,9 @@ namespace TinaXEditor.VFSKit.Versions
 
                     string platform_name = XPlatformUtil.GetNameText(branch.Platform);
                     string source_packages_folder_path = VFSEditorUtil.GetSourcePackagesFolderPath(platform_name);
-                    string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref branch.BranchName, ref versionCode); //存放数据的地方
+                    string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(branch.BranchName, versionCode); //存放数据的地方
 
+                    string build_id = string.Empty;
 
                     try
                     {
@@ -309,7 +310,7 @@ namespace TinaXEditor.VFSKit.Versions
                         Directory.CreateDirectory(data_folder);
 
                         //复制并存档assets_hash文件
-                        string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(ref platform_name, ref branch.ExtensionGroupName);
+                        string assets_hash_path = isMainPackage ? VFSEditorUtil.GetMainPackage_AssetsHashFilePath_InSourcePackagesFolder(platform_name) : VFSEditorUtil.GetExtensionGroup_AssetsHashFilePath_InSourcePackagesFolder(platform_name, branch.ExtensionGroupName);
                         string assets_hash_target_path = Path.Combine(data_folder, VFSConst.AssetsHashFileName);
                         if (File.Exists(assets_hash_path))
                         {
@@ -344,6 +345,28 @@ namespace TinaXEditor.VFSKit.Versions
                                 File.Copy(ab_hash_path, ab_hash_target_path);
                         }
 
+                        //复制并存档vfs config (main package)
+                        if (isMainPackage)
+                        {
+                            string vfs_config_path = VFSUtil.GetVFSConfigFilePath_InPackages(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name));
+                            if (File.Exists(vfs_config_path))
+                            {
+                                string target_path = Path.Combine(data_folder, VFSConst.Config_Runtime_FileName);
+                                File.Copy(vfs_config_path, target_path, true);
+                            }
+                        }
+
+                        //Group Options
+                        if (!isMainPackage)
+                        {
+                            string group_option_path = VFSUtil.GetExtensionPackages_GroupOptions_FilePath(source_packages_folder_path, branch.ExtensionGroupName);
+                            if (File.Exists(group_option_path))
+                            {
+                                string target_path = Path.Combine(data_folder, VFSConst.GetExtensionGroup_GroupOption_FileName);
+                                File.Copy(group_option_path, target_path, true);
+                            }
+                        }
+
                         //复制并存档editor build info
                         string editor_build_info_path = VFSEditorUtil.Get_EditorBuildInfoPath(VFSEditorUtil.GetSourcePackagesFolderPath(platform_name));
                         if (File.Exists(editor_build_info_path))
@@ -363,6 +386,8 @@ namespace TinaXEditor.VFSKit.Versions
                             //反写版本信息到source package
                             string build_info_json = File.ReadAllText(target_path, Encoding.UTF8);
                             var obj = JsonUtility.FromJson<BuildInfo>(build_info_json);
+
+                            build_id = obj.BuildID;
 
                             //写出版本信息
                             var version_info = new PackageVersionInfo
@@ -425,7 +450,7 @@ namespace TinaXEditor.VFSKit.Versions
                     //保存二进制文件
                     if(saveBinary && !flag_process_error)
                     {
-                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref branchName, ref versionCode);
+                        string binary_path = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(branchName, versionCode);
 
                         try
                         {
@@ -545,7 +570,8 @@ namespace TinaXEditor.VFSKit.Versions
                         {
                             versionCode = versionCode,
                             versionName = versionName,
-                            desc = versionDesc
+                            desc = versionDesc,
+                            build_id = build_id
                         };
                         //记录版本
                         branch.AddVersion(ref vr);
@@ -562,11 +588,11 @@ namespace TinaXEditor.VFSKit.Versions
             bool isMainPackage = (branch.BType == VersionBranch.BranchType.MainPackage);
 
             //删除data
-            string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(ref branch.BranchName, ref versionCode); //存放数据的地方
+            string data_folder = VFSEditorUtil.GetVersionDataFolderPath_InProjectVersion(branch.BranchName, versionCode); //存放数据的地方
             XDirectory.DeleteIfExists(data_folder, true);
 
             //删除二进制
-            string binary_folder = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(ref branch.BranchName, ref versionCode);
+            string binary_folder = VFSEditorUtil.Get_AssetsBinaryFolderPath_InVersion(branch.BranchName, versionCode);
             XDirectory.DeleteIfExists(binary_folder);
 
             //在索引中删除记录

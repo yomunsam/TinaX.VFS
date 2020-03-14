@@ -17,6 +17,7 @@ namespace TinaX.VFSKit
         /// </summary>
         public string PackagePathSpecified { get; private set; }
         public VFSExtensionGroup(VFSGroupOption option) : base(option) { }
+        public VFSExtensionGroup(VFSGroupOption option, bool available_web_vfs) : base(option) { this.WebVFS_Available = available_web_vfs; }
 
         /// <summary>
         /// 手动指定Package路径
