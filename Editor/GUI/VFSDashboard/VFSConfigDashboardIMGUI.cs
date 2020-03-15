@@ -54,11 +54,85 @@ namespace TinaXEditor.VFSKit.UI
         /// </summary>
         private string mConfigFilePath = $"{TinaX.Const.FrameworkConst.Framework_Configs_Folder_Path}/{ConfigFileName}";
 
-        private GUIStyle style_title_h2;
-        private GUIStyle style_title_h2_center;
-        private GUIStyle style_title_h3;
-        private GUIStyle style_text_warning;
-        private GUIStyle style_text_normal;
+        private GUIStyle _style_title;
+        private GUIStyle style_title
+        {
+            get
+            {
+                if(_style_title == null)
+                {
+                    _style_title = new GUIStyle(EditorStyles.label);
+                    _style_title.fontStyle = FontStyle.Bold;
+                    _style_title.fontSize = 22;
+                    _style_title.normal.textColor = XEditorColorDefine.Color_Normal;
+                }
+                return _style_title;
+            }
+        }
+
+        private GUIStyle _style_title_center;
+        private GUIStyle style_title_center
+        {
+            get
+            {
+                if(_style_title_center == null)
+                {
+                    _style_title_center = new GUIStyle(EditorStyles.label);
+                    _style_title_center.fontStyle = FontStyle.Bold;
+                    _style_title_center.fontSize = 22;
+                    _style_title_center.alignment = TextAnchor.MiddleCenter;
+                    _style_title_center.normal.textColor = XEditorColorDefine.Color_Normal;
+                }
+                return _style_title_center;
+            }
+        }
+
+
+        private GUIStyle _style_title_small;
+        private GUIStyle style_title_small
+        {
+            get
+            {
+                if(_style_title_small == null)
+                {
+                    _style_title_small = new GUIStyle(EditorStyles.label);
+                    _style_title_small.fontStyle = FontStyle.Bold;
+                    _style_title_small.fontSize = 18;
+                    _style_title_small.normal.textColor = XEditorColorDefine.Color_Normal;
+                }
+                return _style_title_small;
+            }
+        }
+
+        private GUIStyle _style_text_warning;
+        private GUIStyle style_text_warning
+        {
+            get
+            {
+                if(_style_text_warning == null)
+                {
+                    _style_text_warning = new GUIStyle(EditorStyles.label);
+                    _style_text_warning.normal.textColor = XEditorColorDefine.Color_Warning;
+                }
+                return _style_text_warning;
+            }
+        }
+
+
+        private GUIStyle _style_text_normal;
+        private GUIStyle style_text_normal
+        {
+            get
+            {
+                if(_style_text_normal == null)
+                {
+                    _style_text_normal = new GUIStyle(EditorStyles.label);
+                    _style_text_normal.normal.textColor = XEditorColorDefine.Color_Normal;
+                }
+                return _style_text_normal;
+                
+            }
+        }
 
         private GUIStyle _styel_label_color_emphasize;
         private GUIStyle styel_label_color_emphasize
@@ -104,8 +178,28 @@ namespace TinaXEditor.VFSKit.UI
         /// <summary>
         /// “文件夹” 图标
         /// </summary>
-        private Texture img_folder_icon;
-        private Texture img_file_icon;
+        private Texture img_folder_icon
+        {
+            get
+            {
+                if(_img_folder_icon == null)
+                    _img_folder_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/folder.png"); 
+                return _img_folder_icon;
+            }
+        }
+        private Texture img_file_icon
+        {
+            get
+            {
+                if(_img_file_icon == null)
+                    _img_file_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/file.png");
+                return _img_file_icon;
+            }
+        }
+
+        private Texture _img_folder_icon;
+        private Texture _img_file_icon;
+
 
         private GenericMenu _build_menu;
         private GenericMenu mBuildMenu
@@ -151,34 +245,7 @@ namespace TinaXEditor.VFSKit.UI
 
             this.minSize = new Vector2(Window_Min_Weight, 600);
             VFSManagerEditor.RefreshManager(true);
-            
 
-
-            style_title_h2 = new GUIStyle(EditorStyles.label);
-            style_title_h2.fontStyle = FontStyle.Bold;
-            style_title_h2.fontSize = 22;
-            style_title_h2.normal.textColor = XEditorColorDefine.Color_Normal;
-            
-            style_title_h2_center = new GUIStyle(EditorStyles.label);
-            style_title_h2_center.fontStyle = FontStyle.Bold;
-            style_title_h2_center.fontSize = 22;
-            style_title_h2_center.alignment = TextAnchor.MiddleCenter;
-            style_title_h2_center.normal.textColor = XEditorColorDefine.Color_Normal;
-
-
-            style_title_h3 = new GUIStyle(EditorStyles.label);
-            style_title_h3.fontStyle = FontStyle.Bold;
-            style_title_h3.fontSize = 18;
-            style_title_h3.normal.textColor = XEditorColorDefine.Color_Normal;
-
-            style_text_warning = new GUIStyle(EditorStyles.label);
-            style_text_warning.normal.textColor = XEditorColorDefine.Color_Warning;
-
-            style_text_normal = new GUIStyle(EditorStyles.label);
-            style_text_normal.normal.textColor = XEditorColorDefine.Color_Normal;
-
-            img_folder_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/folder.png");
-            img_file_icon = AssetDatabase.LoadAssetAtPath<Texture>("Packages/io.nekonya.tinax.vfs/Editor/Res/Icons/file.png");
         }
 
         private void OnGUI()
@@ -332,7 +399,7 @@ namespace TinaXEditor.VFSKit.UI
         private void DrawGlobalConfig()
         {
             EditorGUILayout.BeginVertical(GUILayout.MaxWidth(450), GUILayout.MinWidth(Window_Area_GlobalConfig_Min_Weight));
-            GUILayout.Label("VFS Config", style_title_h2);
+            GUILayout.Label("VFS Config", style_title);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
@@ -655,7 +722,7 @@ namespace TinaXEditor.VFSKit.UI
             if (cur_select_group_index == null)
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Null_Tips, style_title_h2_center);
+                GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Null_Tips, style_title_center);
                 GUILayout.FlexibleSpace();
 
                 cur_group_drawing_data_index = -1;
@@ -666,7 +733,7 @@ namespace TinaXEditor.VFSKit.UI
 
                 v2_scrollview_assetGroupConfig = GUILayout.BeginScrollView(v2_scrollview_assetGroupConfig);
                 //Group Name
-                GUILayout.Label(mVFSConfig.Groups[cur_select_group_index.Value].GroupName, style_title_h3);
+                GUILayout.Label(mVFSConfig.Groups[cur_select_group_index.Value].GroupName, style_title_small);
 
                 GUILayout.BeginHorizontal();
                 //GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));

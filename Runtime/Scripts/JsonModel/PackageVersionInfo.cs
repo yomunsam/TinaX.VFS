@@ -11,5 +11,6 @@ namespace TinaX.VFSKitInternal
         public long version;
         public string versionName;
         public string buildId;    //build info 中记录的id
+        public string branch;
     }
 }

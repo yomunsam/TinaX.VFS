@@ -118,7 +118,10 @@ namespace TinaX.VFSKit
         internal ExtensionGroupsManager ExtensionGroups { get; private set; }
         private PackageVersionInfo MainPackage_Version; //这个信息只会存在于StreamingAssets
         private BuildInfo MainPackage_BuildInfo;//这个信息只会存在于StreamingAssets
-        private VFSMainPackageVersionInfo mVirtualDisk_MainPackage_Version_Info; //VDisk中的资源是母包和补丁的结合信息。
+        private VFSUpgrdableVersionInfo mUpgradeable_Version_Info; //VDisk中的资源是母包和补丁的结合信息。
+
+        private string mVFS_Patch_Handle_Folder;
+        private string mVFS_Patch_Temp_Folder;
 
         private bool mInited = false;
         private bool mWebVFSReady = false;
@@ -140,6 +143,8 @@ namespace TinaX.VFSKit
             Platform = XPlatformUtil.GetXRuntimePlatform(Application.platform);
             PlatformText = XPlatformUtil.GetNameText(Platform);
 
+            mVFS_Patch_Handle_Folder = Path.Combine(Application.persistentDataPath, "VFS_Patch");
+            mVFS_Patch_Temp_Folder = Path.Combine(mVFS_Patch_Handle_Folder, "temp");
 #if UNITY_EDITOR
             //load mode
             var loadMode = VFSLoadModeInEditor.GetLoadMode();
@@ -208,9 +213,7 @@ namespace TinaX.VFSKit
                 }
                 catch (FileNotFoundException)
                 {
-#if UNITY_EDITOR
                     Debug.LogWarning(IsChinese ? "[TinaX.VFS]当前母包没有登记版本信息，补丁功能将不可用。" : "[TinaX.VFS]The current main package has no registered version information, and the patch function will not be available.");
-#endif
                 }
                 catch (VFSException e)
                 {
@@ -219,29 +222,40 @@ namespace TinaX.VFSKit
                 }
 
                 //VDisk
-                string vdisk_version_path = VFSUtil.GetVirtualDiskVersionPath(VirtualDiskPath);
-                if (File.Exists(vdisk_version_path))
+                if (this.MainPackage_Version != null)
                 {
-                    if (this.MainPackage_Version != null)
+                    string vdisk_version_path = VFSUtil.GetMainPackage_UpgradableVersionFilePath(VirtualDiskPath);
+                    if (File.Exists(vdisk_version_path))
                     {
-                        this.mVirtualDisk_MainPackage_Version_Info = XConfig.GetJson<VFSMainPackageVersionInfo>(vdisk_version_path, AssetLoadType.SystemIO, false);
+                        this.mUpgradeable_Version_Info = XConfig.GetJson<VFSUpgrdableVersionInfo>(vdisk_version_path, AssetLoadType.SystemIO, false);
+                        //检查一致性
+                        if(this.mUpgradeable_Version_Info.VFSPackageVersion != this.MainPackage_Version.version)
+                        {
+                            this.mUpgradeable_Version_Info.VFSPackageVersion = this.MainPackage_Version.version;
+                            this.mUpgradeable_Version_Info.VFSPackageVersionName = this.MainPackage_Version.versionName;
+                            this.mUpgradeable_Version_Info.VFSPatchVersion = -1;
+                            this.mUpgradeable_Version_Info.VFSPatchVersionName = string.Empty ;
+                            XConfig.SaveJson(this.mUpgradeable_Version_Info, vdisk_version_path);
+
+                            //因为母包换了，之前的资源不能用了，资源全清掉
+                            XDirectory.DeleteIfExists(mVirtualDisk_DataFolderPath);
+                            XDirectory.DeleteIfExists(mVirtualDisk_MainPackageFolderPath);
+                        }
                     }
-                }
-                else
-                {
-                    if(this.MainPackage_Version != null)
+                    else
                     {
                         //创建这个文件
-                        this.mVirtualDisk_MainPackage_Version_Info = new VFSMainPackageVersionInfo()
+                        this.mUpgradeable_Version_Info = new VFSUpgrdableVersionInfo()
                         {
                             VFSPackageVersionName = this.MainPackage_Version.versionName,
                             VFSPackageVersion = this.MainPackage_Version.version,
                             VFSPatchVersionName = string.Empty,
                             VFSPatchVersion = -1
                         };
-                        XConfig.SaveJson(this.mVirtualDisk_MainPackage_Version_Info, vdisk_version_path);
+                        XConfig.SaveJson(this.mUpgradeable_Version_Info, vdisk_version_path);
                     }
                 }
+                
             }
 
             #endregion
@@ -310,10 +324,12 @@ namespace TinaX.VFSKit
 
             #endregion
 
-            
+            #region Patch
+            XDirectory.DeleteIfExists(mVFS_Patch_Temp_Folder, true);
+            #endregion
 
 
-            
+
 
 
             bool need_init_webvfs = false;
@@ -510,11 +526,6 @@ namespace TinaX.VFSKit
                 .ObserveOnMainThread()
                 .Subscribe(asset =>
                 {
-                    //int thraed = System.Threading.Thread.CurrentThread.ManagedThreadId;
-                    //if (thraed != 1)
-                    //{
-                    //    Debug.LogError("????");
-                    //}
                     callback?.Invoke(asset.Get<T>(), null);
                 },
                 e=>
@@ -755,7 +766,7 @@ namespace TinaX.VFSKit
         /// </summary>
         /// <param name="group_name"></param>
         /// <returns></returns>
-        public async Task<bool> AddExtensionPackage(string group_name)
+        public async Task<bool> AddExtensionPackage(string group_name, bool enable_web_vfs = true)
         {
             if (this.ExtensionGroups.IsExists(group_name)) return true;
             VFSGroupOption group_options = null;
@@ -807,7 +818,8 @@ namespace TinaX.VFSKit
                 if (mLoadByAssetDatabaseInEditor)
                 {
                     //在编辑器模式下，我们直接去config里找找有没有
-                    var options = mConfig.Groups.Where(o => o.GroupName.ToLower() == group_name.ToLower());
+                    var _config = XConfig.GetConfig<VFSConfigModel>(VFSConst.ConfigFilePath_Resources);
+                    var options = _config.Groups.Where(o => o.GroupName.ToLower() == group_name.ToLower());
                     if (options.Count() > 0)
                     {
                         group_options = options.First();
@@ -818,7 +830,7 @@ namespace TinaX.VFSKit
 
             if (group_options == null) return false;
 
-            VFSExtensionGroup group = new VFSExtensionGroup(group_options);
+            VFSExtensionGroup group = new VFSExtensionGroup(group_options,enable_web_vfs);
             //登记
             lock (this)
             {
@@ -840,7 +852,98 @@ namespace TinaX.VFSKit
                 task_manifest_filehash[1] = InitExtensionGroupFilesHash(group);
                 await Task.WhenAll(task_manifest_filehash);
             }
-            
+
+            //版本信息
+            bool init_version = true;
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor) init_version = false;
+#endif
+            if (group.HandleMode == GroupHandleMode.LocalOrRemote || group.HandleMode == GroupHandleMode.RemoteOnly)
+                init_version = false;
+            if (init_version)
+            {
+                string build_info_path_vdisk = group.GetBuildInfoPath(VirtualDiskPath);
+                string version_info_vdisk = group.GetVersionInfoPath(VirtualDiskPath);
+                if (File.Exists(build_info_path_vdisk) && !File.Exists(version_info_vdisk))
+                {
+                    try
+                    {
+                        var build_info = XConfig.GetJson<BuildInfo>(build_info_path_vdisk, AssetLoadType.SystemIO, false);
+                        var version_info = XConfig.GetJson<PackageVersionInfo>(version_info_vdisk, AssetLoadType.SystemIO, false);
+                        if (version_info.buildId == build_info.BuildID)
+                        {
+                            group.VersionInfo = version_info;
+                        }
+                        else
+                        {
+                            Debug.LogWarning(IsChinese ? $"[TinaX.VFS]扩展包\"{group.GroupName}\"中的版本信息无效，它可能已过期，补丁功能将不可用" : $"[TinaX.VFS]The version information of the extension package \"{group.GroupName}\" is invalid. It may have expired and the patch function will be unavailable.");
+                        }
+                    }
+                    catch
+                    {
+                        Debug.LogWarning(IsChinese ? $"[TinaX.VFS]扩展包\"{group.GroupName}\"没有登记版本信息，补丁功能将不可用。" : $"[TinaX.VFS]The extension package \"{group.GroupName}\" has no registered version information, and the patch function will not be available.");
+                    }
+                }
+                else
+                {
+                    //streamingassets查找
+                    string build_info_path_stream = group.GetBuildInfoPath(mStreamingAssets_PackagesRootFolderPath);
+                    string version_info_stream = group.GetVersionInfoPath(mStreamingAssets_PackagesRootFolderPath);
+
+                    try
+                    {
+                        string build_info_json = await LoadTextFromStreamingAssetsAsync(build_info_path_stream);
+                        string version_info_json = await LoadTextFromStreamingAssetsAsync(version_info_stream);
+                        var binfo = JsonUtility.FromJson<BuildInfo>(build_info_json);
+                        var vinfo = JsonUtility.FromJson<PackageVersionInfo>(version_info_json);
+                        if (binfo.BuildID == vinfo.buildId)
+                        {
+                            group.VersionInfo = vinfo;
+                        }
+                        else
+                            Debug.LogWarning(IsChinese ? "[TinaX.VFS]当前扩展包中的版本信息无效，它可能已过期，补丁功能将不可用" : $"[TinaX.VFS]The version information of the extension package \"{group.GroupName}\" is invalid. It may have expired and the patch function will be unavailable.");
+
+                    }
+                    catch
+                    {
+                        Debug.LogWarning(IsChinese ? "[TinaX.VFS]当前扩展包没有登记版本信息，补丁功能将不可用。" : $"[TinaX.VFS]The extension package \"{group.GroupName}\" has no registered version information, and the patch function will not be available.");
+                    }
+
+                }
+
+                if(group.VersionInfo != null)
+                {
+                    string upgrade_version_path = group.GetUpgradableVersionPath(VirtualDiskPath);
+                    if (File.Exists(upgrade_version_path))
+                    {
+                        group.UpgradableVersionInfo = XConfig.GetJson<VFSUpgrdableVersionInfo>(upgrade_version_path, AssetLoadType.SystemIO, false);
+                        if(group.UpgradableVersionInfo.VFSPackageVersion != group.VersionInfo.version)
+                        {
+                            group.UpgradableVersionInfo.VFSPackageVersion = group.VersionInfo.version;
+                            group.UpgradableVersionInfo.VFSPackageVersionName = group.VersionInfo.versionName;
+                            group.UpgradableVersionInfo.VFSPatchVersion = -1;
+                            group.UpgradableVersionInfo.VFSPatchVersionName = string.Empty;
+                            XConfig.SaveJson(group.UpgradableVersionInfo, upgrade_version_path);
+
+                            //干掉vdisk的资源
+                            XDirectory.DeleteIfExists(VFSUtil.GetExtensionGroupFolder(VirtualDiskPath, group.GroupName));
+                            
+                        }
+                    
+                    }
+                    else
+                    {
+                        group.UpgradableVersionInfo = new VFSUpgrdableVersionInfo()
+                        {
+                            VFSPackageVersion = group.VersionInfo.version,
+                            VFSPackageVersionName = group.VersionInfo.versionName,
+                            VFSPatchVersion = -1,
+                        };
+                        XConfig.SaveJson(group.UpgradableVersionInfo, upgrade_version_path);
+                    }
+                }
+            }
+
 
             return true;
         }
@@ -893,6 +996,60 @@ namespace TinaX.VFSKit
             task_manifest_filehash[1] = InitExtensionGroupFilesHash(ext_group);
             await Task.WhenAll(task_manifest_filehash);
 
+            //版本信息
+            string build_info_path_vdisk = ext_group.GetBuildInfoPath(VirtualDiskPath);
+            string version_info_vdisk = ext_group.GetVersionInfoPath(VirtualDiskPath);
+            if (File.Exists(build_info_path_vdisk) && !File.Exists(version_info_vdisk))
+            {
+                try
+                {
+                    var build_info = XConfig.GetJson<BuildInfo>(build_info_path_vdisk, AssetLoadType.SystemIO, false);
+                    var version_info = XConfig.GetJson<PackageVersionInfo>(version_info_vdisk, AssetLoadType.SystemIO, false);
+                    if (version_info.buildId == build_info.BuildID)
+                    {
+                        ext_group.VersionInfo = version_info;
+                    }
+                    else
+                    {
+                        Debug.LogWarning(IsChinese ? $"[TinaX.VFS]扩展包\"{ext_group.GroupName}\"中的版本信息无效，它可能已过期，补丁功能将不可用" : $"[TinaX.VFS]The version information of the extension package \"{ext_group.GroupName}\" is invalid. It may have expired and the patch function will be unavailable.");
+                    }
+                }
+                catch
+                {
+                    Debug.LogWarning(IsChinese ? $"[TinaX.VFS]扩展包\"{ext_group.GroupName}\"没有登记版本信息，补丁功能将不可用。" : $"[TinaX.VFS]The extension package \"{ext_group.GroupName}\" has no registered version information, and the patch function will not be available.");
+                }
+            }else
+                Debug.LogWarning(IsChinese ? $"[TinaX.VFS]扩展包\"{ext_group.GroupName}\"没有登记版本信息，补丁功能将不可用。" : $"[TinaX.VFS]The extension package \"{ext_group.GroupName}\" has no registered version information, and the patch function will not be available.");
+
+            if (ext_group.VersionInfo != null)
+            {
+                string upgrade_version_path = ext_group.GetUpgradableVersionPath(VirtualDiskPath);
+                if (File.Exists(upgrade_version_path))
+                {
+                    ext_group.UpgradableVersionInfo = XConfig.GetJson<VFSUpgrdableVersionInfo>(upgrade_version_path, AssetLoadType.SystemIO, false);
+                    if (ext_group.UpgradableVersionInfo.VFSPackageVersion != ext_group.VersionInfo.version)
+                    {
+                        ext_group.UpgradableVersionInfo.VFSPackageVersion = ext_group.VersionInfo.version;
+                        ext_group.UpgradableVersionInfo.VFSPackageVersionName = ext_group.VersionInfo.versionName;
+                        ext_group.UpgradableVersionInfo.VFSPatchVersion = -1;
+                        ext_group.UpgradableVersionInfo.VFSPatchVersionName = string.Empty;
+                        XConfig.SaveJson(ext_group.UpgradableVersionInfo, upgrade_version_path);
+
+                        //TODO： 这里应该怎么处理呢
+                    }
+                }
+                else
+                {
+                    ext_group.UpgradableVersionInfo = new VFSUpgrdableVersionInfo()
+                    {
+                        VFSPackageVersion = ext_group.VersionInfo.version,
+                        VFSPackageVersionName = ext_group.VersionInfo.versionName,
+                        VFSPatchVersion = -1,
+                    };
+                    XConfig.SaveJson(ext_group.UpgradableVersionInfo, upgrade_version_path);
+                }
+            }
+
             return true;
         }
         
@@ -906,9 +1063,206 @@ namespace TinaX.VFSKit
             return groups.ToArray();
         }
 
-        #endregion
+#endregion
+
+#region 补丁相关
+        public void InstallPatch(string path)
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+            {
+                UnityEditor.EditorUtility.DisplayDialog(
+                    IsChinese ? "喵" : "Oops",
+                    IsChinese ? "您当前正在使用编辑器方式模拟资源加载功能，在该模式下您不能安装资源补丁。\n如有需要，请在编辑器中将VFS切换自“AssetBundle”加载模式。" : "You are currently using the editor mode to simulate the resource loading function. \nIn this mode, you cannot install patch. \nIf necessary, switch the VFS from \"AssetBundle\" load mode in the editor.",
+                    "Okey");
+                return;
+            }
+#endif
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Patch file not found: " + path, path);
+            XDirectory.CreateIfNotExists(mVFS_Patch_Handle_Folder);
+            string cur_temp_folder_path = Path.Combine(mVFS_Patch_Temp_Folder, "tmp_" + StringHelper.GetRandom(5));
+            while (Directory.Exists(cur_temp_folder_path))
+                cur_temp_folder_path = Path.Combine(mVFS_Patch_Temp_Folder, "tmp_" + StringHelper.GetRandom(5));
+
+            Directory.CreateDirectory(cur_temp_folder_path);
+            ZipUtil.UnZip(path, cur_temp_folder_path);
+
+            //读取补丁信息
+            string patch_info_path = Path.Combine(cur_temp_folder_path, VFSConst.Patch_Info_FileName);
+            if (File.Exists(patch_info_path))
+            {
+                var patch_info = XConfig.GetJson<PatchInfo>(patch_info_path, AssetLoadType.SystemIO, false);
+                if(patch_info.platform != this.Platform)
+                {
+                    throw new VFSException("Connot Install Patch: the patch's target platform is not " + this.Platform.ToString());
+                }
+                if (patch_info.extension)
+                {
+                    if(this.ExtensionGroups.TryGetExtensionGroup(patch_info.extensionGroupName, out var ext_group))
+                    {
+                        if(ext_group.VersionInfo != null && ext_group.UpgradableVersionInfo != null)
+                        {
+                            if(ext_group.VersionInfo.branch == patch_info.branch)
+                            {
+                                if(patch_info.targetVersionCode == ext_group.VersionInfo.version)
+                                {
+                                    if(ext_group.UpgradableVersionInfo.VFSPatchVersion < patch_info.patchCode)
+                                    {
+                                        //install
+                                        string group_root_folder = ext_group.GetGroupRootFolder(VirtualDiskPath);
+                                        doPatchInstall(group_root_folder, cur_temp_folder_path, true);
+                                        ext_group.UpgradableVersionInfo.VFSPatchVersion = patch_info.patchCode;
+                                        string upgrade_path = ext_group.GetUpgradableVersionPath(VirtualDiskPath);
+                                        XConfig.SaveJson(ext_group.UpgradableVersionInfo, upgrade_path);
+                                    }
+                                    else
+                                    {
+                                        throw new VFSException($"Cannot install patch to extension group \"{patch_info.extensionGroupName}\", The patch version must greater than group's patch version.");
+                                    }
+                                }
+                                else
+                                {
+                                    throw new VFSException($"Cannot install patch to extension group \"{patch_info.extensionGroupName}\", The target version of the patch is inconsistent with the group version");
+                                }
+                            }
+                            else
+                            {
+                                throw new VFSException($"Cannot install patch to extension group \"{patch_info.extensionGroupName}\", The version branch of the patch is inconsistent");
+                            }
+                        }
+                        else
+                        {
+                            throw new VFSException($"Cannot install patch to extension group \"{patch_info.extensionGroupName}\", There is no valid version information for this group");
+                        }
+                    }
+                    else
+                    {
+                        throw new VFSException($"Cannot install patch to extension group \"{patch_info.extensionGroupName}\", the group not active.");
+                    }
+                }
+                else
+                {
+                    if(this.MainPackage_Version != null && this.mUpgradeable_Version_Info != null)
+                    {
+                        if(this.MainPackage_Version.branch == patch_info.branch)
+                        {
+                            if(this.MainPackage_Version.version == patch_info.targetVersionCode)
+                            {
+                                if (this.mUpgradeable_Version_Info.VFSPatchVersion < patch_info.patchCode)
+                                {
+                                    //install 
+                                    doPatchInstall(mVirtualDisk_MainPackageFolderPath, cur_temp_folder_path, false, VirtualDiskPath);
+                                    this.mUpgradeable_Version_Info.VFSPatchVersion = patch_info.patchCode;
+                                    string save_path = VFSUtil.GetMainPackage_UpgradableVersionFilePath(VirtualDiskPath);
+                                    XConfig.SaveJson(this.mUpgradeable_Version_Info, save_path);
+                                }
+                                else
+                                    throw new VFSException($"Connot install patch: Patch version must greater than main package's version.");
+                            }
+                            else
+                                throw new VFSException($"Connot install patch: The target version of the patch is inconsistent with the main package version.");
+                        }
+                        else
+                        {
+                            throw new VFSException(IsChinese? "该补丁的版本分支与当前母包不符合" : "The patch branch of this patch does not match the current parent package");
+                        }
+                    }
+                    else
+                    {
+                        throw new VFSException($"Connot install patch: Main Package have not valid version data.");
+                    }
+                }
+            }
+            else
+            {
+                throw new VFSException("Connot read info from this patch");
+            }
 
 
+
+            Debug.Log("install finish");
+            XDirectory.DeleteIfExists(cur_temp_folder_path, true);
+        }
+
+        private void doPatchInstall(string target_root_folder,string patch_root_folder, bool isExtension,string mainpackage_root_path = null)
+        {
+            string record_path = Path.Combine(patch_root_folder, VFSConst.Patch_Record_FileName);
+            var record = XConfig.GetJson<PatchRecords>(record_path, AssetLoadType.SystemIO, false);
+            foreach(var ab in record.Delete_ReadWrite)
+            {
+                string full_path = Path.Combine(target_root_folder, ab);
+                if (File.Exists(full_path))
+                    File.Delete(full_path);
+            }
+            foreach(var ab in record.Add_ReadWrite)
+            {
+                string target_path = Path.Combine(target_root_folder,ab);
+                string patch_path = Path.Combine(patch_root_folder, VFSConst.Patch_Assets_Folder_Name, ab);
+                if (File.Exists(patch_path))
+                {
+                    XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                    File.Copy(patch_path, target_path, true);
+                }
+            }
+            foreach (var ab in record.Modify_ReadWrite)
+            {
+                string target_path = Path.Combine(target_root_folder, ab);
+                string patch_path = Path.Combine(patch_root_folder, VFSConst.Patch_Assets_Folder_Name, ab);
+                if (File.Exists(patch_path))
+                {
+                    XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                    File.Copy(patch_path, target_path, true);
+                }
+            }
+
+            //数据文件复制
+            //Manifest
+            if (isExtension)
+            {
+                string manifest_path = Path.Combine(patch_root_folder, VFSConst.AssetBundleManifestFileName);
+                if (File.Exists(manifest_path))
+                {
+                    string target_path = Path.Combine(target_root_folder, VFSConst.AssetBundleManifestFileName);
+                    XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                    File.Copy(manifest_path, target_path, true);
+                }
+            }
+            else
+            {
+                string manifest_folder = Path.Combine(patch_root_folder, VFSConst.MainPackage_AssetBundleManifests_Folder);
+                if (Directory.Exists(manifest_folder))
+                {
+                    string target_path = VFSUtil.GetMainPackage_AssetBundleManifests_Folder(mainpackage_root_path);
+                    XDirectory.CopyDir(manifest_folder, target_path);
+                }
+            }
+
+            //Group Option
+            if (isExtension)
+            {
+                string option_path = Path.Combine(patch_root_folder, VFSConst.ExtensionGroup_GroupOption_FileName);
+                if (File.Exists(option_path))
+                {
+                    string target_path = Path.Combine(target_root_folder, VFSConst.ExtensionGroup_GroupOption_FileName);
+                    File.Copy(option_path, target_path, true);
+                }
+            }
+
+            //vfs config
+            if (!isExtension)
+            {
+                string conf_path = Path.Combine(patch_root_folder, VFSConst.Config_Runtime_FileName);
+                if (File.Exists(conf_path))
+                {
+                    string target_path = VFSUtil.GetVFSConfigFilePath_InPackages(mainpackage_root_path);
+                    File.Copy(conf_path, target_path, true);
+                }
+            }
+
+        }
+
+#endregion
 
 
 
@@ -964,7 +1318,7 @@ namespace TinaX.VFSKit
                 }
             }
 
-            #region Manifest and FilesHash ...
+#region Manifest and FilesHash ...
             List<Task> list_init_manifest_and_hashs_tasks = new List<Task>();
             if (mGroups != null && mGroups.Count > 0)
             {
@@ -977,7 +1331,7 @@ namespace TinaX.VFSKit
                 }
             }
             await Task.WhenAll(list_init_manifest_and_hashs_tasks);
-            #endregion
+#endregion
 
 
             if (!webvfs_download_base_url_modify)
@@ -1281,7 +1635,7 @@ namespace TinaX.VFSKit
             group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
         }
 
-        #region VFS Asset 异步加载
+#region VFS Asset 异步加载
 
         private async UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
         {
@@ -1369,9 +1723,9 @@ namespace TinaX.VFSKit
             await asset.LoadAsync(type);
             this.Assets.RegisterHashCode(asset);
         }
-        #endregion 
+#endregion
 
-        #region 加载AssetBundle_Async
+#region 加载AssetBundle_Async
 
         /// <summary>
         /// 加载AssetBundle和它的依赖， 异步入口
@@ -1468,9 +1822,9 @@ namespace TinaX.VFSKit
             await bundle.LoadAsync();
         }
 
-        #endregion
+#endregion
 
-        #region VFS Asset 同步加载
+#region VFS Asset 同步加载
 
         /// <summary>
         /// 同步加载【IAsset】，正常AssetBundle模式，泛型，【私有方法总入口】
@@ -1613,9 +1967,9 @@ namespace TinaX.VFSKit
         }
         
         
-        #endregion
+#endregion
 
-        #region 同步加载AssetBundle
+#region 同步加载AssetBundle
         private VFSBundle loadAssetBundleAndDependencies(string assetbundleName, VFSGroup group, bool counter = true, List<string> load_chain = null)
         {
             VFSBundle bundle;
@@ -1742,7 +2096,7 @@ namespace TinaX.VFSKit
             }
 
         }
-        #endregion
+#endregion
 
         /// <summary>
         /// 查询资源
@@ -1913,23 +2267,19 @@ namespace TinaX.VFSKit
                 return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
             }
 
-            //检查资源是否在Virtual Disk
-            string asset_path_vdisk;
-            if (group.ExtensionGroup)
-                asset_path_vdisk = ((VFSExtensionGroup)group).GetAssetBundlePath(VirtualDiskPath, assetbundle);
+            //获取vdisk路径
+            if(group.ExtensionGroup)
+                vdisk_path = ((VFSExtensionGroup)group).GetAssetBundlePath(VirtualDiskPath, assetbundle);
             else
-                asset_path_vdisk = group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
-            vdisk_path = asset_path_vdisk;
+                vdisk_path = group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
+            
 
-            if (File.Exists(asset_path_vdisk))
+            if (File.Exists(vdisk_path))
             {
                 //资源存在，检查：如果这个资源是LocalOrRemote，并且本地hash与云端不一致的话，则使用云端地址
                 if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
                 {
-                    string hash_vdisk = XFile.GetMD5(asset_path_vdisk);
-                    string hash_streaming = string.Empty;
-                    if(group.FilesHash_StreamingAssets != null)
-                        group.FilesHash_StreamingAssets.TryGetFileHashValue(assetbundle, out hash_streaming);
+                    string hash_vdisk = XFile.GetMD5(vdisk_path);
 
                     //尝试找到它在remote的hash
                     if (group.FilesHash_Remote != null)
@@ -1937,37 +2287,13 @@ namespace TinaX.VFSKit
                         if(group.FilesHash_Remote.TryGetFileHashValue(assetbundle, out var remote_hash))
                         {
                             if (!hash_vdisk.Equals(remote_hash))
-                            {
-                                //和vdisk的hash不一致了，检查下stream的，如果也不一致就用云端的了
-                                if (!hash_streaming.IsNullOrEmpty())
-                                {
-                                    if (!hash_streaming.Equals(remote_hash))
-                                    {
-                                        //不一致，用remote吧
-                                        this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
-                                    }
-                                    else
-                                    {
-                                        //用steram的
-                                        if (group.ExtensionGroup)
-                                            return ((VFSExtensionGroup)group).GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
-                                        else
-                                            group.GetAssetBundlePath(mStreamingAssets_PackagesRootFolderPath, assetbundle);
-                                    }
-                                }
-                                else
-                                {
-                                    //在stream没有有效的hash，只能用remote的
-                                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
-                                }
-                            }
+                                return group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
                         }
                     }
-                    
                 }
 
                 //在上面没有被return 的话，返回vdisk的地址
-                return asset_path_vdisk;
+                return vdisk_path;
             }
 
             //已知文件不在Virtual Disk
@@ -2085,7 +2411,7 @@ namespace TinaX.VFSKit
             return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
         }
 
-        #region Customizable_Default_Function
+#region Customizable_Default_Function
         private string default_getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
         {
             if (isExtensionGroup)
@@ -2112,11 +2438,11 @@ namespace TinaX.VFSKit
         }
 
 
-        #endregion
+#endregion
 
 
 #if UNITY_EDITOR
-        #region 编辑器下的AssetDatabase加载
+#region 编辑器下的AssetDatabase加载
         private async Task<IAsset> loadAssetFromAssetDatabaseAsync<T>(string asset_path) where T : UnityEngine.Object
         {
             var asset = loadAssetFromAssetDatabase<T>(asset_path); //编辑器没提供异步接口，所以同步加载
@@ -2189,13 +2515,13 @@ namespace TinaX.VFSKit
 
 
 
-        #endregion
+#endregion
 
-        #region 编辑器下的扩展组操作
+#region 编辑器下的扩展组操作
 
 
 
-        #endregion
+#endregion
 
 #endif
 

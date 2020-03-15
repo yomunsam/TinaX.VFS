@@ -362,8 +362,19 @@ namespace TinaXEditor.VFSKit.Versions
                             string group_option_path = VFSUtil.GetExtensionPackages_GroupOptions_FilePath(source_packages_folder_path, branch.ExtensionGroupName);
                             if (File.Exists(group_option_path))
                             {
-                                string target_path = Path.Combine(data_folder, VFSConst.GetExtensionGroup_GroupOption_FileName);
+                                string target_path = Path.Combine(data_folder, VFSConst.ExtensionGroup_GroupOption_FileName);
                                 File.Copy(group_option_path, target_path, true);
+                            }
+                        }
+
+                        //Group Info
+                        if (!isMainPackage)
+                        {
+                            string group_info_path = VFSUtil.GetExtensionGroup_GroupInfo_Path_InGroupPath(VFSUtil.GetExtensionGroupFolder(source_packages_folder_path, branch.ExtensionGroupName));
+                            if (File.Exists(group_info_path))
+                            {
+                                string target_path = Path.Combine(data_folder, VFSConst.VFS_ExtensionGroupInfo_FileName);
+                                File.Copy(group_info_path, target_path, true);
                             }
                         }
 
@@ -394,7 +405,8 @@ namespace TinaXEditor.VFSKit.Versions
                             {
                                 version = versionCode,
                                 versionName = versionName,
-                                buildId = obj.BuildID
+                                buildId = obj.BuildID,
+                                branch = branch.BranchName
                             };
                             string version_info_path = isMainPackage ? VFSEditorUtil.Get_MainPackage_PackageVersionFilePath_InSourcePackages(platform_name) : VFSEditorUtil.Get_ExtensionGroups_PackageVersionFilePath_InSourcePackages(ref platform_name, ref branch.ExtensionGroupName);
                             XFile.DeleteIfExists(version_info_path);
@@ -457,13 +469,17 @@ namespace TinaXEditor.VFSKit.Versions
                             long total_count = 0;
                             //把所有二进制文件直接全拷进去
                             string binary_path_temp = Path.Combine(binary_path, "temp");
+                            string binary_path_temp_remote = Path.Combine(binary_path, "temp_remote");
                             XDirectory.DeleteIfExists(binary_path_temp, true);
                             Directory.CreateDirectory(binary_path_temp);
-                            /*
-                             * 首先，先把vfs_root和vfs_remote的文件得都还原到temp目录下，
-                             * 然后，把temp目录里的东西整体打包成zip，存储在binary_path
-                             */
 
+                            if (isMainPackage)
+                            {
+                                XDirectory.DeleteIfExists(binary_path_temp_remote, true);
+                                Directory.CreateDirectory(binary_path_temp_remote);
+                            }
+
+                            
                             //移动文件
                             if (isMainPackage)
                             {
@@ -493,7 +509,7 @@ namespace TinaXEditor.VFSKit.Versions
                                     foreach (var item in remote_files)
                                     {
                                         string pure_path = item.Substring(remote_path_len, item.Length - remote_path_len);
-                                        string target_path = Path.Combine(binary_path_temp, pure_path);
+                                        string target_path = Path.Combine(binary_path_temp_remote, pure_path);
                                         XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
                                         File.Copy(item, target_path);
                                     }
@@ -548,12 +564,42 @@ namespace TinaXEditor.VFSKit.Versions
                                 }
                             });
 
+                            if (isMainPackage)
+                            {
+                                string zip_file_path_remote = Path.Combine(binary_path, VFSEditorConst.VFS_VERSION_AssetsBinary_REMOTE_Zip_Name);
+                                zip_counter = 0;
+                                zip_counter_t = 0;
+                                ZipUtil.ZipDirectory(binary_path_temp_remote, zip_file_path_remote, fileName =>
+                                {
+                                    if (log || dialog)
+                                    {
+                                        zip_counter++;
+                                        if (total_count > 100)
+                                        {
+                                            zip_counter_t++;
+                                            if (zip_counter_t >= 20)
+                                            {
+                                                zip_counter_t = 0;
+                                                if (log) Debug.Log($"    Create Zip: {zip_counter}/{total_count}");
+                                                if (dialog) EditorUtility.DisplayProgressBar("Create Zip", $"{zip_counter}/{total_count}\n{fileName}", zip_counter / total_count);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (log) Debug.Log($"    Create Zip: {zip_counter}/{total_count} : {fileName}");
+                                            if (dialog) EditorUtility.DisplayProgressBar("Create Zip", $"{zip_counter}/{total_count}\n{fileName}", zip_counter / total_count);
+                                        }
+                                    }
+                                });
+                            }
+
                             if (dialog)
                                 EditorUtility.ClearProgressBar(); //上面这个应该是同步方法，不会有时间错乱。（吧
 
 
                             //删除temp
                             XDirectory.DeleteIfExists(binary_path_temp);
+                            XDirectory.DeleteIfExists(binary_path_temp_remote);
                         }
                         catch(Exception e)
                         {

@@ -10,7 +10,7 @@ namespace TinaX.VFSKitInternal
     /// 
     /// </summary>
     [Serializable]
-    public class VFSMainPackageVersionInfo
+    public class VFSUpgrdableVersionInfo
     {
         //母包资源版本
         public long VFSPackageVersion;

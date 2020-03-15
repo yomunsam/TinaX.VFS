@@ -520,7 +520,7 @@ namespace TinaX.VFSKitInternal.Utils
         /// <param name="packages_root_path"></param>
         /// <param name="group_name"></param>
         /// <returns></returns>
-        public static string GetExtensionGroups_AssetBundleManifests_Folder(string packages_root_path, string group_name)
+        public static string GetExtensionGroups_AssetBundleManifests_FilePath(string packages_root_path, string group_name)
         {
             return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_EXTENSION, GetExtensionGroupFolderName(group_name), VFSConst.AssetBundleManifestFileName);
         }
@@ -591,7 +591,7 @@ namespace TinaX.VFSKitInternal.Utils
         /// <returns></returns>
         public static string Get_GroupOptions_InExtensionPackage(string extension_group_path)
         {
-            return Path.Combine(extension_group_path, VFSConst.GetExtensionGroup_GroupOption_FileName);
+            return Path.Combine(extension_group_path, VFSConst.ExtensionGroup_GroupOption_FileName);
         }
 
         /// <summary>
@@ -616,9 +616,9 @@ namespace TinaX.VFSKitInternal.Utils
         }
 
 
-        public static string GetVirtualDiskVersionPath(string packages_root_path)
+        public static string GetMainPackage_UpgradableVersionFilePath(string packages_root_path)
         {
-            return Path.Combine(GetDataFolderInPackages(packages_root_path), VFSConst.VirtualDisk_Version_FileName);
+            return Path.Combine(GetDataFolderInPackages(packages_root_path), VFSConst.Upgradable_Vesion_FileName);
         }
 
     }

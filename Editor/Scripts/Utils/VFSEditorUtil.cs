@@ -349,7 +349,7 @@ namespace TinaXEditor.VFSKit.Utils
         /// <returns></returns>
         public static string GetExtensionGroup_AssetBundleManifestPath_InInSourcePackagesFolder(string platform, string group_name)
         {
-            return VFSUtil.GetExtensionGroups_AssetBundleManifests_Folder(GetSourcePackagesFolderPath(platform), group_name);
+            return VFSUtil.GetExtensionGroups_AssetBundleManifests_FilePath(GetSourcePackagesFolderPath(platform), group_name);
         }
 
         /// <summary>

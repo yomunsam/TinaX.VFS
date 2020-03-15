@@ -81,6 +81,15 @@ namespace TinaX.VFSKit
             }
         }
 
+        public FilesHashBook FileHash_Local
+        {
+            get
+            {
+                if (FilesHash_VirtualDisk != null) return FilesHash_VirtualDisk;
+                return FilesHash_StreamingAssets;
+            }
+        }
+
 
         protected VFSGroupOption mOption;
 
@@ -387,7 +396,7 @@ namespace TinaX.VFSKit
         public string GetManifestFilePath(string packages_root_path)
         {
             if (this.ExtensionGroup)
-                return VFSUtil.GetExtensionGroups_AssetBundleManifests_Folder(packages_root_path, this.GroupName);
+                return VFSUtil.GetExtensionGroups_AssetBundleManifests_FilePath(packages_root_path, this.GroupName);
             else
                 return Path.Combine(packages_root_path, VFSConst.VFS_FOLDER_DATA, VFSConst.MainPackage_AssetBundleManifests_Folder, this.GroupName.GetMD5(true, true) + ".json");
         }
@@ -414,6 +423,13 @@ namespace TinaX.VFSKit
                 return VFSUtil.GetAssetBundlePathFromPackages(this.ExtensionGroup, packages_root_path, assetbundleName);
         }
 
+        public string GetBuildInfoPath(string packages_root_path)
+        {
+            if (this.ExtensionGroup)
+                return VFSUtil.GetExtensionGroup_BuildInfo_Path(packages_root_path, this.GroupName);
+            else
+                return VFSUtil.GetMainPackage_BuildInfo_Path(packages_root_path);
+        }
 
 
         /// <summary>

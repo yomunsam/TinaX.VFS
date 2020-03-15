@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using TinaX.VFSKit.Const;
+using TinaX.VFSKitInternal;
+using TinaX.VFSKitInternal.Utils;
 
 namespace TinaX.VFSKit
 {
@@ -11,6 +13,9 @@ namespace TinaX.VFSKit
         public bool OverridePackagePath { get; private set; } = false;
 
         public bool WebVFS_Available { get; private set; } = true;
+
+        public PackageVersionInfo VersionInfo { get; internal set; }
+        public VFSUpgrdableVersionInfo UpgradableVersionInfo { get; internal set; }
 
         /// <summary>
         /// 如果有指定扩展包的路径，那么从这里获取到指定的路径
@@ -51,6 +56,38 @@ namespace TinaX.VFSKit
                 return Path.Combine(this.PackagePathSpecified, VFSConst.AssetBundleManifestFileName);
             else
                 return base.GetManifestFilePath(packages_root_path);
+        }
+
+        public string GetGroupRootFolder(string packages_root_path)
+        {
+            if (this.OverridePackagePath)
+                return this.PackagePathSpecified;
+            else
+                return VFSUtil.GetExtensionGroupFolder(packages_root_path, this.GroupName);
+        }
+
+        public new string GetBuildInfoPath(string packages_root_path)
+        {
+            if (this.OverridePackagePath)
+                return VFSUtil.GetExtensionGroup_BuildInfo_Path_InGroupPath(this.PackagePathSpecified);
+            else
+                return base.GetManifestFilePath(packages_root_path);
+        }
+
+        public string GetVersionInfoPath(string packages_root_path)
+        {
+            if (this.OverridePackagePath)
+                return Path.Combine(this.PackagePathSpecified, VFSConst.PakcageVersionFileName);
+            else
+                return VFSUtil.GetExtensionGroup_VersionInfo_Path(packages_root_path, this.GroupName);
+        }
+
+        public string GetUpgradableVersionPath(string package_root_path)
+        {
+            if (this.OverridePackagePath)
+                return Path.Combine(this.PackagePathSpecified, VFSConst.Upgradable_Vesion_FileName);
+            else
+                return Path.Combine(VFSUtil.GetExtensionGroupFolder(package_root_path, this.GroupName), VFSConst.Upgradable_Vesion_FileName);
         }
 
     }

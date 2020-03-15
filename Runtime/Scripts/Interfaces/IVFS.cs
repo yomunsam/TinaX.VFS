@@ -35,7 +35,7 @@ namespace TinaX.VFSKit
         #region Extension Packages and Groups
 
         string[] GetExtensionPackagesInVirtualDisk();
-        Task<bool> AddExtensionPackage(string group_name);
+        Task<bool> AddExtensionPackage(string group_name, bool available_web_vfs = true);
         Task<bool> AddExtensionPackageByPath(string extension_package_path, bool available_web_vfs = true);
         void AddExtensionPackage(string group_name, Action<bool,VFSException> callback);
         string[] GetActiveExtensionGroupNames();
@@ -75,11 +75,15 @@ namespace TinaX.VFSKit
         void LoadAsync<T>(string assetPath, Action<T, VFSException> callback) where T : UnityEngine.Object;
         void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object, VFSException> callback);
         void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object> callback);
-        
+
+
 
         #endregion
 
+        #region Patch
+        void InstallPatch(string path);
 
+        #endregion
     }
 }
 

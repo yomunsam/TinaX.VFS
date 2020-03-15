@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
+using TinaX;
+using TinaX.VFSKit.Const;
 using UnityEditor;
 using UnityEngine;
-using TinaX.VFSKit.Const;
-using TinaX;
-using System.IO;
 
 namespace TinaXEditor.VFSKit.Versions
 {
@@ -211,7 +206,9 @@ namespace TinaXEditor.VFSKit.Versions
             string patch_ext = VFSConst.Patch_File_Extension;
             if (patch_ext.StartsWith("."))
                 patch_ext = patch_ext.Substring(1, patch_ext.Length - 1);
-            string save_dir = EditorPrefs.GetString("TINAX_VFS_PATCH_OUTPUT_DIR_CACHE",System.IO.Directory.GetCurrentDirectory());
+            string current_project_dir = Directory.GetCurrentDirectory();
+            string save_dir = EditorPrefs.GetString("TINAX_VFS_PATCH_OUTPUT_DIR_CACHE", current_project_dir);
+            
             string save_path = EditorUtility.SaveFilePanel(
                 IsChinese ? "保存补丁位置" : "Save Patch Path",
                 save_dir,

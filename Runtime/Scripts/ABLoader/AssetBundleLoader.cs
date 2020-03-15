@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using TinaX.VFSKit.Exceptions;
 using TinaX.VFSKit.Network;
+using TinaX.IO;
 
 namespace TinaX.VFSKit.Loader
 { 
@@ -24,6 +25,7 @@ namespace TinaX.VFSKit.Loader
         
         public async UniTask DownloadFile(string url, string save_path, int timeout)
         {
+            XFile.DeleteIfExists(save_path);
             var req = UnityWebRequest.Get(url);
             req.timeout = timeout;
             req.downloadHandler = new DownloadHandlerVDisk(save_path);

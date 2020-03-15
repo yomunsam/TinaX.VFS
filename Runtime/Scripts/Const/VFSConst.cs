@@ -55,7 +55,7 @@
 
         public const string BuildInfoFileName = "build_info.json";
 
-        public const string GetExtensionGroup_GroupOption_FileName = "group_option.json";
+        public const string ExtensionGroup_GroupOption_FileName = "group_option.json";
 
         public const string Patch_Info_FileName = "info.json";
         public const string Patch_Record_FileName = "record.json";
@@ -63,7 +63,7 @@
 
         public const string Patch_File_Extension = ".xpk";
 
-        public const string VirtualDisk_Version_FileName = "virtual_disk_version.json";
+        public const string Upgradable_Vesion_FileName = "virtual_disk_version.json";
     }
 }
 
