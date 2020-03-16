@@ -390,7 +390,7 @@ namespace TinaXEditor.VFSKit
         [MenuItem("Explor Default VirtualDisk Folder", menuItem = "TinaX/VFS/Explor Default VirtualDisk Folder", priority = 22)]
         static void OpenVdisk()
         {
-            var uri = new System.Uri(Path.Combine(Application.persistentDataPath, "VFS_VDisk"));
+            var uri = new System.Uri(Path.Combine(XCore.LocalStorage_TinaX, "VFS_VDisk"));
             Application.OpenURL(uri.ToString());
         }
 

@@ -80,8 +80,14 @@ namespace TinaX.VFSKit
 
         #endregion
 
+        #region Load Files
+        Task<byte[]> LoadFileFromStreamingAssetsAsync(string path);
+        void LoadFileFromStreamingAssetsAsync(string path, Action<byte[], VFSException> callback);
+        #endregion
+
         #region Patch
         void InstallPatch(string path);
+        
 
         #endregion
     }

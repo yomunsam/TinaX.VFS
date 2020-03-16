@@ -143,7 +143,7 @@ namespace TinaX.VFSKit
             Platform = XPlatformUtil.GetXRuntimePlatform(Application.platform);
             PlatformText = XPlatformUtil.GetNameText(Platform);
 
-            mVFS_Patch_Handle_Folder = Path.Combine(Application.persistentDataPath, "VFS_Patch");
+            mVFS_Patch_Handle_Folder = Path.Combine(XCore.LocalStorage_TinaX, "VFS_Patch");
             mVFS_Patch_Temp_Folder = Path.Combine(mVFS_Patch_Handle_Folder, "temp");
 #if UNITY_EDITOR
             //load mode
@@ -180,7 +180,7 @@ namespace TinaX.VFSKit
 
             #region virtual disk
             //init vfs virtual disk folder
-            VirtualDiskPath = Path.Combine(Application.persistentDataPath, "VFS_VDisk"); //TODO: 在Windows之类目录权限比较自由的平台，未来可以考虑搞个把这个目录移动到别的地方的功能。（毕竟有人不喜欢把太多文件扔在C盘）
+            VirtualDiskPath = Path.Combine(XCore.LocalStorage_TinaX, "VFS_VDisk"); //TODO: 在Windows之类目录权限比较自由的平台，未来可以考虑搞个把这个目录移动到别的地方的功能。（毕竟有人不喜欢把太多文件扔在C盘）
             XDirectory.CreateIfNotExists(VirtualDiskPath);
             mVirtualDisk_MainPackageFolderPath = VFSUtil.GetMainPackageFolderInPackages(VirtualDiskPath);
             mVirtualDisk_DataFolderPath = VFSUtil.GetDataFolderInPackages(VirtualDiskPath);
@@ -1065,7 +1065,7 @@ namespace TinaX.VFSKit
 
 #endregion
 
-#region 补丁相关
+        #region 补丁相关
         public void InstallPatch(string path)
         {
 #if UNITY_EDITOR
@@ -1262,9 +1262,40 @@ namespace TinaX.VFSKit
 
         }
 
-#endregion
+        #endregion
 
+        #region 直接加载
 
+        /// <summary>
+        /// 从StreamingAssets中直接加载文件，使用StreamingAssets的相对路径
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<byte[]> LoadFileFromStreamingAssetsAsync(string path)
+        {
+            string load_path = this.getFilePathForStreamingAssets(path);
+            byte[] data = await this.loadFileFromStreamingAssetsAsync(load_path);
+            return data;
+        }
+
+        public void LoadFileFromStreamingAssetsAsync(string path, Action<byte[], VFSException> callback)
+        {
+            this.LoadFileFromStreamingAssetsAsync(path)
+                .ToObservable()
+                .ObserveOnMainThread()
+                .Subscribe(data =>
+                {
+                    callback?.Invoke(data, null);
+                }, e =>
+                {
+                    if (e is VFSException)
+                        callback?.Invoke(null, e as VFSException);
+                    else
+                        Debug.LogException(e);
+                });
+        }
+
+        #endregion
 
 
 
@@ -1400,7 +1431,7 @@ namespace TinaX.VFSKit
             webvfs_download_base_url_modify = true;
         }
 
-        private async UniTask<byte[]> LoadFileFromStreamingAssetsAsync(string path)
+        private async UniTask<byte[]> loadFileFromStreamingAssetsAsync(string path)
         {
             var req = UnityWebRequest.Get(path);
             await req.SendWebRequest();
@@ -1635,7 +1666,7 @@ namespace TinaX.VFSKit
             group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
         }
 
-#region VFS Asset 异步加载
+        #region VFS Asset 异步加载
 
         private async UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
         {
@@ -1723,9 +1754,9 @@ namespace TinaX.VFSKit
             await asset.LoadAsync(type);
             this.Assets.RegisterHashCode(asset);
         }
-#endregion
+        #endregion
 
-#region 加载AssetBundle_Async
+        #region 加载AssetBundle_Async
 
         /// <summary>
         /// 加载AssetBundle和它的依赖， 异步入口
@@ -1822,9 +1853,9 @@ namespace TinaX.VFSKit
             await bundle.LoadAsync();
         }
 
-#endregion
+        #endregion
 
-#region VFS Asset 同步加载
+        #region VFS Asset 同步加载
 
         /// <summary>
         /// 同步加载【IAsset】，正常AssetBundle模式，泛型，【私有方法总入口】
@@ -1967,9 +1998,9 @@ namespace TinaX.VFSKit
         }
         
         
-#endregion
+        #endregion
 
-#region 同步加载AssetBundle
+        #region 同步加载AssetBundle
         private VFSBundle loadAssetBundleAndDependencies(string assetbundleName, VFSGroup group, bool counter = true, List<string> load_chain = null)
         {
             VFSBundle bundle;
@@ -2096,7 +2127,7 @@ namespace TinaX.VFSKit
             }
 
         }
-#endregion
+        #endregion
 
         /// <summary>
         /// 查询资源
@@ -2411,7 +2442,25 @@ namespace TinaX.VFSKit
             return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
         }
 
-#region Customizable_Default_Function
+        /// <summary>
+        /// 用于直接从StreamingAssets中加载文件的功能，
+        /// 如果传递的路径是一个相对与Assets的路径，比如“Assets/StreamingAssets/xxxx”,
+        /// 则把它转化成系统路径返回
+        /// 
+        /// 如果传递的是其他路径，则认为是相对于StreamingAssets目录的路径，直接拼接上StreamingAssets的根目录然后返回
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private string getFilePathForStreamingAssets(string path)
+        {
+            if (path.StartsWith(_assets_streamingassets_path))
+                return Path.Combine(Application.streamingAssetsPath, path.Substring(_assets_streamingassets_path.Length, path.Length - _assets_streamingassets_path.Length));
+            else
+                return Path.Combine(Application.streamingAssetsPath, path);
+        }
+        private readonly string _assets_streamingassets_path = "Assets/StreamingAssets/";
+
+        #region Customizable_Default_Function
         private string default_getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
         {
             if (isExtensionGroup)
@@ -2438,11 +2487,11 @@ namespace TinaX.VFSKit
         }
 
 
-#endregion
+        #endregion
 
 
 #if UNITY_EDITOR
-#region 编辑器下的AssetDatabase加载
+        #region 编辑器下的AssetDatabase加载
         private async Task<IAsset> loadAssetFromAssetDatabaseAsync<T>(string asset_path) where T : UnityEngine.Object
         {
             var asset = loadAssetFromAssetDatabase<T>(asset_path); //编辑器没提供异步接口，所以同步加载
@@ -2515,7 +2564,7 @@ namespace TinaX.VFSKit
 
 
 
-#endregion
+        #endregion
 
 #region 编辑器下的扩展组操作
 
