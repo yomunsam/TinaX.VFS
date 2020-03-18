@@ -129,7 +129,7 @@ namespace TinaXEditor.VFSKit.UI
         //private string cur_preview_profileName;
 
         private bool isBuilding = false;
-        private bool mBuilded = false;
+        //private bool mBuilded = false;
 
         private void OnDestroy()
         {
@@ -401,7 +401,7 @@ namespace TinaXEditor.VFSKit.UI
 
                 this.ShowNotification(new GUIContent("Build Finish"));
                 isBuilding = false;
-                mBuilded = true;
+                //mBuilded = true;
             }
             catch (Exception e)
             {

@@ -2517,6 +2517,8 @@ namespace TinaX.VFSKit
                 {
                     return _editor_asset;
                 }
+                if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), assetPath)))
+                    throw new FileNotFoundException("[TinaX.VFS]Connot load assets in editor:" + assetPath, assetPath);
                 //加载
                 var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(assetPath);
                 //登记
@@ -2544,6 +2546,8 @@ namespace TinaX.VFSKit
                 {
                     return _editor_asset;
                 }
+                if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), assetPath)))
+                    throw new FileNotFoundException("[TinaX.VFS]Connot load assets in editor:" + assetPath, assetPath);
                 //加载
                 var asset = UnityEditor.AssetDatabase.LoadAssetAtPath(assetPath, type);
                 //登记

@@ -39,9 +39,9 @@ namespace TinaX.VFSKit
             return XCore.GetMainInstance()?.GetService<IVFSInternal>().GetStartException();
         }
 
-        public Task OnClose()
+        public void OnQuit()
         {
-            return XCore.GetMainInstance()?.GetService<IVFSInternal>().OnServiceClose();
+            _ = XCore.GetMainInstance()?.GetService<IVFSInternal>().OnServiceClose();
         }
 
         
