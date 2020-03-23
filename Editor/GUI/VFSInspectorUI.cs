@@ -7,6 +7,7 @@ using TinaX.VFSKit.Const;
 using TinaXEditor.Utils;
 using System;
 using System.Linq;
+using TinaX;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -93,7 +94,7 @@ namespace TinaXEditor.VFSKit.UI
                     mCurSelectedAssetPath = path;
                     
 
-                    if (!IsTypeIgnore(mainAssetType) && path.StartsWith("Assets/"))
+                    if (!IsTypeIgnore(mainAssetType) && path.StartsWith("Assets/") && !editor.target.name.IsNullOrEmpty())
                     {
                         if (mCurSelectedAssetPath != mCurShowAssetPath || mCurAssetDataTime != VFSManagerEditor.LastRefreshManagerTime)
                         {
@@ -107,6 +108,7 @@ namespace TinaXEditor.VFSKit.UI
                         
                         EditorGUILayout.BeginVertical(style_bg);
                         EditorGUILayout.LabelField("VFS Preview", EditorStyles.centeredGreyMiniLabel);
+                        
                         if (mCurAssetData.ManagedByVFS)
                         {
                             GUILayout.Label("Managed By VFS.", style_txt_bold);
