@@ -7,6 +7,8 @@ namespace TinaXEditor.VFSKit.Const
     {
         public static string VFSProfileProjectSettingFileName = "VFSProfiles.json";
 
+        public static readonly string ProjectSetting_Node = XEditorConst.ProjectSettingRootName + "/VFS";
+
         /// <summary>
         /// 在工程目录下存放VFS打包文件的地方 （存放多个Source Packages的地方）
         /// </summary>

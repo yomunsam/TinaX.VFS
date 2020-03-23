@@ -256,7 +256,7 @@ namespace TinaX.VFSKitInternal
             }
 
 #if UNITY_EDITOR
-            for(var i = mEditorAssets.Count -1; i >=0; i++)
+            for(var i = mEditorAssets.Count -1; i >=0; i--)
             {
                 if(mEditorAssets[i].LoadState == AssetLoadState.Unloaded)
                 {

@@ -42,7 +42,11 @@ namespace TinaXEditor.VFSKit.UI
         private bool mFlag_RefreshData = false;
         private bool mFlag_RefreshData_left = false;
         private XRuntimePlatform? mFlag_RefreshData_left_platform = null;
+#pragma warning disable IDE0052 // 删除未读的私有成员
+#pragma warning disable CS0414 // 删除未读的私有成员
         private bool mFlag_RefreshData_right = false;
+#pragma warning restore IDE0052 // 删除未读的私有成员
+#pragma warning restore CS0414 // 删除未读的私有成员
         private XRuntimePlatform? mFlag_RefreshData_right_platform = null;
 
         /*

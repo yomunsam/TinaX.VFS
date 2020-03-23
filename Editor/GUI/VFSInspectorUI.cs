@@ -84,6 +84,7 @@ namespace TinaXEditor.VFSKit.UI
 
         private static void OnPostHeaderGUI(Editor editor)
         {
+            if (VFSManagerEditor.VFSConfig == null) return;
             if(editor.targets.Length == 1)
             {
                 string guid = string.Empty;

@@ -537,6 +537,8 @@ namespace TinaX.VFSKit
                 });
         }
 
+        
+
         /// <summary>
         /// 加载资源， 异步callback ，非泛型
         /// </summary>
@@ -576,6 +578,25 @@ namespace TinaX.VFSKit
                 {
                     if (e is VFSException)
                         callback?.Invoke(null, e as VFSException);
+                    else
+                        throw e;
+                });
+        }
+
+        public void LoadAsync(string assetPath, Type type, Action<UnityEngine.Object, XException> callback)
+        {
+            this.LoadAssetAsync(assetPath, type)
+                .ToObservable()
+                //.SubscribeOnMainThread()
+                .ObserveOnMainThread()
+                .Subscribe(asset =>
+                {
+                    callback?.Invoke(asset.Asset, null);
+                },
+                e =>
+                {
+                    if (e is XException)
+                        callback?.Invoke(null, e as XException);
                     else
                         throw e;
                 });
@@ -2565,16 +2586,18 @@ namespace TinaX.VFSKit
 
         }
 
+        
+
 
 
 
         #endregion
 
-#region 编辑器下的扩展组操作
+        #region 编辑器下的扩展组操作
 
 
 
-#endregion
+        #endregion
 
 #endif
 

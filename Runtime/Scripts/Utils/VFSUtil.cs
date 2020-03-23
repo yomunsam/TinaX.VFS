@@ -153,7 +153,7 @@ namespace TinaX.VFSKitInternal.Utils
 
             #endregion
 
-                #region 全局 Assetbundle细节
+            #region 全局 Assetbundle细节
             if (config.PAssetBundleFileExtension.IsNullOrEmpty() || config.PAssetBundleFileExtension.IsNullOrWhiteSpace())
                 config.PAssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
 

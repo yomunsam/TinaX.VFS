@@ -10,7 +10,7 @@ namespace TinaX.VFSKit
     public class VFSConfigModel : ScriptableObject, IVFSConfig
     {
         public VFSGroupOption[] Groups = { VFSGroupOption.New() };
-        public bool EnableVFS = false;
+        public bool EnableVFS = true;
 
         public string AssetBundleFileExtension = InternalVFSConfig.default_AssetBundle_ExtName;
 
@@ -76,7 +76,7 @@ namespace TinaX.VFSKit
         }
 
         #region Web VFS
-        public bool InitWebVFSOnStart = true;
+        public bool InitWebVFSOnStart = false;
 
         public string DefaultWebVFSBaseUrl = "http://127.0.0.1:8080/files";
 
