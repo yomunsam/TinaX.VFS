@@ -708,6 +708,19 @@ namespace TinaX.VFSKit
 
         #endregion
 
+        #region 特殊资源和封装规则
+        public async Task<ISceneAsset> LoadSceneAsync(string scenePath)
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+                return await this.loadSceneFromEditorAsync(scenePath);
+#endif
+            return await this.loadSceneAsync(scenePath);
+        }
+
+        #endregion
+
+
         #region GC相关
         public void Release(UnityEngine.Object asset)
         {
@@ -1318,7 +1331,29 @@ namespace TinaX.VFSKit
 
         #endregion
 
+        #region 调试相关
+        public List<VFSBundle> GetAllBundle()
+        {
+            return this.Bundles.GetVFSBundles();
+        }
 
+        public bool LoadFromAssetbundle()
+        {
+#if UNITY_EDITOR
+            return !mLoadByAssetDatabaseInEditor;
+#else
+            return true;
+#endif
+        }
+
+        #endregion
+
+#if UNITY_EDITOR
+        public List<EditorAsset> GetAllEditorAsset()
+        {
+            return this.Assets.GetAllEditorAssets();
+        }
+#endif
 
 
         /// <summary>
@@ -1687,11 +1722,129 @@ namespace TinaX.VFSKit
             group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
         }
 
+        #region Scene 异步加载
+        private async UniTask<ISceneAsset> loadSceneAsync(string scenePath)
+        {
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load scene\" function before VFS service started. load path:" + scenePath);
+            if (QueryAsset(scenePath, out var result, out var group))
+            {
+                VFSAsset asset;
+                //是否已加载
+                lock (this)
+                {
+                    bool load_flag = this.IsAssetLoadedOrLoading(result.AssetPathLower, out asset);
+                    if (!load_flag)
+                    {
+                        asset = new SceneAsset(group, result);
+                        asset.LoadTask = doLoadSceneAsync((SceneAsset)asset);
+                        this.Assets.Register(asset);
+                    }
+                }
+
+                if (asset.LoadState != AssetLoadState.Loaded)
+                {
+                    await asset.LoadTask;
+                }
+                asset.Retain();
+                return (SceneAsset)asset;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的asset的路径是无效的，它不在VFS的管理范围内" : "The asset path you want to load is valid. It is not under the management of VFS") + "Path:" + scenePath, VFSErrorCode.ValidLoadPath);
+            }
+        }
+
+        private async UniTask doLoadSceneAsync(SceneAsset asset)
+        {
+            if (asset.LoadState != AssetLoadState.Loaded && asset.LoadState != AssetLoadState.Unloaded) asset.LoadState = AssetLoadState.Loading;
+            if (asset.Bundle == null)
+            {
+                //来加载bundle吧
+                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group, true);
+            }
+            await asset.LoadAsync();
+            //this.Assets.RegisterHashCode(asset); //Scene没有Asset
+        }
+
+        #endregion
+
+        #region Scene 同步加载
+        private ISceneAsset loadScene(string scenePath)
+        {
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load scene\" function before VFS service started. load path:" + scenePath);
+            if (QueryAsset(scenePath, out var result, out var group))
+            {
+                lock (this)
+                {
+                    if (this.Assets.TryGetAsset(result.AssetPathLower, out var __asset))
+                    {
+                        if (__asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            __asset.Retain();
+                            return (SceneAsset)__asset;
+                        }
+                    }
+                }
+                //同步cache检查
+                lock (this)
+                {
+                    if (this.Assets.TryGetAssetSync(result.AssetPathLower, out var __asset))
+                    {
+                        if (__asset.LoadState == AssetLoadState.Loaded)
+                        {
+                            __asset.Retain();
+                            return (SceneAsset)__asset;
+                        }
+                    }
+                }
+
+                SceneAsset asset;
+
+                //两次检查都没有return的话，开始同步加载
+                asset = new SceneAsset(group, result);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Load();
+
+                //加载结束，检查
+                if (this.Assets.TryGetAsset(result.AssetPathLower, out var _asset))
+                {
+                    if (_asset.LoadState == AssetLoadState.Loaded)
+                    {
+                        asset.Unload();
+                        _asset.Retain();
+                        return (SceneAsset)_asset;
+                    }
+                    else
+                    {
+                        asset.Retain();
+                        this.Assets.RegisterSync(asset);
+                        return asset;
+                    }
+                }
+                else
+                {
+                    asset.Retain();
+                    this.Assets.Register(asset);
+                    return asset;
+                }
+
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的scene的路径是无效的，它不在VFS的管理范围内" : "The scene path you want to load is valid. It is not under the management of VFS") + "Path:" + scenePath, VFSErrorCode.ValidLoadPath);
+            }
+        }
+        #endregion
+
         #region VFS Asset 异步加载
 
         private async UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
         {
-            if(QueryAsset(assetPath, out var result , out var group))
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load asset\" function before VFS service started. load path:" + assetPath);
+            if (QueryAsset(assetPath, out var result , out var group))
             {
                 VFSAsset asset;
                 //是否已加载
@@ -1704,14 +1857,13 @@ namespace TinaX.VFSKit
                         asset.LoadTask = doLoadAssetAsync<T>(asset);
                         this.Assets.Register(asset);
                     }
-                    else
-                        asset.Retain();
                 }
 
                 if(asset.LoadState != AssetLoadState.Loaded)
                 {
                     await asset.LoadTask;
                 }
+                asset.Retain();
                 return asset;
             }
             else
@@ -1722,6 +1874,8 @@ namespace TinaX.VFSKit
 
         private async UniTask<IAsset> loadAssetAsync(string assetPath, Type type)
         {
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load asset\" function before VFS service started. load path:" + assetPath);
             if (QueryAsset(assetPath, out var result, out var group))
             {
                 VFSAsset asset;
@@ -1735,14 +1889,13 @@ namespace TinaX.VFSKit
                         asset.LoadTask = doLoadAssetAsync(asset,type);
                         this.Assets.Register(asset);
                     }
-                    else
-                        asset.Retain();
+                    
                 }
-
                 if (asset.LoadState != AssetLoadState.Loaded)
                 {
                     await asset.LoadTask;
                 }
+                asset.Retain();
                 return asset;
             }
             else
@@ -1886,6 +2039,8 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         private IAsset loadAsset<T>(string assetPath) where T : UnityEngine.Object
         {
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load asset\" function before VFS service started. load path:" + assetPath);
             if(QueryAsset(assetPath,out var result, out var group))
             {
                 VFSAsset asset;
@@ -1931,6 +2086,7 @@ namespace TinaX.VFSKit
                     {
                         this.Assets.RegisterSync(asset);
                         this.Assets.RegisterHashCodeSync(asset);
+                        asset.Retain();
                         return asset;
                     }
                 }
@@ -1938,6 +2094,7 @@ namespace TinaX.VFSKit
                 {
                     this.Assets.Register(asset);
                     this.Assets.RegisterHashCode(asset);
+                    asset.Retain();
                     return asset;
                 }
 
@@ -1956,6 +2113,8 @@ namespace TinaX.VFSKit
         /// <returns></returns>
         private IAsset loadAsset(string assetPath, Type type)
         {
+            if (!mInited)
+                throw new VFSException("[TinaX.VFS] Cannot invoke \"load asset\" function before VFS service started. load path:" + assetPath);
             if (QueryAsset(assetPath, out var result, out var group))
             {
                 VFSAsset asset;
@@ -2001,6 +2160,7 @@ namespace TinaX.VFSKit
                     {
                         this.Assets.RegisterSync(asset);
                         this.Assets.RegisterHashCodeSync(asset);
+                        asset.Retain();
                         return asset;
                     }
                 }
@@ -2008,6 +2168,7 @@ namespace TinaX.VFSKit
                 {
                     this.Assets.Register(asset);
                     this.Assets.RegisterHashCode(asset);
+                    asset.Retain();
                     return asset;
                 }
 
@@ -2481,7 +2642,7 @@ namespace TinaX.VFSKit
         }
         private readonly string _assets_streamingassets_path = "Assets/StreamingAssets/";
 
-        #region Customizable_Default_Function
+#region Customizable_Default_Function
         private string default_getWebAssetUrl(string platform_name, string assetBundleName, ref VFSGroup group, bool isExtensionGroup)
         {
             if (isExtensionGroup)
@@ -2508,7 +2669,7 @@ namespace TinaX.VFSKit
         }
 
 
-        #endregion
+#endregion
 
 
 #if UNITY_EDITOR
@@ -2536,6 +2697,7 @@ namespace TinaX.VFSKit
                 //查重
                 if (this.Assets.TryGetEditorAsset(result.AssetPathLower,out var _editor_asset))
                 {
+                    _editor_asset.Retain();
                     return _editor_asset;
                 }
                 if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), assetPath)))
@@ -2565,6 +2727,7 @@ namespace TinaX.VFSKit
                 //查重
                 if (this.Assets.TryGetEditorAsset(result.AssetPathLower, out var _editor_asset))
                 {
+                    _editor_asset.Retain();
                     return _editor_asset;
                 }
                 if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), assetPath)))
@@ -2586,10 +2749,46 @@ namespace TinaX.VFSKit
 
         }
 
-        
 
+        #endregion
 
+        #region 编辑器下Scene加载
 
+        private async Task<ISceneAsset> loadSceneFromEditorAsync(string scenePath)
+        {
+            var asset = this.loadSceneFromEditor(scenePath);
+            await UniTask.DelayFrame(1);
+            return asset;
+        }
+
+        private ISceneAsset loadSceneFromEditor(string scenePath)
+        {
+            //要查询的
+            if (this.QueryAsset(scenePath, out var result, out var group))
+            {
+                //查重
+                if (this.Assets.TryGetEditorAsset(result.AssetPathLower, out var _editor_asset))
+                {
+                    _editor_asset.Retain();
+                    return (EditorSceneAsset)_editor_asset;
+                }
+                if (!File.Exists(Path.Combine(Directory.GetCurrentDirectory(), scenePath)))
+                    throw new FileNotFoundException("[TinaX.VFS]Connot load assets in editor:" + scenePath, scenePath);
+                //加载
+                //什么都不用加载
+                //登记
+                var editor_asset = new EditorSceneAsset(result.AssetPath, result.AssetPathLower);
+                editor_asset.Retain();
+                this.Assets.Register(editor_asset);
+                return editor_asset;
+            }
+            else
+            {
+                throw new VFSException((IsChinese ? "被加载的Scene的路径是无效的，它不在VFS的管理范围内" : "The Scene path you want to load is valid. It is not under the management of VFS")
+                                       + "Path:"
+                                       + scenePath, VFSErrorCode.ValidLoadPath);
+            }
+        }
 
         #endregion
 

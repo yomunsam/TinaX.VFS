@@ -220,6 +220,11 @@ namespace TinaX.VFSKitInternal
                 return false;
         }
 
+        public List<EditorAsset> GetAllEditorAssets()
+        {
+            return new List<EditorAsset>(mEditorAssets);
+        }
+
 #endif
 
         public void Refresh()

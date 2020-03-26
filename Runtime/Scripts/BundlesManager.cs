@@ -93,5 +93,12 @@ namespace TinaX.VFSKitInternal
             }
         }
 
+        public List<VFSBundle> GetVFSBundles()
+        {
+            var list = new List<VFSBundle>();
+            list.AddRange(mList_AssetBundles);
+            list.AddRange(mList_Sync_Temp);
+            return list;
+        }
     }
 }

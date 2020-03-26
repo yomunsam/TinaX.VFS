@@ -26,7 +26,7 @@ namespace TinaX.VFSKitInternal
         public AssetQueryResult QueryResult { get; internal set; }
         public UniTask LoadTask { get; internal set; }
 
-        public int AssetHashCode { get; private set; } = -1;
+        public int AssetHashCode { get; private protected set; } = -1;
 
         public VFSAsset(VFSGroup group, AssetQueryResult queryResult)
         {
@@ -36,12 +36,12 @@ namespace TinaX.VFSKitInternal
 
 
         #region Counter
-        public int RefCount { get; private set; }
+        public int RefCount { get; private set; } = 0;
 
         public void Release()
         {
             RefCount--;
-            Bundle.Release();
+
             if(RefCount <= 0 && LoadState != AssetLoadState.Unloaded)
             {
                 Unload();
@@ -52,6 +52,8 @@ namespace TinaX.VFSKitInternal
         {
             RefCount++;
         }
+
+
         #endregion
 
         public T Get<T>() where T : UnityEngine.Object
@@ -71,6 +73,7 @@ namespace TinaX.VFSKitInternal
             }
             if (this.Bundle != null)
             {
+                this.Bundle.Release();
                 this.Bundle.UnRegisterAsset(this);
                 this.Bundle = null;
             }
@@ -87,6 +90,7 @@ namespace TinaX.VFSKitInternal
             }
             if (this.Bundle != null)
             {
+                this.Bundle.Release();
                 this.Bundle.UnRegisterAsset(this);
                 this.Bundle = null;
             }
@@ -168,7 +172,7 @@ namespace TinaX.VFSKitInternal
             RegisterToBundle();
         }
 
-        private void RegisterToBundle()
+        protected void RegisterToBundle()
         {
             if(this.Bundle != null)
             {
@@ -222,6 +226,10 @@ namespace TinaX.VFSKitInternal
             this.AssetHashCode = asset.GetHashCode();
         }
 
+        public EditorAsset(string path_lower)
+        {
+            this.AssetPathLower = path_lower;
+        }
 
         public T Get<T>() where T : UnityEngine.Object
         {

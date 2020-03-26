@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using TinaX.VFSKit.Exceptions;
 
 namespace TinaX.VFSKitInternal
@@ -9,6 +10,12 @@ namespace TinaX.VFSKitInternal
 
         Task OnServiceClose();
         VFSException GetStartException();
+        List<VFSBundle> GetAllBundle();
+        bool LoadFromAssetbundle();
+#if UNITY_EDITOR
+        List<EditorAsset> GetAllEditorAsset();
+#endif
+
     }
 }
 
