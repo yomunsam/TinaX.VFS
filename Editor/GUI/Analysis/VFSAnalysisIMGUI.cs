@@ -185,6 +185,7 @@ namespace TinaXEditor.VFSKitInternal
                                         GUILayout.Label("Select Asset:  " + _asset.AssetPathLower);
                                         GUILayout.Label(I18Ns.RefCounter + _asset.RefCount);
                                         GUILayout.Label(I18Ns.AssetStatue + _asset.LoadState.ToString());
+                                        GUILayout.Label("Group: " + _asset.Group.GroupName);
 
                                     }
                                 }
@@ -202,6 +203,7 @@ namespace TinaXEditor.VFSKitInternal
                             m_TreeView_EditorAsset.OnGUI(rect);
 
                             EditorGUILayout.BeginVertical(Styles.box);
+                            EditorGUILayout.LabelField(I18Ns.NoAB_And_Dep_In_Editor, Styles.label_emphasize);
                             //当前选中项
                             var selects = m_TreeView_EditorAsset.GetSelection();
                             if (selects.Count != 1)
@@ -276,6 +278,18 @@ namespace TinaXEditor.VFSKitInternal
         private void OnDestroy()
         {
             wnd = null;
+            if(m_TreeView_AssetBundle != null)
+            {
+                if (m_TreeView_AssetBundle.Dict_Assets_id != null)
+                    m_TreeView_AssetBundle.Dict_Assets_id.Clear();
+                if (m_TreeView_AssetBundle.Dict_Bundle_id != null)
+                    m_TreeView_AssetBundle.Dict_Bundle_id.Clear();
+            }
+            if(m_TreeView_EditorAsset != null)
+            {
+                if (m_TreeView_EditorAsset.Dict_Assets_id != null)
+                    m_TreeView_EditorAsset.Dict_Assets_id.Clear();
+            }
         }
 
 
@@ -293,6 +307,21 @@ namespace TinaXEditor.VFSKitInternal
                         _center_label.wordWrap = true;
                     }
                     return _center_label;
+                }
+            }
+
+            private static GUIStyle _label_emphasize;
+            public static GUIStyle label_emphasize
+            {
+                get
+                {
+                    if (_label_emphasize == null)
+                    {
+                        _label_emphasize = new GUIStyle(EditorStyles.label);
+                        _label_emphasize.normal.textColor = TinaX.Internal.XEditorColorDefine.Color_Emphasize;
+                        _label_emphasize.wordWrap = true;
+                    }
+                    return _label_emphasize;
                 }
             }
 
@@ -378,6 +407,16 @@ namespace TinaXEditor.VFSKitInternal
                     if (IsChinese)
                         return "状态：";
                     return "Status: ";
+                }
+            }
+
+            public static string NoAB_And_Dep_In_Editor
+            {
+                get
+                {
+                    if (IsChinese)
+                        return "在编辑器模拟加载资源的模式中，无法查看AssetBundle加载信息和资源依赖信息。";
+                    return "In the mode where the editor simulates loading assets, you cannot view AssetBundle status information and assets dependency information.";
                 }
             }
         }

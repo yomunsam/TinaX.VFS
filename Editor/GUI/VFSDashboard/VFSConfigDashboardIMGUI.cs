@@ -16,6 +16,7 @@ using TinaXEditor.VFSKit.Utils;
 using TinaXEditor.VFSKitInternal.I18N;
 using TinaXEditor.VFSKit.FileServer;
 using TinaXEditor.VFSKit.Versions;
+using TinaXEditor.VFSKitInternal;
 
 namespace TinaXEditor.VFSKit.UI
 {
@@ -334,7 +335,18 @@ namespace TinaXEditor.VFSKit.UI
                         menu.ShowAsContext();
                     }
                     #endregion
+
+                    #region Analysis
+                    if (GUILayout.Button("Analysis", EditorStyles.toolbarButton))
+                    {
+                        VFSAnalysisIMGUI.OpenUI();
+                    }
+
+                    #endregion
+
+
                     GUILayout.FlexibleSpace();
+
 
                     #region file server
                     if (!FileServerEditorManager.IsSupported)
