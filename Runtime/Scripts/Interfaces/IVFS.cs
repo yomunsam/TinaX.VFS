@@ -88,6 +88,8 @@ namespace TinaX.VFSKit
         #region Patch
         void InstallPatch(string path);
         Task<ISceneAsset> LoadSceneAsync(string scenePath);
+        void LoadSceneAsync(string scenePath, Action<ISceneAsset, XException> callback);
+        ISceneAsset LoadScene(string scenePath);
 
 
         #endregion

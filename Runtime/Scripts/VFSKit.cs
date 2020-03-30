@@ -718,6 +718,33 @@ namespace TinaX.VFSKit
             return await this.loadSceneAsync(scenePath);
         }
 
+        public void LoadSceneAsync(string scenePath, Action<ISceneAsset, XException> callback)
+        {
+            this.loadSceneAsync(scenePath)
+                .ToObservable()
+                .ObserveOnMainThread()
+                .Subscribe(scene =>
+                {
+                    callback?.Invoke(scene, null);
+                },
+                e =>
+                {
+                    if (e is XException)
+                        callback?.Invoke(null, e as XException);
+                    else
+                        Debug.LogException(e);
+                });
+        }
+
+        public ISceneAsset LoadScene(string scenePath)
+        {
+#if UNITY_EDITOR
+            if (mLoadByAssetDatabaseInEditor)
+                return this.loadSceneFromEditor(scenePath);
+#endif
+            return this.loadScene(scenePath);
+        }
+
         #endregion
 
 
