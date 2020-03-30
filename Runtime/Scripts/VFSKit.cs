@@ -720,7 +720,7 @@ namespace TinaX.VFSKit
 
         public void LoadSceneAsync(string scenePath, Action<ISceneAsset, XException> callback)
         {
-            this.loadSceneAsync(scenePath)
+            this.LoadSceneAsync(scenePath)
                 .ToObservable()
                 .ObserveOnMainThread()
                 .Subscribe(scene =>
