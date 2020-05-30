@@ -2546,32 +2546,10 @@ namespace TinaX.VFSKit
             //有没有可能这个文件在web?
             if (group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
             {
-                if (group.FilesHash_StreamingAssets == null)
-                {
-                    if (group.FilesHash_Remote != null)
-                        return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group); //StreamingAssets找不到相关的信息，然后这个文件又有可能在remote,所以就直接认为它在remote了
-                    else
-                        return asset_path_streamingassets; //放弃
-                }
-                if (group.FilesHash_StreamingAssets.TryGetFileHashValue(assetbundle,out var stream_hash))
-                {
-                    if(group.FilesHash_Remote != null)
-                    {
-                        if(group.FilesHash_Remote.TryGetFileHashValue(assetbundle,out var remote_hash))
-                        {
-                            if (!remote_hash.Equals(stream_hash))
-                            {
-                                //不一致，用云端的
-                                return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
-                            }
-                        }
-                    }
-                }
+                if (group.FilesHash_Remote != null)
+                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group); //StreamingAssets找不到相关的信息，然后这个文件又有可能在remote,所以就直接认为它在remote了
                 else
-                {
-                    //本地没有，用云端的
-                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
-                }
+                    return asset_path_streamingassets; //放弃
             }
             
             return asset_path_streamingassets;
