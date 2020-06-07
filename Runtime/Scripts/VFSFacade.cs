@@ -9,5 +9,8 @@ namespace TinaX.VFSKit
 {
     public class VFS : Facade<IVFS>
     {
+        public static IVFS Instance => VFS.That;
+        public static IVFS I => VFS.That;
+
     }
 }

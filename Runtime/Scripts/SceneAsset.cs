@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TinaX.VFSKit;
 using UniRx;
-using UniRx.Async;
+using Cysharp.Threading.Tasks;
 using TinaX.VFSKit.Exceptions;
 using UnityEngine.SceneManagement;
 #if UNITY_EDITOR

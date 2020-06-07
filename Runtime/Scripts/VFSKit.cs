@@ -21,7 +21,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using TinaX.VFSKitInternal.Utils;
 using UniRx;
-using UniRx.Async;
+using Cysharp.Threading.Tasks;
 using FileNotFoundException = TinaX.VFSKit.Exceptions.FileNotFoundException;
 
 namespace TinaX.VFSKit

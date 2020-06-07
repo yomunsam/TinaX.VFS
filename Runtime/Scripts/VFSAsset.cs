@@ -7,14 +7,16 @@ using UnityEngine;
 using TinaX.VFSKit;
 using TinaX;
 using TinaX.VFSKit.Exceptions;
-using UniRx.Async;
+using Cysharp.Threading.Tasks;
 
 namespace TinaX.VFSKitInternal
 {
     /// <summary>
     /// VFS内部的一个资源
     /// </summary>
-    public class VFSAsset : IAsset, IRefCounter, IDisposable
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+    public class VFSAsset : IAsset, IRefCounter
+#pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         protected UnityEngine.Object _asset;
         public UnityEngine.Object Asset => _asset;
@@ -80,21 +82,8 @@ namespace TinaX.VFSKitInternal
 
             this.LoadState = AssetLoadState.Unloaded;
         }
-        public void Dispose()
-        {
-            if (_asset != null)
-            {
-                if (!(_asset is GameObject))
-                    Resources.UnloadAsset(_asset);
-                _asset = null;
-            }
-            if (this.Bundle != null)
-            {
-                this.Bundle.Release();
-                this.Bundle.UnRegisterAsset(this);
-                this.Bundle = null;
-            }
-        }
+        
+
 
         public async UniTask LoadAsync<T>()
         {
@@ -180,7 +169,12 @@ namespace TinaX.VFSKitInternal
             }
         }
 
-        
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+        public void Dispose()
+#pragma warning restore CA1063 // Implement IDisposable Correctly
+        {
+            this.Release();
+        }
     }
 
 
@@ -188,7 +182,9 @@ namespace TinaX.VFSKitInternal
     /// <summary>
     /// 用于从AssetDatabase加载的资源
     /// </summary>
+#pragma warning disable CA1063 // Implement IDisposable Correctly
     public class EditorAsset : IAsset , IRefCounter
+#pragma warning restore CA1063 // Implement IDisposable Correctly
     {
         #region Editor not need counter
         public int RefCount { get; private set; } = 0;
@@ -241,6 +237,7 @@ namespace TinaX.VFSKitInternal
             return _asset;
         }
 
+        
 
         private void Unload()
         {
@@ -255,6 +252,16 @@ namespace TinaX.VFSKitInternal
 
             this.LoadState = AssetLoadState.Unloaded;
         }
+
+#pragma warning disable CA1063 // Implement IDisposable Correctly
+        public void Dispose()
+#pragma warning restore CA1063 // Implement IDisposable Correctly
+        {
+            this.Release();
+        }
+
+        
+
     }
 #endif
 

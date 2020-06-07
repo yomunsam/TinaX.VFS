@@ -160,6 +160,11 @@ namespace TinaXEditor.VFSKitInternal
                                         GUILayout.Label(I18Ns.AssetStatue + _bundle.LoadState.ToString());
                                         if(GUILayout.Button("Log All Assets Name In This Bundle To Console",GUILayout.MaxWidth(300)))
                                         {
+                                            if(_bundle.AssetBundle == null)
+                                            {
+                                                Debug.Log($"AssetBundle <color=#{TinaX.Internal.XEditorColorDefine.Color_Emphasize_16}> {_bundle.AssetBundleName} </color> not load or unloaded.");
+                                                return;
+                                            }
                                             var _asset_names = _bundle.AssetBundle.GetAllAssetNames();
                                             var _scene_paths = _bundle.AssetBundle.GetAllScenePaths();
                                             Debug.Log("Assets in AssetBundle \"" + _bundle.AssetBundle.name + "\"");

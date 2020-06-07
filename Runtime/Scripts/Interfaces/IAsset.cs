@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace TinaX.VFSKit
 {
-    public interface IAsset
+    public interface IAsset : IDisposable
     {
         Object Asset { get; }
 
