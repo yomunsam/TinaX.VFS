@@ -30,8 +30,8 @@ package name: `io.nekonya.tinax.vfs`
 
 Before setup `TinaX.VFS`, please ensure the following dependencies are installed by `Unity Package Manager`:
 
-- [com.neuecc.unirx](https://github.com/yomunsam/UniRx.UPM) :`git://github.com/yomunsam/UniRx.UPM.git`
-- [com.cysharp.unitask](https://github.com/yomunsam/UniTask.UPM) :`git://github.com/yomunsam/UniTask.UPM.git`
+- [com.neuecc.unirx](https://github.com/neuecc/UniRx#upm-package) :`https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts`
+- [com.cysharp.unitask](https://github.com/Cysharp/UniTask#install-via-git-url) :`https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
 - [io.nekonya.tinax.core](https://github.com/yomunsam/tinax.core) :`git://github.com/yomunsam/TinaX.Core.git`
 
 ------
