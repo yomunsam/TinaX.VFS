@@ -1,4 +1,4 @@
-# TinaX Framework - Core.
+# TinaX Framework - Virtual Files System.
 
 <img src="https://github.com/yomunsam/TinaX.Core/raw/master/readme_res/logo.png" width = "360" height = "160" alt="logo" align=center />
 

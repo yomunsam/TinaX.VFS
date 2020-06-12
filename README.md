@@ -1,4 +1,4 @@
-# TinaX Framework - VFS.
+# TinaX Framework - Virtual Files System.
 
 <img src="https://github.com/yomunsam/TinaX.Core/raw/master/readme_res/logo.png" width = "360" height = "160" alt="logo" align=center />
 
@@ -197,8 +197,5 @@ You can find out how to use the various features of TinaX in the [documentation]
 
 The following excellent third-party libraries are used in this project:
 
-- **[CatLib](https://catlib.io/)** : lightweight dependency injection container
 - **[UniRx](https://github.com/neuecc/UniRx)** : Reactive Extensions for Unity
 - **[UniTask](https://github.com/Cysharp/UniTask)** : Provides an efficient async/await integration to Unity.
-- **[SharpZipLib](https://github.com/icsharpcode/SharpZipLib)** : a Zip, GZip, Tar and BZip2 library written entirely in C# for the .NET platform. 
-- **[unity-toolbar-extender](https://github.com/marijnz/unity-toolbar-extender)** : Extend the Unity Toolbar with your own Editor UI code.
