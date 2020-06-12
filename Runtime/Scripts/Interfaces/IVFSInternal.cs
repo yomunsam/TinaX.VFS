@@ -6,10 +6,8 @@ namespace TinaX.VFSKitInternal
 {
     public interface IVFSInternal
     {
-        Task<bool> Start();
+        Task<XException> Start();
 
-        Task OnServiceClose();
-        VFSException GetStartException();
         List<VFSBundle> GetAllBundle();
         bool LoadFromAssetbundle();
 #if UNITY_EDITOR

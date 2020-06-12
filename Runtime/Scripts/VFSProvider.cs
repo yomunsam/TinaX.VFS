@@ -14,45 +14,19 @@ namespace TinaX.VFSKit
     {
         public string ServiceName => VFSConst.ServiceName;
 
-        public Task<bool> OnInit()
-        {
-            return Task.FromResult(true);
-        }
+        public Task<XException> OnInit(IXCore core) => Task.FromResult<XException>(null);
 
-        public XException GetInitException()
+        public void OnServiceRegister(IXCore core)
         {
-            return null;
+            core.Services.BindBuiltInService<IAssetService, IVFS, VFSKit>()
+                .SetAlias<IVFSInternal>();
         }
-
-        public void OnServiceRegister()
-        {
-            XCore.GetMainInstance()?.BindSingletonService<IVFS, IAssetService, VFSKit>().SetAlias<IVFSInternal>();
-        }
-
-        public Task<bool> OnStart()
-        {
-            return XCore.GetMainInstance()?.GetService<IVFSInternal>().Start();
-        }
-
-        public XException GetStartException()
-        {
-            return XCore.GetMainInstance()?.GetService<IVFSInternal>().GetStartException();
-        }
-
-        public void OnQuit()
-        {
-            _ = XCore.GetMainInstance()?.GetService<IVFSInternal>().OnServiceClose();
-        }
-
         
+        public Task<XException> OnStart(IXCore core)
+            => core.Services.Get<IVFSInternal>().Start();
 
-        public Task OnRestart()
-        {
-            return XCore.GetMainInstance()?.GetService<IVFSInternal>().OnServiceClose();
-        }
+        public void OnQuit() { }
 
-        
-
-        
+        public Task OnRestart() => Task.CompletedTask;
     }
 }

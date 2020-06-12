@@ -10,12 +10,7 @@ namespace TinaXEditor.VFSKit.FileServer
 {
     public class FileServerStartupn : IXBootstrap
     {
-        public void OnAppRestart()
-        {
-            
-        }
-
-        public void OnInit()
+        public void OnInit(IXCore core)
         {
             if (ScriptableSingleton<FileServerDataCache>.instance.Server_Switch)
             {
@@ -24,14 +19,8 @@ namespace TinaXEditor.VFSKit.FileServer
             }
         }
 
-        public void OnQuit()
-        {
-            
-        }
-
-        public void OnStart()
-        {
-            
-        }
+        public void OnStart(IXCore core) { }
+        public void OnQuit() { }
+        public void OnAppRestart() { }
     }
 }

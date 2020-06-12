@@ -95,9 +95,6 @@ namespace TinaX.VFSKit
         private Dictionary<string, VFSGroup> mDict_Groups = new Dictionary<string, VFSGroup>();
 
 
-        private VFSException mStartException;
-
-
         private string webVfs_asset_download_base_url;
         private bool webvfs_download_base_url_modify = false; //如果被profile或者手动修改过的话，这里为true
 
@@ -174,9 +171,9 @@ namespace TinaX.VFSKit
         /// 启动，如果初始化失败，则返回false.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> Start()
+        public async Task<XException> Start()
         {
-            if (mInited) return true;
+            if (mInited) return null;
 
             #region virtual disk
             //init vfs virtual disk folder
@@ -217,8 +214,7 @@ namespace TinaX.VFSKit
                 }
                 catch (VFSException e)
                 {
-                    this.mStartException = e;
-                    return false;
+                    return e;
                 }
 
                 //VDisk
@@ -272,7 +268,7 @@ namespace TinaX.VFSKit
                 var config = XConfig.GetConfig<VFSConfigModel>(VFSConst.ConfigFilePath_Resources);
                 if (config == null)
                 {
-                    this.mStartException = new VFSException("Load VFS config failed");
+                    return new VFSException("Load VFS config failed");
                 }
                 string json = JsonUtility.ToJson(config);
                 myConfig = JsonUtility.FromJson<VFSConfigJson>(json);
@@ -304,8 +300,7 @@ namespace TinaX.VFSKit
                     }
                     catch (FileNotFoundException)
                     {
-                        this.mStartException = new VFSException("Load VFS config failed");
-                        return false;
+                        return new VFSException("Load VFS config failed");
                     }
 
                 }
@@ -317,8 +312,7 @@ namespace TinaX.VFSKit
             }
             catch (VFSException e)
             {
-                mStartException = e;
-                return false;
+                return e;
             }
 
 
@@ -348,27 +342,18 @@ namespace TinaX.VFSKit
                 }
                 catch (VFSException e)
                 {
-                    mStartException = e;
 #if UNITY_EDITOR
                     Debug.LogError(e.Message);
 #endif
-                    return false;
+                    return e;
                 }
             }
 
             mInited = true;
-            return true;
+            return null;
         }
 
-        public VFSException GetStartException()
-        {
-            return mStartException;
-        }
 
-        public Task OnServiceClose()
-        {
-            return Task.CompletedTask;
-        }
         #endregion
 
         public async Task InitWebVFS()
