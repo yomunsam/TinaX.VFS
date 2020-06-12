@@ -166,7 +166,7 @@ If after doing the above, you still cannot find the relevant Packages for TinaX 
 You can use the following to install and use this package in UPM GUI.  
 
 ```
-git://github.com/yomunsam/TinaX.Core.git
+git://github.com/yomunsam/TinaX.UIKit.git
 ```
 
 If you want to set a target version, you can use release tag like `#6.6.3`. for detail you can see this page: [https://github.com/yomunsam/TinaX.VFS/releases](https://github.com/yomunsam/TinaX.VFS/releases)
@@ -180,6 +180,7 @@ If you want to set a target version, you can use release tag like `#6.6.3`. for 
 
 - [com.neuecc.unirx](https://github.com/neuecc/UniRx#upm-package) :`https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts`
 - [com.cysharp.unitask](https://github.com/Cysharp/UniTask#install-via-git-url) :`https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`
+- [io.nekonya.tinax.core](https://github.com/yomunsam/tinax.core) :`git://github.com/yomunsam/TinaX.Core.git`
 
 > if you install packages by git UPM， You need to install the dependencies manually. Or dependencies will installed automatically by NPM / OpenUPM
 
