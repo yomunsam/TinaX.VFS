@@ -166,7 +166,7 @@ If after doing the above, you still cannot find the relevant Packages for TinaX 
 You can use the following to install and use this package in UPM GUI.  
 
 ```
-git://github.com/yomunsam/TinaX.UIKit.git
+git://github.com/yomunsam/TinaX.VFS.git
 ```
 
 If you want to set a target version, you can use release tag like `#6.6.3`. for detail you can see this page: [https://github.com/yomunsam/TinaX.VFS/releases](https://github.com/yomunsam/TinaX.VFS/releases)
