@@ -1501,51 +1501,91 @@ namespace TinaX.VFSKit
 
         private async UniTask<byte[]> loadFileFromStreamingAssetsAsync(string path)
         {
-            var req = UnityWebRequest.Get(path);
-            await req.SendWebRequest();
-            if (req.isHttpError)
+            try
             {
-                if (req.responseCode == 404)
-                    throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                var req = UnityWebRequest.Get(path);
+                await req.SendWebRequest();
+                if (req.isHttpError)
+                {
+                    if (req.responseCode == 404)
+                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                }
+                return req.downloadHandler.data;
             }
-            return req.downloadHandler.data;
+            catch(UnityWebRequestException e)
+            {
+                if(e.IsHttpError)
+                {
+                    if (e.UnityWebRequest.responseCode == 404)
+                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                }
+                throw e;
+            }
         }
 
         private async UniTask<string> LoadTextFromStreamingAssetsAsync(string path)
         {
-            var req = UnityWebRequest.Get(path);
-            await req.SendWebRequest();
-            if (req.isHttpError)
+            try
             {
-                if (req.responseCode == 404)
-                    throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                var req = UnityWebRequest.Get(path);
+                await req.SendWebRequest();
+                if (req.isHttpError)
+                {
+                    if (req.responseCode == 404)
+                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                }
+                return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
             }
-            return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+            catch(UnityWebRequestException e)
+            {
+                if (e.IsHttpError)
+                {
+                    if (e.UnityWebRequest.responseCode == 404)
+                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                }
+
+                throw e;
+            }
+            
         }
 
 
         private  async UniTask<string> DownLoadTextFromWebAsync(Uri uri, int timeout = 3, Encoding encoding = null)
         {
-            Debug.Log("喵，下载文本：" + uri.ToString());
-            var req = UnityWebRequest.Get(uri);
-            req.timeout = timeout;
-            await req.SendWebRequest();
+            try
+            {
+                Debug.Log("喵，下载文本：" + uri.ToString());
+                var req = UnityWebRequest.Get(uri);
+                req.timeout = timeout;
+                await req.SendWebRequest();
 
-            if (req.isNetworkError || req.isHttpError)
-            {
-                if (req.responseCode == 404)
-                    throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
-                else
-                    throw new VFSException("Failed to get text from web:" + uri.ToString());
-            }
-            if (encoding == null)
-                return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
-            else
-            {
-                if (encoding == Encoding.UTF8)
+                if (req.isNetworkError || req.isHttpError)
+                {
+                    if (req.responseCode == 404)
+                        throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
+                    else
+                        throw new VFSException("Failed to get text from web:" + uri.ToString());
+                }
+                if (encoding == null)
                     return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
                 else
-                    return encoding.GetString(req.downloadHandler.data);
+                {
+                    if (encoding == Encoding.UTF8)
+                        return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+                    else
+                        return encoding.GetString(req.downloadHandler.data);
+                }
+            }
+            catch(UnityWebRequestException e)
+            {
+                if(e.IsNetworkError || e.IsHttpError)
+                {
+                    if (e.UnityWebRequest.responseCode == 404)
+                        throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
+                    else
+                        throw new VFSException("Failed to get text from web:" + uri.ToString());
+                }
+                throw e;
             }
 
         }
@@ -2603,15 +2643,22 @@ namespace TinaX.VFSKit
 
         private async UniTask<bool> SayHelloToWebServer(string url, int timeout = 10)
         {
-            Debug.Log("喵，say hello:" + url);
-            var req = UnityWebRequest.Get(url);
-            req.timeout = timeout;
-            await req.SendWebRequest();
+            try
+            {
+                Debug.Log("喵，say hello:" + url);
+                var req = UnityWebRequest.Get(url);
+                req.timeout = timeout;
+                await req.SendWebRequest();
 
-            if (req.isNetworkError || req.isHttpError)
+                if (req.isNetworkError || req.isHttpError)
+                    return false;
+
+                return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
+            }
+            catch
+            {
                 return false;
-
-            return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
+            }
         }
 
         /// <summary>

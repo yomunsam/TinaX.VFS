@@ -25,17 +25,32 @@ namespace TinaX.VFSKit.Loader
         
         public async UniTask DownloadFile(string url, string save_path, int timeout)
         {
-            XFile.DeleteIfExists(save_path);
-            var req = UnityWebRequest.Get(url);
-            req.timeout = timeout;
-            req.downloadHandler = new DownloadHandlerVDisk(save_path);
-            await req.SendWebRequest();
-            if (req.isNetworkError || req.isHttpError)
+            try
             {
-                if (req.responseCode == 404)
-                    throw new FileNotFoundException("file not found from web :" + url, url);
-                else
-                    throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+                XFile.DeleteIfExists(save_path);
+                var req = UnityWebRequest.Get(url);
+                req.timeout = timeout;
+                req.downloadHandler = new DownloadHandlerVDisk(save_path);
+                await req.SendWebRequest();
+                if (req.isNetworkError || req.isHttpError)
+                {
+                    if (req.responseCode == 404)
+                        throw new FileNotFoundException("file not found from web :" + url, url);
+                    else
+                        throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+                }
+            }
+            catch(UnityWebRequestException e)
+            {
+                var req = e.UnityWebRequest;
+                if(e.IsNetworkError || e.IsHttpError)
+                {
+                    if (req.responseCode == 404)
+                        throw new FileNotFoundException("file not found from web :" + url, url);
+                    else
+                        throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+                }
+                throw e;
             }
         }
 
