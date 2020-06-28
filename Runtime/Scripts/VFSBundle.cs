@@ -56,8 +56,8 @@ namespace TinaX.VFSKitInternal
                 this.AssetBundle = null;
             }
             LoadState = AssetLoadState.Unloaded;
-            foreach (var item in Dependencies)
-                item.Release();
+            //foreach (var item in Dependencies)
+            //    item.Release();
             Dependencies.Clear();
             DependenciesNames = null;
             this.ABLoader = null;
