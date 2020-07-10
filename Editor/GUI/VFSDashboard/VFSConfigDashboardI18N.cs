@@ -23,7 +23,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "VFS Ãæ°å";
+                    return "VFS é¢æ¿";
                 else
                     return "VFS Dashboard";
             }
@@ -34,7 +34,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ÆôÓÃVFS";
+                    return "å¯ç”¨VFS";
                 else
                     return "Enable VFS";
             }
@@ -45,7 +45,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ºöÂÔºó×ºÃû";
+                    return "å¿½ç•¥åç¼€å";
                 else
                     return "Ignore extname";
             }
@@ -56,7 +56,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ºöÂÔÂ·¾¶ÏîÄ¿";
+                    return "å¿½ç•¥è·¯å¾„é¡¹ç›®";
                 else
                     return "Ignore path item";
             }
@@ -68,7 +68,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "²»Ì«¶Ô¾¢";
+                    return "ä¸å¤ªå¯¹åŠ²";
                 else
                     return "Oops!";
             }
@@ -79,7 +79,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ºÃ°É";
+                    return "å¥½å§";
                 else
                     return "Okey";
             }
@@ -90,7 +90,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "×ÊÔ´×éÃû³ÆÎŞĞ§Å¶.";
+                    return "èµ„æºç»„åç§°æ— æ•ˆå“¦.";
                 else
                     return "The asset group name you want to create is not valid.";
             }
@@ -101,7 +101,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "Òª´´½¨µÄ×ÊÔ´×éµÄÃû³Æ\"{0}\"ÒÑ¾­´æÔÚ¿©.";
+                    return "è¦åˆ›å»ºçš„èµ„æºç»„çš„åç§°\"{0}\"å·²ç»å­˜åœ¨å’¯.";
                 else
                     return "The name \"{0}\" of the assets group you want to create already exists.";
             }
@@ -112,7 +112,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "Çë±£ÁôÖÁÉÙÒ»¸öGroup.";
+                    return "è¯·ä¿ç•™è‡³å°‘ä¸€ä¸ªGroup.";
                 else
                     return "Please keep at least one group in config.";
             }
@@ -125,7 +125,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "µ±Ç°ÅäÖÃÖĞÃ»ÓĞÈÎºÎ×ÊÔ´×éĞÅÏ¢£¬ÇëÔÚ´°¿ÚÉÏ·½¹¤¾ßÀ¸ĞÂ½¨×ÊÔ´×é¡£";
+                    return "å½“å‰é…ç½®ä¸­æ²¡æœ‰ä»»ä½•èµ„æºç»„ä¿¡æ¯ï¼Œè¯·åœ¨çª—å£ä¸Šæ–¹å·¥å…·æ æ–°å»ºèµ„æºç»„ã€‚";
                 else
                     return "There is no assets group information in the current configuration. Please create a new in the toolbar above the window.";
             }
@@ -137,7 +137,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "Ñ¡ÔñÒ»¸ö×ÊÔ´×é.";
+                    return "é€‰æ‹©ä¸€ä¸ªèµ„æºç»„.";
                 else
                     return "Select a group.";
             }
@@ -148,7 +148,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "×ÊÔ´×é£º";
+                    return "èµ„æºç»„ï¼š";
                 else
                     return "Asset Group: ";
             }
@@ -160,7 +160,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "°×Ãûµ¥ÎÄ¼ş¼ĞÂ·¾¶£º";
+                    return "ç™½åå•æ–‡ä»¶å¤¹è·¯å¾„ï¼š";
                 else
                     return "Whitelist folder paths: ";
             }
@@ -171,7 +171,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "°×Ãûµ¥×ÊÔ´Â·¾¶£º";
+                    return "ç™½åå•èµ„æºè·¯å¾„ï¼š";
                 else
                     return "Whitelist asset paths: ";
             }
@@ -182,7 +182,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "×ÊÔ´Ä¿Â¼ÌØÊâ¹¹½¨¹æÔò";
+                    return "èµ„æºç›®å½•ç‰¹æ®Šæ„å»ºè§„åˆ™";
                 else
                     return "Folder Special Build Rules";
             }
@@ -193,7 +193,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "Ñ¡ÔñÎÄ¼ş¼Ğ£º";
+                    return "é€‰æ‹©æ–‡ä»¶å¤¹ï¼š";
                 else
                     return "Select a folder: ";
             }
@@ -203,7 +203,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "Ñ¡Ôñ×ÊÔ´£º";
+                    return "é€‰æ‹©èµ„æºï¼š";
                 else
                     return "Select a asset: ";
             }
@@ -214,7 +214,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "²»¿ÉÒÔÑ¡Ôñ\".meta\"ºó×ºµÄÎÄ¼ş¼ÓÈëVFSÃûµ¥";
+                    return "ä¸å¯ä»¥é€‰æ‹©\".meta\"åç¼€çš„æ–‡ä»¶åŠ å…¥VFSåå•";
                 else
                     return "Can not select a \".meta\" file to add VFS Asset list.";
             }
@@ -225,7 +225,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ÓÉÓÚVFSÄÚ²¿¹æÔò£¬²»¿ÉÒÔÉ¾³ı¸ÃÏî£º{0}";
+                    return "ç”±äºVFSå†…éƒ¨è§„åˆ™ï¼Œä¸å¯ä»¥åˆ é™¤è¯¥é¡¹ï¼š{0}";
                 else
                     return "The item \"{0}\"cannot be remove because of VFS internal rules.";
             }
@@ -236,7 +236,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "¸ÃÏî²»¿ÉÉ¾³ı";
+                    return "è¯¥é¡¹ä¸å¯åˆ é™¤";
                 else
                     return "Cannot remove item.";
             }
@@ -247,9 +247,9 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "×ÊÔ´×é ´¦ÀíÄ£Ê½£º";
+                    return "èµ„æºç»„ å¤„ç†æ¨¡å¼ï¼š";
                 else
-                    return "Group handle type£º";
+                    return "Group handle typeï¼š";
             }
         }
         
@@ -258,7 +258,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "»ìÏıÄ¿Â¼½á¹¹";
+                    return "æ··æ·†ç›®å½•ç»“æ„";
                 else
                     return "Obfuscate Directory Structure";
             }
@@ -268,7 +268,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "À©Õ¹×é£º";
+                if (IsChinese) return "æ‰©å±•ç»„ï¼š";
                 return "Extension Group: ";
             }
         }
@@ -278,7 +278,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "À©Õ¹×é¿ÉÒÔ²»°üº¬ÔÚÓÎÏ·×ÊÔ´ÖĞ£¬ËüÓµÓĞ¶ÀÁ¢µÄ°æ±¾¹ÜÀí»úÖÆ¡£\nÀ©Õ¹×éÍ¨³£ÓÃÓÚÖÆ×÷Mod»òÕßDLCÖ®ÀàµÄÀ©Õ¹ÄÚÈİ¡£";
+                    return "æ‰©å±•ç»„å¯ä»¥ä¸åŒ…å«åœ¨æ¸¸æˆèµ„æºä¸­ï¼Œå®ƒæ‹¥æœ‰ç‹¬ç«‹çš„ç‰ˆæœ¬ç®¡ç†æœºåˆ¶ã€‚\næ‰©å±•ç»„é€šå¸¸ç”¨äºåˆ¶ä½œModæˆ–è€…DLCä¹‹ç±»çš„æ‰©å±•å†…å®¹ã€‚";
                 else
                     return "Extension groups are allowed not to be included in game resources. They have independent version management mechanism. \nExtension groups are often used to make extended content such as mod or DLC.";
             }
@@ -289,7 +289,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ºöÂÔÒÔÏÂ×ÓÄ¿Â¼£º";
+                    return "å¿½ç•¥ä»¥ä¸‹å­ç›®å½•ï¼š";
                 else
                     return "Ignore The Following Subfolders";
             }
@@ -300,7 +300,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ÄúÑ¡ÔñµÄÎÄ¼ş¼Ğ²¢²»ÊÇµ±Ç°×é¡°°×Ãûµ¥ÎÄ¼ş¼Ğ¡±ÖĞÅäÖÃµÄÈÎºÎÂ·¾¶µÄ×ÓÄ¿Â¼:\n{0}";
+                    return "æ‚¨é€‰æ‹©çš„æ–‡ä»¶å¤¹å¹¶ä¸æ˜¯å½“å‰ç»„â€œç™½åå•æ–‡ä»¶å¤¹â€ä¸­é…ç½®çš„ä»»ä½•è·¯å¾„çš„å­ç›®å½•:\n{0}";
                 else
                     return "The folder you selected is not a subdirectory of any path configured in the current group \"Whitelist folder paths\":\n{0}";
             }
@@ -311,7 +311,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "¹¹½¨×ÊÔ´";
+                    return "æ„å»ºèµ„æº";
                 else
                     return "Build";
             }
@@ -322,7 +322,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ÍêÕû×ÊÔ´°ü£¨Ä¸°ü£©";
+                    return "å®Œæ•´èµ„æºåŒ…ï¼ˆæ¯åŒ…ï¼‰";
                 else
                     return "Complete assets package";
             }
@@ -333,7 +333,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "AssetBundle Ï¸½ÚÉèÖÃ";
+                    return "AssetBundle ç»†èŠ‚è®¾ç½®";
                 else
                     return "AssetBundle detail setting";
             }
@@ -345,7 +345,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "AssetBundle ÎÄ¼şÀ©Õ¹Ãû£º";
+                    return "AssetBundle æ–‡ä»¶æ‰©å±•åï¼š";
                 else
                     return "AssetBundle file extension name: ";
             }
@@ -356,7 +356,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
             get
             {
                 if (Application.systemLanguage == SystemLanguage.Chinese || Application.systemLanguage == SystemLanguage.ChineseSimplified)
-                    return "ºó×ºÃûÇëÒÔµãºÅ\".\"¿ªÊ¼¡£";
+                    return "åç¼€åè¯·ä»¥ç‚¹å·\".\"å¼€å§‹ã€‚";
                 else
                     return "Please start with dot \".\" for file extension.";
             }
@@ -366,7 +366,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÎÄ¼ş·şÎñÆ÷²»Ö§³Ö";
+                if (IsChinese) return "æ–‡ä»¶æœåŠ¡å™¨ä¸æ”¯æŒ";
                 return "File Server Not Support";
             }
         }
@@ -375,7 +375,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÎÄ¼ş·şÎñÆ÷ÒÑÆô¶¯";
+                if (IsChinese) return "æ–‡ä»¶æœåŠ¡å™¨å·²å¯åŠ¨";
                 return "File Server Running";
             }
         }
@@ -384,7 +384,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÎÄ¼ş·şÎñÆ÷Î´Æô¶¯";
+                if (IsChinese) return "æ–‡ä»¶æœåŠ¡å™¨æœªå¯åŠ¨";
                 return "File Server Stopped";
             }
         }
@@ -393,7 +393,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "¹ÜÀíÎÄ¼ş·şÎñÆ÷";
+                if (IsChinese) return "ç®¡ç†æ–‡ä»¶æœåŠ¡å™¨";
                 return "Manage File Server";
             }
         }
@@ -402,7 +402,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "°æ±¾¹ÜÀíÆ÷";
+                if (IsChinese) return "ç‰ˆæœ¬ç®¡ç†å™¨";
                 return "Versions Manager";
             }
         }
@@ -411,7 +411,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "¸ü¸Ä×éÃû";
+                if (IsChinese) return "æ›´æ”¹ç»„å";
                 return "Modify Group Name";
             }
         }
@@ -420,7 +420,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "µ±Ç°×ÊÔ´×éÎªÀ©Õ¹×é";
+                if (IsChinese) return "å½“å‰èµ„æºç»„ä¸ºæ‰©å±•ç»„";
                 return "The current group is an extension group";
             }
         }
@@ -429,7 +429,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÇĞ»»ÎªÀ©Õ¹×é";
+                if (IsChinese) return "åˆ‡æ¢ä¸ºæ‰©å±•ç»„";
                 return "Set as extension group";
             }
         }
@@ -438,7 +438,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÄãÒªÉ¾³ıµÄ×ÊÔ´×é\"{0}\"ÊÇÒ»¸öÀ©Õ¹×é.\nÒòÎªÀ©Õ¹×éÊÇ¶ÀÁ¢¹ÜÀí°æ±¾ÀúÊ·¼ÇÂ¼µÄ£¬Òò´ËÉ¾³ı¸ÃÀ©Õ¹×é£¬»áµ¼ÖÂÓëÖ®Ïà¹ØµÄ°æ±¾·ÖÖ§Ò²±»É¾³ı£¬ÇÒ²»¿É³·Ïú\nÈç¹ûÄãÖ»ÊÇÔİÊ±²»ĞèÒª¸Ã×éµÄ×ÊÔ´£¬¿ÉÒÔÔÚProfileÖĞÉèÖÃÏà¹Ø¹æÔò¡£\nÓë¸Ã×éÏà¹ØµÄ°æ±¾·ÖÖ§Îª:\n";
+                if (IsChinese) return "ä½ è¦åˆ é™¤çš„èµ„æºç»„\"{0}\"æ˜¯ä¸€ä¸ªæ‰©å±•ç»„.\nå› ä¸ºæ‰©å±•ç»„æ˜¯ç‹¬ç«‹ç®¡ç†ç‰ˆæœ¬å†å²è®°å½•çš„ï¼Œå› æ­¤åˆ é™¤è¯¥æ‰©å±•ç»„ï¼Œä¼šå¯¼è‡´ä¸ä¹‹ç›¸å…³çš„ç‰ˆæœ¬åˆ†æ”¯ä¹Ÿè¢«åˆ é™¤ï¼Œä¸”ä¸å¯æ’¤é”€\nå¦‚æœä½ åªæ˜¯æš‚æ—¶ä¸éœ€è¦è¯¥ç»„çš„èµ„æºï¼Œå¯ä»¥åœ¨Profileä¸­è®¾ç½®ç›¸å…³è§„åˆ™ã€‚\nä¸è¯¥ç»„ç›¸å…³çš„ç‰ˆæœ¬åˆ†æ”¯ä¸º:\n";
                 return "The assets group \"{0} \" you want to delete  is an extension group. \nBecause the extension group manages the version history independently, deleting the extension group will cause the version branch associated with it to be deleted, and it cannot be undone \nIf you only need the assets of this group temporarily, you can set related rules in the profile. \nThe branch associated with this group is: \n";
             }
         }
@@ -447,7 +447,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÆôÓÃÊ±³õÊ¼»¯Web VFS£º";
+                if (IsChinese) return "å¯ç”¨æ—¶åˆå§‹åŒ–Web VFSï¼š";
                 return "init Web VFS OnStart:";
             }
         }
@@ -456,7 +456,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "Ä¬ÈÏµÄ×ÊÔ´ÏÂÔØ»ù´¡Url:";
+                if (IsChinese) return "é»˜è®¤çš„èµ„æºä¸‹è½½åŸºç¡€Url:";
                 return "Default Download Url:";
             }
         }
@@ -465,7 +465,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "´Ë´¦ÉèÖÃµÄÏÂÔØµØÖ·Ö»ÊÇ×÷ÎªÒ»¸öÈ±Ê¡ÖµµÄ´æÔÚ£¬¸üÏêÏ¸µÄÉèÖÃÇëÔÚProfile´°¿ÚÖĞÉèÖÃ";
+                if (IsChinese) return "æ­¤å¤„è®¾ç½®çš„ä¸‹è½½åœ°å€åªæ˜¯ä½œä¸ºä¸€ä¸ªç¼ºçœå€¼çš„å­˜åœ¨ï¼Œæ›´è¯¦ç»†çš„è®¾ç½®è¯·åœ¨Profileçª—å£ä¸­è®¾ç½®";
                 return "The download address set here only exists as a default value. For more detailed settings, please set it in the profile window";
             }
         }
@@ -474,7 +474,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "±à¼­Æ÷ÏÂ×ÊÔ´¼ÓÔØ·½Ê½";
+                if (IsChinese) return "ç¼–è¾‘å™¨ä¸‹èµ„æºåŠ è½½æ–¹å¼";
                 return "Assets Load Mode In Editor";
             }
         }
@@ -483,7 +483,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "±à¼­Æ÷·½Ê½¼ÓÔØ";
+                if (IsChinese) return "ç¼–è¾‘å™¨æ–¹å¼åŠ è½½";
                 return "Load By Editor";
             }
         }
@@ -501,7 +501,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "´Ó×ÊÔ´¹¹½¨½á¹ûÄ¿Â¼ÖĞ¼ÓÔØAssetBundle";
+                if (IsChinese) return "ä»èµ„æºæ„å»ºç»“æœç›®å½•ä¸­åŠ è½½AssetBundle";
                 return "Load AssetBundle from the resource build results directory";
             }
         }
@@ -510,7 +510,7 @@ namespace TinaXEditor.VFSKitInternal.I18N
         {
             get
             {
-                if (IsChinese) return "ÒÑ´ò°ü×ÊÔ´¹ÜÀí";
+                if (IsChinese) return "å·²æ‰“åŒ…èµ„æºç®¡ç†";
                 return "Built Files Manager";
             }
         }
