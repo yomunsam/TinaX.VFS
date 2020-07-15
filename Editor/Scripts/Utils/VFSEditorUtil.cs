@@ -200,6 +200,16 @@ namespace TinaXEditor.VFSKit.Utils
                 File.Copy(main_package_build_info, target_path);
             }
 
+            //package version info
+            var main_package_version_info = VFSUtil.GetMainPackage_VersionInfo_Path(packages_root_path);
+            if (File.Exists(main_package_version_info))
+            {
+                string target_path = VFSUtil.GetMainPackage_VersionInfo_Path(Path.Combine(stream_root_path, platform_name));
+                XFile.DeleteIfExists(target_path);
+                XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                File.Copy(main_package_version_info, target_path);
+            }
+
             //vfs config
             var vfs_config_path = VFSUtil.GetVFSConfigFilePath_InPackages(packages_root_path);
             if (File.Exists(vfs_config_path))
