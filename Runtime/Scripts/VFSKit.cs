@@ -1503,7 +1503,7 @@ namespace TinaX.VFSKit
         {
             try
             {
-                var req = UnityWebRequest.Get(path);
+                var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
                 if (req.isHttpError)
                 {
@@ -1527,7 +1527,7 @@ namespace TinaX.VFSKit
         {
             try
             {
-                var req = UnityWebRequest.Get(path);
+                var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
                 if (req.isHttpError)
                 {
