@@ -277,7 +277,7 @@ namespace TinaX.VFSKit
                             }
                         case FolderBuildType.whole:
                             //return rule.FolderPath;
-                            return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(rule.FolderPath) : rule.FolderPath;
+                            return this.ObfuscateDirectoryStructure ? this.GetObfuscatedAssetBundleName(RemoveLastSlashIfExist(rule.FolderPath)) : RemoveLastSlashIfExist(rule.FolderPath);
                     }
 
                 }
@@ -453,7 +453,17 @@ namespace TinaX.VFSKit
             return md5_32.Substring(0, 2) + "/" + md5_32.Substring(8,16);
         }
 
-
+        /// <summary>
+        /// 如果给定的字符串最后一位是斜杠的话，就去掉
+        /// </summary>
+        /// <returns></returns>
+        private string RemoveLastSlashIfExist(string str)
+        {
+            if (str.EndsWith("/") || str.EndsWith("\\"))
+                return str.Substring(0, str.Length - 1);
+            else
+                return str;
+        }
 
 
     }
