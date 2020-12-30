@@ -32,7 +32,11 @@ namespace TinaX.VFSKit.Loader
                 req.timeout = timeout;
                 req.downloadHandler = new DownloadHandlerVDisk(save_path);
                 await req.SendWebRequest();
+#if UNITY_2020_2
+                if(req.result != UnityWebRequest.Result.Success)
+#else
                 if (req.isNetworkError || req.isHttpError)
+#endif
                 {
                     if (req.responseCode == 404)
                         throw new FileNotFoundException("file not found from web :" + url, url);
@@ -43,7 +47,11 @@ namespace TinaX.VFSKit.Loader
             catch(UnityWebRequestException e)
             {
                 var req = e.UnityWebRequest;
-                if(e.IsNetworkError || e.IsHttpError)
+#if UNITY_2020_2
+                if(e.Result != UnityWebRequest.Result.Success)
+#else
+                if (e.IsNetworkError || e.IsHttpError)
+#endif
                 {
                     if (req.responseCode == 404)
                         throw new FileNotFoundException("file not found from web :" + url, url);
@@ -59,7 +67,12 @@ namespace TinaX.VFSKit.Loader
             var req = UnityWebRequestAssetBundle.GetAssetBundle(path);
             req.timeout = timeout;
             await req.SendWebRequest();
-            if(req.isNetworkError || req.isHttpError)
+
+#if UNITY_2020_2
+            if(req.result != UnityWebRequest.Result.Success)
+#else
+            if (req.isNetworkError || req.isHttpError)
+#endif
             {
                 if (req.responseCode == 404)
                     throw new FileNotFoundException("assetbundle not found from web :" + path, path);

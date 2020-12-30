@@ -1505,7 +1505,11 @@ namespace TinaX.VFSKit
             {
                 var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
+#if UNITY_2020_2
+                if(req.result == UnityWebRequest.Result.ProtocolError)
+#else
                 if (req.isHttpError)
+#endif
                 {
                     if (req.responseCode == 404)
                         throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
@@ -1514,7 +1518,11 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
-                if(e.IsHttpError)
+#if UNITY_2020_2
+                if(e.Result == UnityWebRequest.Result.ProtocolError)
+#else
+                if (e.IsHttpError)
+#endif
                 {
                     if (e.UnityWebRequest.responseCode == 404)
                         throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
@@ -1529,7 +1537,11 @@ namespace TinaX.VFSKit
             {
                 var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
+#if UNITY_2020_2
+                if(req.result == UnityWebRequest.Result.ProtocolError)
+#else
                 if (req.isHttpError)
+#endif
                 {
                     if (req.responseCode == 404)
                         throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
@@ -1538,7 +1550,11 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
+#if UNITY_2020_2
+                if(e.Result == UnityWebRequest.Result.ProtocolError)
+#else
                 if (e.IsHttpError)
+#endif
                 {
                     if (e.UnityWebRequest.responseCode == 404)
                         throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
@@ -1559,7 +1575,11 @@ namespace TinaX.VFSKit
                 req.timeout = timeout;
                 await req.SendWebRequest();
 
+#if UNITY_2020_2
+                if(req.result != UnityWebRequest.Result.Success)
+#else
                 if (req.isNetworkError || req.isHttpError)
+#endif
                 {
                     if (req.responseCode == 404)
                         throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
@@ -1578,7 +1598,11 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
-                if(e.IsNetworkError || e.IsHttpError)
+#if UNITY_2020_2
+                if(e.Result != UnityWebRequest.Result.Success)
+#else
+                if (e.IsNetworkError || e.IsHttpError)
+#endif
                 {
                     if (e.UnityWebRequest.responseCode == 404)
                         throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
@@ -1774,7 +1798,7 @@ namespace TinaX.VFSKit
             group.FilesHash_Remote = JsonUtility.FromJson<FilesHashBook>(json);
         }
 
-        #region Scene 异步加载
+#region Scene 异步加载
         private async UniTask<ISceneAsset> loadSceneAsync(string scenePath)
         {
             if (!mInited)
@@ -1819,9 +1843,9 @@ namespace TinaX.VFSKit
             //this.Assets.RegisterHashCode(asset); //Scene没有Asset
         }
 
-        #endregion
+#endregion
 
-        #region Scene 同步加载
+#region Scene 同步加载
         private ISceneAsset loadScene(string scenePath)
         {
             if (!mInited)
@@ -1888,9 +1912,9 @@ namespace TinaX.VFSKit
                 throw new VFSException((IsChinese ? "被加载的scene的路径是无效的，它不在VFS的管理范围内" : "The scene path you want to load is valid. It is not under the management of VFS") + "Path:" + scenePath, VFSErrorCode.ValidLoadPath);
             }
         }
-        #endregion
+#endregion
 
-        #region VFS Asset 异步加载
+#region VFS Asset 异步加载
 
         private async UniTask<IAsset> loadAssetAsync<T>(string assetPath) where T: UnityEngine.Object
         {
@@ -1980,9 +2004,9 @@ namespace TinaX.VFSKit
             await asset.LoadAsync(type);
             this.Assets.RegisterHashCode(asset);
         }
-        #endregion
+#endregion
 
-        #region 加载AssetBundle_Async
+#region 加载AssetBundle_Async
 
         /// <summary>
         /// 加载AssetBundle和它的依赖， 异步入口
@@ -2079,9 +2103,9 @@ namespace TinaX.VFSKit
             await bundle.LoadAsync();
         }
 
-        #endregion
+#endregion
 
-        #region VFS Asset 同步加载
+#region VFS Asset 同步加载
 
         /// <summary>
         /// 同步加载【IAsset】，正常AssetBundle模式，泛型，【私有方法总入口】
@@ -2232,9 +2256,9 @@ namespace TinaX.VFSKit
         }
         
         
-        #endregion
+#endregion
 
-        #region 同步加载AssetBundle
+#region 同步加载AssetBundle
         private VFSBundle loadAssetBundleAndDependencies(string assetbundleName, VFSGroup group, bool counter = true, List<string> load_chain = null)
         {
             VFSBundle bundle;
@@ -2361,7 +2385,7 @@ namespace TinaX.VFSKit
             }
 
         }
-        #endregion
+#endregion
 
         /// <summary>
         /// 查询资源
@@ -2650,8 +2674,13 @@ namespace TinaX.VFSKit
                 req.timeout = timeout;
                 await req.SendWebRequest();
 
+#if UNITY_2020_2
+                if (req.result != UnityWebRequest.Result.Success)
+                    return false;
+#else
                 if (req.isNetworkError || req.isHttpError)
                     return false;
+#endif
 
                 return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
             }
@@ -2710,7 +2739,7 @@ namespace TinaX.VFSKit
 
 
 #if UNITY_EDITOR
-        #region 编辑器下的AssetDatabase加载
+#region 编辑器下的AssetDatabase加载
         private async Task<IAsset> loadAssetFromAssetDatabaseAsync<T>(string asset_path) where T : UnityEngine.Object
         {
             var asset = loadAssetFromAssetDatabase<T>(asset_path); //编辑器没提供异步接口，所以同步加载
@@ -2787,9 +2816,9 @@ namespace TinaX.VFSKit
         }
 
 
-        #endregion
+#endregion
 
-        #region 编辑器下Scene加载
+#region 编辑器下Scene加载
 
         private async Task<ISceneAsset> loadSceneFromEditorAsync(string scenePath)
         {
@@ -2827,13 +2856,13 @@ namespace TinaX.VFSKit
             }
         }
 
-        #endregion
+#endregion
 
-        #region 编辑器下的扩展组操作
+#region 编辑器下的扩展组操作
 
 
 
-        #endregion
+#endregion
 
 #endif
 
