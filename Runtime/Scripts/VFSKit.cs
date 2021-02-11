@@ -1505,7 +1505,7 @@ namespace TinaX.VFSKit
             {
                 var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(req.result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (req.isHttpError)
@@ -1518,7 +1518,7 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(e.Result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (e.IsHttpError)
@@ -1537,7 +1537,7 @@ namespace TinaX.VFSKit
             {
                 var req = UnityWebRequest.Get(new Uri(path));
                 await req.SendWebRequest();
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(req.result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (req.isHttpError)
@@ -1550,7 +1550,7 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(e.Result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (e.IsHttpError)
@@ -1575,7 +1575,7 @@ namespace TinaX.VFSKit
                 req.timeout = timeout;
                 await req.SendWebRequest();
 
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(req.result != UnityWebRequest.Result.Success)
 #else
                 if (req.isNetworkError || req.isHttpError)
@@ -1598,7 +1598,7 @@ namespace TinaX.VFSKit
             }
             catch(UnityWebRequestException e)
             {
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(e.Result != UnityWebRequest.Result.Success)
 #else
                 if (e.IsNetworkError || e.IsHttpError)
@@ -2674,7 +2674,7 @@ namespace TinaX.VFSKit
                 req.timeout = timeout;
                 await req.SendWebRequest();
 
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if (req.result != UnityWebRequest.Result.Success)
                     return false;
 #else

@@ -750,7 +750,7 @@ namespace TinaXEditor.VFSKit.UI
                 GUILayout.BeginHorizontal();
                 //GUILayout.Label(VFSConfigDashboardI18N.Window_GroupConfig_Title_GroupName,GUILayout.MaxWidth(90));
                 SerializedProperty groupName = group_root_property.FindPropertyRelative("GroupName");
-                if (GUILayout.Button(VFSConfigDashboardI18N.Change_GroupName, GUILayout.Width(110)))
+                if (GUILayout.Button(VFSConfigDashboardI18N.Change_GroupName, GUILayout.Width(150)))
                 {
                     EditorGUIUtil.Prompt((success,text) => 
                     {
@@ -802,7 +802,7 @@ namespace TinaXEditor.VFSKit.UI
                 //EditorGUILayout.PropertyField(extensionGroup, new GUIContent(VFSConfigDashboardI18N.Window_Group_Extension));
                 if (!extensionGroup.boolValue)
                 {
-                    if (GUILayout.Button(VFSConfigDashboardI18N.Enable_ExtensionGroup, GUILayout.Width(110)))
+                    if (GUILayout.Button(VFSConfigDashboardI18N.Enable_ExtensionGroup, GUILayout.Width(150)))
                     {
                         extensionGroup.boolValue = true;
                     }
