@@ -339,7 +339,7 @@ namespace TinaXEditor.VFSKit.Versions
                 
 
                 //------------版本列表操作----
-                if (GUILayout.Button("创建新版本"))
+                if (GUILayout.Button(IsChinese ? "创建新版本" : "Create New Version"))
                 {
                     CreateVersionRecordGUI.BranchName = mSelectBranchName;
                     CreateVersionRecordGUI.OpenUI();
