@@ -32,7 +32,7 @@ namespace TinaX.VFSKit.Loader
                 req.timeout = timeout;
                 req.downloadHandler = new DownloadHandlerVDisk(save_path);
                 await req.SendWebRequest();
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(req.result != UnityWebRequest.Result.Success)
 #else
                 if (req.isNetworkError || req.isHttpError)
@@ -47,7 +47,7 @@ namespace TinaX.VFSKit.Loader
             catch(UnityWebRequestException e)
             {
                 var req = e.UnityWebRequest;
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
                 if(e.Result != UnityWebRequest.Result.Success)
 #else
                 if (e.IsNetworkError || e.IsHttpError)
@@ -68,7 +68,7 @@ namespace TinaX.VFSKit.Loader
             req.timeout = timeout;
             await req.SendWebRequest();
 
-#if UNITY_2020_2
+#if UNITY_2020_2_OR_NEWER
             if(req.result != UnityWebRequest.Result.Success)
 #else
             if (req.isNetworkError || req.isHttpError)
