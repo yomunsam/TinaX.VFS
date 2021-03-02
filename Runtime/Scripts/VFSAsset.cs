@@ -26,7 +26,21 @@ namespace TinaX.VFSKitInternal
         public VFSGroup Group { get; internal set; }
         public AssetLoadState LoadState { get; internal set; } = AssetLoadState.Idle;
         public AssetQueryResult QueryResult { get; internal set; }
-        public UniTask LoadTask { get; internal set; }
+
+        //public UniTask _loadTask;
+        //public UniTask LoadTask
+        //{
+        //    get
+        //    {
+        //        return _loadTask;
+        //    }
+        //    internal set
+        //    {
+        //        _loadTask = value.Preserve();
+        //    }
+        //}
+
+        public Task LoadTask { get; internal set; }
 
         public int AssetHashCode { get; private protected set; } = -1;
 
@@ -99,7 +113,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = await this.Bundle.AssetBundle.LoadAssetAsync<T>(this.AssetPathLower);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -118,7 +132,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = await this.Bundle.AssetBundle.LoadAssetAsync(this.AssetPathLower,type);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -137,7 +151,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = this.Bundle.AssetBundle.LoadAsset<T>(this.AssetPathLower);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -156,7 +170,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = this.Bundle.AssetBundle.LoadAsset(this.AssetPathLower, type);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }

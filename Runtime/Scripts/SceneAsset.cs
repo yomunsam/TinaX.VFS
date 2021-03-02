@@ -37,7 +37,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = null;
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this.GetHashCode();
             base.RegisterToBundle();
 
@@ -58,7 +58,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = null;
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = Task.CompletedTask;
             this.AssetHashCode = this.GetHashCode();
             base.RegisterToBundle();
         }

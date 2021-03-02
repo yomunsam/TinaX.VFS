@@ -1831,7 +1831,7 @@ namespace TinaX.VFSKit
             }
         }
 
-        private async UniTask doLoadSceneAsync(SceneAsset asset)
+        private async Task doLoadSceneAsync(SceneAsset asset)
         {
             if (asset.LoadState != AssetLoadState.Loaded && asset.LoadState != AssetLoadState.Unloaded) asset.LoadState = AssetLoadState.Loading;
             if (asset.Bundle == null)
@@ -1981,7 +1981,7 @@ namespace TinaX.VFSKit
         }
 
         //只执行加载，不做判断，啥也不干
-        private async UniTask doLoadAssetAsync<T>(VFSAsset asset)
+        private async Task doLoadAssetAsync<T>(VFSAsset asset)
         {
             if (asset.LoadState != AssetLoadState.Loaded && asset.LoadState != AssetLoadState.Unloaded) asset.LoadState = AssetLoadState.Loading;
             if(asset.Bundle == null)
@@ -1993,7 +1993,7 @@ namespace TinaX.VFSKit
             this.Assets.RegisterHashCode(asset);
         }
 
-        private async UniTask doLoadAssetAsync(VFSAsset asset, Type type)
+        private async Task doLoadAssetAsync(VFSAsset asset, Type type)
         {
             if (asset.LoadState != AssetLoadState.Loaded && asset.LoadState != AssetLoadState.Unloaded) asset.LoadState = AssetLoadState.Loading;
             if (asset.Bundle == null)
