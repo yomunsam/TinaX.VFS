@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -500,21 +500,23 @@ namespace TinaXEditor.VFSKit.Versions
                                 }
 
                                 string remote_path = VFSEditorUtil.Get_MainPackage_RemoteAssetsFolderPath_InSourcePackages(platform_name);
-                                int remote_path_len = remote_path.Length + 1;
-                                string[] remote_files = Directory.GetFiles(remote_path, "*.*", SearchOption.AllDirectories);
-                                if (remote_files != null && remote_files.Length > 0)
+                                if (Directory.Exists(remote_path))
                                 {
-                                    total_count++;
-                                    ArrayUtil.RemoveDuplicationElements(ref remote_files);
-                                    foreach (var item in remote_files)
+                                    int remote_path_len = remote_path.Length + 1;
+                                    string[] remote_files = Directory.GetFiles(remote_path, "*.*", SearchOption.AllDirectories);
+                                    if (remote_files != null && remote_files.Length > 0)
                                     {
-                                        string pure_path = item.Substring(remote_path_len, item.Length - remote_path_len);
-                                        string target_path = Path.Combine(binary_path_temp_remote, pure_path);
-                                        XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
-                                        File.Copy(item, target_path);
+                                        total_count++;
+                                        ArrayUtil.RemoveDuplicationElements(ref remote_files);
+                                        foreach (var item in remote_files)
+                                        {
+                                            string pure_path = item.Substring(remote_path_len, item.Length - remote_path_len);
+                                            string target_path = Path.Combine(binary_path_temp_remote, pure_path);
+                                            XDirectory.CreateIfNotExists(Path.GetDirectoryName(target_path));
+                                            File.Copy(item, target_path);
+                                        }
                                     }
                                 }
-
                             }
                             else
                             {

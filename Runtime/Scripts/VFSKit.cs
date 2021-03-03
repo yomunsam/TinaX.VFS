@@ -1,4 +1,4 @@
-﻿/*
+/*
  * 你看啊，所有加载方法在最终实现的时候都按照泛型和非泛型写了两套，
  * 那为什么不直接把泛型的T用typeof(T)传给带Type参数的非泛型方法呢，这样就可以少写一遍了
  * 因为作者有强迫症，这么搞会觉得难受。
@@ -1837,7 +1837,7 @@ namespace TinaX.VFSKit
             if (asset.Bundle == null)
             {
                 //来加载bundle吧
-                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group, true);
+                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group);
             }
             await asset.LoadAsync();
             //this.Assets.RegisterHashCode(asset); //Scene没有Asset
@@ -1880,7 +1880,7 @@ namespace TinaX.VFSKit
 
                 //两次检查都没有return的话，开始同步加载
                 asset = new SceneAsset(group, result);
-                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group);
                 asset.Load();
 
                 //加载结束，检查
@@ -1987,7 +1987,7 @@ namespace TinaX.VFSKit
             if(asset.Bundle == null)
             {
                 //来加载bundle吧
-                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group,true);
+                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group);
             }
             await asset.LoadAsync<T>();
             this.Assets.RegisterHashCode(asset);
@@ -1999,7 +1999,7 @@ namespace TinaX.VFSKit
             if (asset.Bundle == null)
             {
                 //来加载bundle吧
-                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group, true);
+                asset.Bundle = await loadAssetBundleAndDependenciesAsync(asset.QueryResult.AssetBundleName, asset.Group);
             }
             await asset.LoadAsync(type);
             this.Assets.RegisterHashCode(asset);
@@ -2015,13 +2015,14 @@ namespace TinaX.VFSKit
         /// <param name="counter">引用计数器</param>
         /// <param name="load_chain">加载链：如果是从外部调用的加载，这里为空，如果是递归，则把递归过程中的每一项都加入到加载链</param>
         /// <returns></returns>
-        private async UniTask<VFSBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName, VFSGroup group, bool counter = true, List<string> load_chain = null)
+        private async UniTask<VFSBundle> loadAssetBundleAndDependenciesAsync(string assetbundleName, VFSGroup group, List<string> load_chain = null)
         {
             VFSBundle bundle;
+            bool load_flag;
             //是否已经加载了
             lock (this)
             {
-                bool load_flag = this.Bundles.TryGetBundle(assetbundleName, out bundle);
+                load_flag = this.Bundles.TryGetBundle(assetbundleName, out bundle);
                 if (!load_flag)
                 {
                     bundle = new VFSBundle();
@@ -2034,8 +2035,11 @@ namespace TinaX.VFSKit
             if (bundle.LoadState != AssetLoadState.Loaded)
                 await bundle.LoadTask;
 
-            if (counter)
+            if (load_flag)
+                bundle.RetainWithDependencies();
+            else
                 bundle.Retain();
+
             return bundle;
         }
 
@@ -2071,7 +2075,7 @@ namespace TinaX.VFSKit
                         
                         if (!_dep_self)
                         {
-                            var task = this.loadAssetBundleAndDependenciesAsync(d, dg, false, load_chain);
+                            var task = this.loadAssetBundleAndDependenciesAsync(d, dg, load_chain);
                             list_dep_load_task.Add(task);
                         }
                     }
@@ -2100,7 +2104,16 @@ namespace TinaX.VFSKit
             bundle.GroupHandleMode = group.HandleMode;
             bundle.DownloadTimeout = this.DownloadWebAssetTimeout;
 
-            await bundle.LoadAsync();
+            try
+            {
+                await bundle.LoadAsync();
+            }
+            catch
+            {
+                //如果AB包加载失败，但此时它的依赖项的计数器数字已经+1了，得清理回去
+                bundle.Release();
+                throw;
+            }
         }
 
 #endregion
@@ -2146,7 +2159,7 @@ namespace TinaX.VFSKit
 
                 //两次检查都没有return的话，开始同步加载
                 asset = new VFSAsset(group, result);
-                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group);
                 asset.Load<T>();
 
                 //加载结束，检查
@@ -2220,7 +2233,7 @@ namespace TinaX.VFSKit
 
                 //两次检查都没有return的话，开始同步加载
                 asset = new VFSAsset(group, result);
-                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group, true);
+                asset.Bundle = loadAssetBundleAndDependencies(result.AssetBundleName, group);
                 asset.Load(type);
 
                 //加载结束，检查
@@ -2259,7 +2272,7 @@ namespace TinaX.VFSKit
 #endregion
 
 #region 同步加载AssetBundle
-        private VFSBundle loadAssetBundleAndDependencies(string assetbundleName, VFSGroup group, bool counter = true, List<string> load_chain = null)
+        private VFSBundle loadAssetBundleAndDependencies(string assetbundleName, VFSGroup group, List<string> load_chain = null)
         {
             VFSBundle bundle;
             //是否已经加载了
@@ -2269,8 +2282,7 @@ namespace TinaX.VFSKit
                 {
                     if(bundle.LoadState == AssetLoadState.Loaded)
                     {
-                        if (counter)
-                            bundle.Retain();
+                        bundle.RetainWithDependencies();
                         return bundle;
                     }
                 }
@@ -2280,8 +2292,7 @@ namespace TinaX.VFSKit
             {
                 if(bundle.LoadState == AssetLoadState.Loaded)
                 {
-                    if (counter)
-                        bundle.Retain();
+                    bundle.RetainWithDependencies();
                     return bundle;
                 }
             }
@@ -2323,7 +2334,7 @@ namespace TinaX.VFSKit
                         if (!dep_self)
                         {
                             //加载
-                            loadAssetBundleAndDependencies(d, dg, false, load_chain);
+                            loadAssetBundleAndDependencies(d, dg, load_chain);
                         }
 
                     }
@@ -2347,7 +2358,16 @@ namespace TinaX.VFSKit
             bundle.GroupHandleMode = group.HandleMode;
             bundle.DownloadTimeout = this.DownloadWebAssetTimeout; //其实没啥用
 
-            bundle.Load();
+            try
+            {
+                bundle.Load();
+            }
+            catch
+            {
+                //如果AB包加载失败，它的依赖项已经有计数器+1，要还回去
+                bundle.Release();
+                throw;
+            }
 
             //同步加载结束，再次检查cache
             lock (this)
@@ -2361,16 +2381,14 @@ namespace TinaX.VFSKit
                         bundle.DependenciesNames = null;
                         bundle.Unload();
                         bundle = null;
-                        if (counter)
-                            _bundle.Retain();
+                        _bundle.Retain();
                         return _bundle;
                     }
                     else
                     {
                         //有一个还没加载完的
                         this.Bundles.RegisterSyncTemp(bundle);
-                        if (counter)
-                            bundle.Retain();
+                        bundle.Retain();
                         return bundle;
                     }
                 }
@@ -2378,8 +2396,7 @@ namespace TinaX.VFSKit
                 {
                     //没有，把自己加进去
                     this.Bundles.Register(bundle);
-                    if (counter)
-                        bundle.Retain();
+                    bundle.Retain();
                     return bundle;
                 }
             }

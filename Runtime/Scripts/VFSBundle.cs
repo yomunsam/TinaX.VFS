@@ -1,4 +1,4 @@
-﻿using TinaX.VFSKit;
+using TinaX.VFSKit;
 using UnityEngine;
 using System.Collections.Generic;
 using TinaX.VFSKit.Loader;
@@ -38,15 +38,40 @@ namespace TinaX.VFSKitInternal
 
         public void Release()
         {
+            this.DoRelease();
+        }
+
+        protected void DoRelease(List<VFSBundle> release_chain = null)
+        {
+            //release 链
+            if (release_chain == null)
+                release_chain = new List<VFSBundle>();
+            if (!release_chain.Contains(this))
+                release_chain.Add(this);
+
             RefCount--;
-            foreach (var dep in this.Dependencies)
-                dep.Release();
+            
+            //处理依赖
+            foreach(var dep in this.Dependencies)
+            {
+                //循环依赖判断
+                bool _dep_loop = false;
+                if (release_chain.Contains(dep))
+                    _dep_loop = true;
+
+                if(!_dep_loop)
+                {
+                    dep.DoRelease(release_chain);
+                }    
+            }
 
             if (RefCount <= 0 && LoadState != AssetLoadState.Unloaded)
             {
                 this.Unload();
             }
         }
+
+
 
         public void Unload()
         {
@@ -67,12 +92,43 @@ namespace TinaX.VFSKitInternal
 
         /// <summary>
         ///  +1s, 苟...
+        ///  不处理依赖
         /// </summary>
         public void Retain()
         {
             RefCount++;
-            foreach (var dep in this.Dependencies)
-                dep.Retain();
+            //foreach (var dep in this.Dependencies)
+            //    dep.Retain();
+        }
+
+        /// <summary>
+        /// +1s, 处理依赖项
+        /// </summary>
+        public void RetainWithDependencies()
+        {
+            this.DoRetainWithDependencies();
+        }
+
+        protected void DoRetainWithDependencies(List<VFSBundle> retain_chain = null)
+        {
+            //retain 链
+            if (retain_chain == null)
+                retain_chain = new List<VFSBundle>();
+            if (!retain_chain.Contains(this))
+                retain_chain.Add(this);
+
+            RefCount++;
+
+            //处理依赖
+            foreach(var dep in this.Dependencies)
+            {
+                bool _dep_loop = false;
+                if (retain_chain.Contains(dep))
+                    _dep_loop = true;
+
+                if (!_dep_loop)
+                    dep.DoRetainWithDependencies(retain_chain);
+            }
         }
 
         public IAssetBundleLoader ABLoader { get; internal set; }
@@ -114,7 +170,7 @@ namespace TinaX.VFSKitInternal
             if (LoadState == AssetLoadState.Loaded && this.AssetBundle != null) return; //已加载
             if(LoadState == AssetLoadState.Unloaded)
                 throw new VFSException("[TinaX.VFS] Error: Attempt to load an unloaded assetbundle :" + this.AssetBundleName);
-            //开始加载
+            
             await DoLoadAsync();
 
             this.LoadState = AssetLoadState.Loaded;
