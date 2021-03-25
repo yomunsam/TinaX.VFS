@@ -739,6 +739,8 @@ namespace TinaX.VFSKit
 #if UNITY_EDITOR
             if (mLoadByAssetDatabaseInEditor)
             {
+                if (asset == null)
+                    return;
                 if (this.Assets.TryGetEditorAsset(asset.GetHashCode(), out var editor_asset))
                     editor_asset.Release();
                 return;
