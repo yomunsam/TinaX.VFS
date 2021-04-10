@@ -1,5 +1,6 @@
 {
     "name": "TinaX.VFS.Editor",
+    "rootNamespace": "TinaXEditor.VFSKit",
     "references": [
         "GUID:c2cbe029685ec88498e06f89c89cda5d",
         "GUID:4e58fd8b44ff4c14f917ce28647bad94",
