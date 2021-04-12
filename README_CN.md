@@ -1,8 +1,7 @@
 # TinaX Framework - Virtual Files System.
 
 <!-- <img src="https://github.com/yomunsam/TinaX.Core/raw/master/readme_res/logo.png" width = "360" height = "160" alt="logo" align=center /> -->
-<img src="Documents~/vfs_logo.png" width = "512" height = "188" alt="vfs_logo" align=center />
-<br>
+<img src="Documents~/vfs_logo.png" width = "512" height = "190" alt="vfs_logo" align=center />
 <br>
 
 [![LICENSE](https://img.shields.io/badge/license-NPL%20(The%20996%20Prohibited%20License)-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)

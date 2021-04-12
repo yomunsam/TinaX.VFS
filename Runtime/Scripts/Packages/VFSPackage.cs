@@ -9,11 +9,6 @@
  * file that was distributed with this source code.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TinaX.VFSKit.Options;
 
 namespace TinaX.VFSKit.Packages
