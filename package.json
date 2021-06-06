@@ -1,6 +1,6 @@
 {
   "name": "io.nekonya.tinax.vfs",
-  "version": "6.6.15",
+  "version": "6.6.16",
   "displayName": "TinaX.VFS",
   "description": "TinaX Framework Assets Manager System - Virtual File System.",
   "unity": "2019.4",

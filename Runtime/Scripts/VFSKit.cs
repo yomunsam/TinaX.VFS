@@ -2587,7 +2587,7 @@ namespace TinaX.VFSKit
                 //资源存在，检查：如果这个资源是LocalOrRemote，并且本地hash与云端不一致的话，则使用云端地址
                 if(group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
                 {
-                    string hash_vdisk = XFile.GetMD5(vdisk_path);
+                    string hash_vdisk = XFile.GetMD5(vdisk_path, true);
 
                     //尝试找到它在remote的hash
                     if (group.FilesHash_Remote != null)
@@ -2595,7 +2595,13 @@ namespace TinaX.VFSKit
                         if(group.FilesHash_Remote.TryGetFileHashValue(assetbundle, out var remote_hash))
                         {
                             if (!hash_vdisk.Equals(remote_hash))
-                                return group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
+                            {
+#if TINAX_DEBUG_DEV
+                                Debug.Log($"[VFS]加载AssetBundle {assetbundle} 时，本地Hash({hash_vdisk})与云端Hash{remote_hash}不一致，采用云端下载地址：{this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group)}");
+#endif
+                                //return group.GetAssetBundlePath(VirtualDiskPath, assetbundle);
+                                return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                            }
                         }
                     }
                 }
