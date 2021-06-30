@@ -32,7 +32,7 @@ namespace TinaX.VFSKitInternal
 
         public int RefCount { get; internal set; } = 0;
 
-        public UniTask LoadTask { get; internal set; }
+        public AsyncLazy LoadTask { get; internal set; }
 
         public List<VFSAsset> Assets = new List<VFSAsset>();
 
@@ -86,7 +86,7 @@ namespace TinaX.VFSKitInternal
             Dependencies.Clear();
             DependenciesNames = null;
             this.ABLoader = null;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
         }
 
 
@@ -174,7 +174,7 @@ namespace TinaX.VFSKitInternal
             await DoLoadAsync();
 
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
         }
 
         private async UniTask DoLoadAsync()
@@ -214,7 +214,7 @@ namespace TinaX.VFSKitInternal
                 this.AssetBundle = null;
             }
             this.ABLoader = null;
-            this.LoadTask = UniTask.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.Dependencies = null;
             this.DependenciesNames = null;
         }

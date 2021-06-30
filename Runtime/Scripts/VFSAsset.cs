@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,7 +40,7 @@ namespace TinaX.VFSKitInternal
         //    }
         //}
 
-        public Task LoadTask { get; internal set; }
+        public AsyncLazy LoadTask { get; internal set; }
 
         public int AssetHashCode { get; private protected set; } = -1;
 
@@ -113,7 +113,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = await this.Bundle.AssetBundle.LoadAssetAsync<T>(this.AssetPathLower);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -132,7 +132,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = await this.Bundle.AssetBundle.LoadAssetAsync(this.AssetPathLower,type);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -151,7 +151,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = this.Bundle.AssetBundle.LoadAsset<T>(this.AssetPathLower);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }
@@ -170,7 +170,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = this.Bundle.AssetBundle.LoadAsset(this.AssetPathLower, type);
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this._asset.GetHashCode();
             RegisterToBundle();
         }

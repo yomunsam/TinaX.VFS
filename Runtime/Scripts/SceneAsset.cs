@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,7 +37,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = null;
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this.GetHashCode();
             base.RegisterToBundle();
 
@@ -58,7 +58,7 @@ namespace TinaX.VFSKitInternal
                 this._asset = null;
             }
             this.LoadState = AssetLoadState.Loaded;
-            this.LoadTask = Task.CompletedTask;
+            this.LoadTask = UniTask.CompletedTask.ToAsyncLazy();
             this.AssetHashCode = this.GetHashCode();
             base.RegisterToBundle();
         }
