@@ -1,4 +1,4 @@
-namespace TinaX.VFSKit.Packages
+namespace TinaX.VFS.Packages
 {
     /// <summary>
     /// 扩展包

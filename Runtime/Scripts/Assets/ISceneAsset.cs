@@ -1,4 +1,4 @@
-namespace TinaX.VFSKit
+namespace TinaX.VFS
 {
     public interface ISceneAsset
     {

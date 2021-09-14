@@ -1,6 +1,6 @@
-using TinaX.VFSKit.Options;
+using TinaX.VFS.Options;
 
-namespace TinaX.VFSKit.Packages
+namespace TinaX.VFS.Packages
 {
     /// <summary>
     /// 主包（母包）

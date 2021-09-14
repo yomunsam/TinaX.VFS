@@ -1,21 +1,31 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
+using TinaX.Exceptions;
 using TinaX.Options;
-using TinaX.VFSKit.Internal;
+using TinaX.VFS.Const;
+using TinaX.VFS.Internal;
 using UObject = UnityEngine.Object;
 
 
-namespace TinaX.VFSKit.Services
+namespace TinaX.VFS.Services
 {
     public class VFSService : IVFS, IVFSInternal, TinaX.Services.IAssetService
     {
-        #region 构造函数
+        private readonly IOptions<VFSOption> m_Option;
+
         public VFSService(IOptions<VFSOption> option)
         {
-
+            this.m_Option = option;
         }
 
-        #endregion
+        /// <summary>
+        /// 实现了IAssetService内置方法的实现者名字
+        /// </summary>
+        string TinaX.Services.Builtin.Base.IBuiltinServiceBase.ImplementerName => VFSConst.ServiceName;
+
+        
 
         #region 接口实现 同步加载资产系列
         public UObject Load(string assetPath, Type type)
@@ -81,7 +91,7 @@ namespace TinaX.VFSKit.Services
         #endregion
 
         #region 实现接口 异步加载 async/await系列
-        public Task<T> LoadAsync<T>(string assetPath) where T : UObject
+        public Task<T> LoadAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject
         {
             throw new NotImplementedException();
         }
@@ -121,10 +131,9 @@ namespace TinaX.VFSKit.Services
 
         #region 生命周期
 
-        public async Task<XException> StartAsync()
+        public async UniTask StartAsync()
         {
-            await Task.CompletedTask;
-            return null;
+            await UniTask.CompletedTask;
         }
 
 

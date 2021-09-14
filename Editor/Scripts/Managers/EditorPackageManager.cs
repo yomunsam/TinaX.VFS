@@ -1,7 +1,7 @@
-using TinaX.VFSKit.Managers;
-using TinaX.VFSKit.Options;
+using TinaX.VFS.Managers;
+using TinaX.VFS.Options;
 
-namespace TinaXEditor.VFSKit.Managers
+namespace TinaXEditor.VFS.Managers
 {
     public class EditorPackageManager : PackageManager
     {

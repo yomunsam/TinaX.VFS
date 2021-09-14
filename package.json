@@ -19,6 +19,6 @@
   "license":"MIT",
   "dependencies": {
     "io.nekonya.tinax.core": "6.6.21",
-    "com.unity.scriptablebuildpipeline":"1.14.1"
+    "com.unity.scriptablebuildpipeline":"1.19.2"
   }
 }

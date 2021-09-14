@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using TinaX.VFSKit.Options;
-using TinaX.VFSKit.Packages;
+using TinaX.VFS.Options;
+using TinaX.VFS.Packages;
 
-namespace TinaX.VFSKit.Managers
+namespace TinaX.VFS.Managers
 {
     /// <summary>
     /// 管理Packages的管理器

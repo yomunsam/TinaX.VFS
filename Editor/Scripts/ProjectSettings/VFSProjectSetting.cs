@@ -1,13 +1,13 @@
 using UnityEditor;
 
-namespace TinaXEditor.VFSKit.ProjectSettings.Internal
+namespace TinaXEditor.VFS.ProjectSettings.Internal
 {
     public static class VFSProjectSetting
     {
-        [SettingsProvider]
-        public static SettingsProvider GetSetting()
-        {
-            return new SettingsProvider()
-        }
+        //[SettingsProvider]
+        //public static SettingsProvider GetSetting()
+        //{
+        //    return new SettingsProvider()
+        //}
     }
 }

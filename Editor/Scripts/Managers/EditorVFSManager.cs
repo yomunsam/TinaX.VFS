@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TinaX;
-using TinaX.VFSKit.Configuration;
-using TinaX.VFSKit.Const;
+using TinaX.VFS.ConfigAssets;
+using TinaX.VFS.Const;
+using TinaXEditor.Core.Utils;
 using UnityEditor;
 
-namespace TinaXEditor.VFSKit.Managers
+namespace TinaXEditor.VFS.Managers
 {
     [InitializeOnLoad]
     public static class EditorVFSManager
     {
-        private static VFSConfScriptableObj m_Config;
+        private static VFSConfigAsset m_Config;
 
         static EditorVFSManager()
         {
@@ -23,7 +18,7 @@ namespace TinaXEditor.VFSKit.Managers
 
         private static void Refresh()
         {
-            m_Config = XConfig.GetConfig<VFSConfScriptableObj>(VFSConst.ConfigFilePath_Resources, AssetLoadType.Resources, false);
+            m_Config = EditorConfigAssetUtil.GetConfigFromDefaultFolder<VFSConfigAsset>(VFSConst.DefaultConfigAssetName);
             if (m_Config == null)
                 return;
         }

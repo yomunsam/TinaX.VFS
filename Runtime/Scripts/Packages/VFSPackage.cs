@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-using TinaX.VFSKit.Options;
+using TinaX.VFS.Options;
 
-namespace TinaX.VFSKit.Packages
+namespace TinaX.VFS.Packages
 {
     /*
      * VFS Package是对VFS 6.x中Group概念的进一步梳理。

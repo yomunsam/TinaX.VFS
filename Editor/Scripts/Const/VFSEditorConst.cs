@@ -1,4 +1,4 @@
-namespace TinaXEditor.VFSKit.Const
+namespace TinaXEditor.VFS.Const
 {
     class VFSEditorConst
     {

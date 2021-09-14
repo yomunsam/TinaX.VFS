@@ -1,9 +1,9 @@
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
-namespace TinaX.VFSKit.Internal
+namespace TinaX.VFS.Internal
 {
     public interface IVFSInternal
     {
-        Task<XException> StartAsync();
+        UniTask StartAsync();
     }
 }

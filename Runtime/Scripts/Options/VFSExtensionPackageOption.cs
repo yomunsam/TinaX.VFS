@@ -1,4 +1,4 @@
-namespace TinaX.VFSKit.Options
+namespace TinaX.VFS.Options
 {
     /// <summary>
     /// VFS Extension Package Option

@@ -1,8 +1,10 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using TinaX.Exceptions;
 using UObject = UnityEngine.Object;
 
-namespace TinaX.VFSKit
+namespace TinaX.VFS
 {
     public interface IVFS
     {
@@ -29,7 +31,7 @@ namespace TinaX.VFSKit
         #endregion
 
         #region 异步加载 async/await系列
-        Task<T> LoadAsync<T>(string assetPath) where T : UObject;
+        Task<T> LoadAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject;
         Task<UObject> LoadAsync(string assetPath, Type type);
 
         Task<IAsset> LoadAssetAsync<T>(string assetPath) where T : UObject;

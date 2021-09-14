@@ -1,7 +1,7 @@
 using System;
 using UObject = UnityEngine.Object;
 
-namespace TinaX.VFSKit
+namespace TinaX.VFS
 {
     public interface IAsset : IDisposable
     {
