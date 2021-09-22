@@ -12,6 +12,7 @@
 using System;
 using TinaX.Options;
 using TinaX.VFS;
+using TinaX.VFS.Options;
 
 namespace TinaX.Services
 {

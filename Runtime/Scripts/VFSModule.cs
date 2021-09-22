@@ -31,7 +31,7 @@ namespace TinaX.VFS
 #if TINAX_DEV
             Debug.Log("VFS Module 开始启动");
 #endif
-            await services.Get<IVFSInternal>().StartAsync();
+            await services.Get<IVFSInternal>().StartAsync(cancellationToken);
             return ModuleBehaviourResult.CreateSuccess(ModuleName);
         }
 

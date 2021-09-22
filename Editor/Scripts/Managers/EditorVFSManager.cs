@@ -1,7 +1,9 @@
 using TinaX.VFS.ConfigAssets;
 using TinaX.VFS.Const;
-using TinaXEditor.Core.Utils;
+using TinaXEditor.Core;
+using TinaXEditor.VFS.ScriptableSingletons;
 using UnityEditor;
+using UnityEngine;
 
 namespace TinaXEditor.VFS.Managers
 {
@@ -18,9 +20,15 @@ namespace TinaXEditor.VFS.Managers
 
         private static void Refresh()
         {
-            m_Config = EditorConfigAssetUtil.GetConfigFromDefaultFolder<VFSConfigAsset>(VFSConst.DefaultConfigAssetName);
+            if (Application.isPlaying)
+                return;
+            m_Config = EditorConfigAsset.GetConfig<VFSConfigAsset>(VFSConst.DefaultConfigAssetName);
             if (m_Config == null)
                 return;
+
+            ScriptableSingleton<EditorVFSOptionScriptableSingleton>.instance.VFSConfigAsset = m_Config;
         }
+
+        
     }
 }
