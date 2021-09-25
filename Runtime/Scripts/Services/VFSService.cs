@@ -29,7 +29,7 @@ namespace TinaX.VFS.Services
         /// <summary>
         /// 实现了IAssetService内置方法的实现者名字
         /// </summary>
-        string TinaX.Services.Builtin.Base.IBuiltinServiceBase.ImplementerName => VFSConst.ServiceName;
+        string TinaX.Services.Builtin.Base.IBuiltinServiceBase.ImplementerName => VFSConsts.ServiceName;
 
 
         #region 接口实现 同步加载资产系列
@@ -180,6 +180,9 @@ namespace TinaX.VFS.Services
              * 而VFS正是IAssetService的实现者，因此在VFS的启动过程中，不能用IConfigAssetService来加载资产，
              * VFS的配置资产需要自行解决加载问题
              */
+
+            return UniTask.FromResult<VFSConfigAsset>(null);
+
         }
 
     }

@@ -24,6 +24,5 @@ namespace TinaX.VFS.Packages
     {
         public VFSPackage() { }
 
-        public VFSPackage(VFSPackageOption option) { }
     }
 }

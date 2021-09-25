@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Const;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace TinaX.VFS.ConfigAssets
     /// VFS配置 资产
     /// </summary>
 #if TINAX_DEV
-    [CreateAssetMenu(fileName = VFSConst.DefaultConfigAssetName, menuName = "TinaX Dev/Create VFS Config Asset", order = 11)]
+    [CreateAssetMenu(fileName = VFSConsts.DefaultConfigAssetName, menuName = "TinaX Dev/Create VFS Config Asset", order = 11)]
 #endif
     public class VFSConfigAsset : ScriptableObject
     {
@@ -21,8 +22,18 @@ namespace TinaX.VFS.ConfigAssets
         /// </summary>
         public List<string> GlobalIgnoreExtensions = new List<string>();
 
+        /// <summary>
+        /// 全局忽略的文件夹名
+        /// </summary>
+        public List<string> GlobalIgnoreFolderName = new List<string>();
 
-        public List<VFSGroupConfigAsset> Groups = new List<VFSGroupConfigAsset>();
+        [Header("Main Package")]
+        public MainPackageConfigTpl MainPackage = new MainPackageConfigTpl();
+
+        /// <summary>
+        /// 扩展包
+        /// </summary>
+        public List<ExpansionPackConfigTpl> ExpansionPacks = new List<ExpansionPackConfigTpl>();
 
         public VFSConfigAsset()
         {
@@ -31,7 +42,7 @@ namespace TinaX.VFS.ConfigAssets
             //用于在编辑器上首次生成这个Asset文件时给它一些默认值, 所以这部分代码仅编辑器下可用，出包之后会剔除掉节省体积
 
             Enable = true;
-            DefaultAssetBundleVariant = VFSConst.DefaultAssetBundleVariant;
+            DefaultAssetBundleVariant = VFSConsts.DefaultAssetBundleVariant;
 
             GlobalIgnoreExtensions.AddRange(new string[]
             {
@@ -43,15 +54,14 @@ namespace TinaX.VFS.ConfigAssets
                 ".dll",
                 ".so"
             });
-            GlobalIgnoreExtensions.AddRange(VFSConst.GlobalIgnoreExtensions);
+            GlobalIgnoreExtensions.AddRange(VFSConsts.GlobalIgnoreExtensions);
 
-
-            Groups.Add(new VFSGroupConfigAsset
-            {
-
-            });
-
+            GlobalIgnoreFolderName.AddRange(VFSConsts.GlobalIgnoreFolderName);
             #endregion
+#endif
+
+#if UNITY_EDITOR && !TINAX_CONFIG_NO_RESOURCES
+            GlobalIgnoreFolderName.AddRange(new string[] { "Resources" });
 #endif
 
         }

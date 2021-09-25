@@ -1,6 +1,6 @@
 namespace TinaX.VFS.Const
 {
-    public static class VFSConst
+    public static class VFSConsts
     {
         public const string ServiceName = "TinaX.VFS";
         public const string DefaultConfigAssetName = "VFS";
@@ -9,6 +9,13 @@ namespace TinaX.VFS.Const
         /// 默认AssetBundle Variant
         /// </summary>
         public const string DefaultAssetBundleVariant = ".xa";
+
+        /// <summary>
+        /// VFS配置模板（VFSConfigTpl）生成的Json文件的名字，
+        /// 按照约定它应该放在Virtual Space中主包的data目录下
+        /// </summary>
+        public const string VFSConfigJsonFileName = "vfs.conf.json";
+
 
         /// <summary>
         /// 全局强制忽略的文件扩展名
@@ -22,7 +29,7 @@ namespace TinaX.VFS.Const
         /// <summary>
         /// 全局强制忽略的路径项
         /// </summary>
-        public static string[] GlobalIgnorePathItem =
+        public static string[] GlobalIgnoreFolderName =
         {
             "Editor",
         };

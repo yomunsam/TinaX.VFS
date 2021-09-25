@@ -1,4 +1,4 @@
-using TinaX.VFS.ConfigAssets;
+using TinaX.VFS.ConfigAssets.Loader;
 using TinaX.VFS.Const;
 
 namespace TinaX.VFS.Options
@@ -13,7 +13,7 @@ namespace TinaX.VFS.Options
         /// </summary>
         public bool Enable { get; set; }
 
-        public string ConfigAssetLoadPath { get; set; } = VFSConst.DefaultConfigAssetName;
+        public string ConfigAssetLoadPath { get; set; } = VFSConsts.DefaultConfigAssetName;
 
 
         public VFSConfigAssetLoader ConfigAssetLoader { get; } = new VFSConfigAssetLoader();

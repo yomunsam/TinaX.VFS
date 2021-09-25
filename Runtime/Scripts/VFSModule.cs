@@ -15,7 +15,7 @@ namespace TinaX.VFS
     [ModuleProviderOrder(80)]
     public class VFSModule : IModuleProvider
     {
-        public string ModuleName => VFSConst.ServiceName;
+        public string ModuleName => VFSConsts.ServiceName;
 
 
         public UniTask<ModuleBehaviourResult> OnInit(IServiceContainer services, CancellationToken cancellationToken)
