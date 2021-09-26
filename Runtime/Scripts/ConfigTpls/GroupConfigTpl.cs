@@ -39,6 +39,7 @@ namespace TinaX.VFS.ConfigTpls
 
         public List<string> IgnoreSubPath = new List<string>();
 
+
         public List<FolderBuildRule> FolderSpecialBuildRules = new List<FolderBuildRule>();
 
     }

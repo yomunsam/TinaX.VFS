@@ -89,7 +89,7 @@ namespace TinaX.VFS.ConfigAssets.Loader
         /// </summary>
         private void StandardizedIgnoreExtensions(ref List<string> extensions)
         {
-            for(var i = 0; i < extensions.Count; i++)
+            for(var i = extensions.Count - 1; i >= 0; i--)
             {
                 //小写和删首尾空格
                 extensions[i] = extensions[i].ToLower().Trim();
@@ -97,6 +97,10 @@ namespace TinaX.VFS.ConfigAssets.Loader
                 //确保前头有点号，比如配置项是"txt",标准化之后是".txt"
                 if (!extensions[i].StartsWith("."))
                     extensions[i] = "." + extensions[i];
+
+                //如果配置项就是一个单纯的点，或者是空字符串，就删掉这项
+                if (extensions[i] == "." || string.IsNullOrEmpty(extensions[i]) || string.IsNullOrWhiteSpace(extensions[i]))
+                    extensions.RemoveAt(i);//因为这儿有Remove，所以这个判断必须放在循环的最后面
             }
 
             //去重复
@@ -118,8 +122,8 @@ namespace TinaX.VFS.ConfigAssets.Loader
                 if (!folders[i].EndsWith("/"))
                     folders[i] = folders[i] + "/";
 
-                //如果有Assets 或 assets ，删掉
-                if (folders[i] == "/assets/")
+                //如果有Assets 或 assets ，删掉 | 如果配置项是空的也删掉
+                if (folders[i] == "/assets/" || string.IsNullOrEmpty(folders[i]) || string.IsNullOrWhiteSpace(folders[i]))
                     folders.RemoveAt(i); //因为这儿有Remove，所以这个判断必须放在循环的最后面
             }
 

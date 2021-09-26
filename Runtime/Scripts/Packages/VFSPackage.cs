@@ -9,7 +9,8 @@
  * file that was distributed with this source code.
  */
 
-using TinaX.VFS.Options;
+using System.Collections.Generic;
+using TinaX.VFS.Groups;
 
 namespace TinaX.VFS.Packages
 {
@@ -23,6 +24,8 @@ namespace TinaX.VFS.Packages
     public class VFSPackage
     {
         public VFSPackage() { }
+
+        public List<VFSGroup> Groups { get; private set; } = new List<VFSGroup>();
 
     }
 }
