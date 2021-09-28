@@ -8,6 +8,7 @@ namespace TinaX.VFS.BuildRules
     {
         public string Path;
         public FolderBuildType FolderBuildType;
-        public List<string> Tags;
+        //public bool EditorOnly;
+        public List<string> BuildTags;
     }
 }

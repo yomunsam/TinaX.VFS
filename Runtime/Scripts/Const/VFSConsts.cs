@@ -16,6 +16,10 @@ namespace TinaX.VFS.Const
         /// </summary>
         public const string VFSConfigJsonFileName = "vfs.conf.json";
 
+        /// <summary>
+        /// 固定资产构建Tag: Editor Only
+        /// </summary>
+        public const string BuildTag_EditorOnly = @"Editor";
 
         /// <summary>
         /// 全局强制忽略的文件扩展名

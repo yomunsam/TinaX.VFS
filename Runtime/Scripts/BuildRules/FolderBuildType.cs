@@ -19,5 +19,10 @@ namespace TinaX.VFS.BuildRules
         /// 子文件夹：给定目录中每个子文件夹打成一个AssetBundle
         /// </summary>
         Subfolders  = 2,
+
+        /// <summary>
+        /// 继承：继承上级目录的规则
+        /// </summary>
+        Inherit = 3,
     }
 }

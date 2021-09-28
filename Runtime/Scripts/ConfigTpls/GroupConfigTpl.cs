@@ -42,6 +42,16 @@ namespace TinaX.VFS.ConfigTpls
 
         public List<FolderBuildRule> FolderSpecialBuildRules = new List<FolderBuildRule>();
 
+        /// <summary>
+        /// 资产变体规则
+        /// </summary>
+        public List<AssetVariantRule> AssetVariants = new List<AssetVariantRule>();
+
+        /// <summary>
+        /// 资产变体（文件夹）规则
+        /// </summary>
+        public List<FolderVariantRule> FolderVariants = new List<FolderVariantRule>();
+
     }
 
 #pragma warning restore CA2235 // Mark all non-serializable fields
