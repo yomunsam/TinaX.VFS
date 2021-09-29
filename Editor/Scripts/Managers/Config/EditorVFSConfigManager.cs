@@ -1,19 +1,13 @@
 using TinaX.VFS.ConfigAssets;
-using TinaX.VFS.Const;
+using TinaX.VFS.Consts;
 using TinaXEditor.Core;
 
 namespace TinaXEditor.VFS.Managers.Config
 {
-    [UnityEditor.InitializeOnLoad]
     public static class EditorVFSConfigManager
     {
         private static VFSConfigAsset _VFSConfigAsset;
-
-        static EditorVFSConfigManager()
-        {
-
-        }
-
+        
         public static VFSConfigAsset ConfigAsset
         {
             get
@@ -25,8 +19,5 @@ namespace TinaXEditor.VFS.Managers.Config
                 return _VFSConfigAsset;
             }
         }
-
-        
-
     }
 }

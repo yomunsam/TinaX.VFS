@@ -5,7 +5,7 @@ using TinaX.Exceptions;
 using TinaX.Options;
 using TinaX.Services.ConfigAssets;
 using TinaX.VFS.ConfigAssets;
-using TinaX.VFS.Const;
+using TinaX.VFS.Consts;
 using TinaX.VFS.Internal;
 using TinaX.VFS.Options;
 using UnityEngine;
@@ -96,6 +96,8 @@ namespace TinaX.VFS.Services
         #endregion
 
         #region 实现接口 异步加载 async/await系列
+
+
         public UniTask<T> LoadAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject
         {
             throw new NotImplementedException();
@@ -106,15 +108,30 @@ namespace TinaX.VFS.Services
             throw new NotImplementedException();
         }
 
-        public UniTask<IAsset> LoadAssetAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject
-        {
-            throw new NotImplementedException();
-        }
+        //public UniTask<IAsset> LoadAssetAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public UniTask<IAsset> LoadAssetAsync(string assetPath, Type type, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// VFS 7加载入口
+        /// </summary>
+        /// <typeparam name="TAsset"></typeparam>
+        /// <param name="assetPath"></param>
+        /// <param name="variant"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public UniTask<IAsset<TAsset>> LoadAssetAsync<TAsset>(string assetPath, string variant = null, CancellationToken cancellationToken = default) where TAsset : UObject
+        {
+            //查询资产路径
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region 实现接口 加载Scene

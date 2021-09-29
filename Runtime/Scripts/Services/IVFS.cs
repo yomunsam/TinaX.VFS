@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using TinaX.Exceptions;
 using UObject = UnityEngine.Object;
@@ -35,8 +34,17 @@ namespace TinaX.VFS
         UniTask<T> LoadAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject;
         UniTask<UObject> LoadAsync(string assetPath, Type type, CancellationToken cancellationToken = default);
 
-        UniTask<IAsset> LoadAssetAsync<T>(string assetPath, CancellationToken cancellationToken = default) where T : UObject;
         UniTask<IAsset> LoadAssetAsync(string assetPath, Type type, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 异步加载资产
+        /// </summary>
+        /// <typeparam name="TAsset">资产类型</typeparam>
+        /// <param name="assetPath">加载路径</param>
+        /// <param name="variant">变体</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        UniTask<IAsset<TAsset>> LoadAssetAsync<TAsset>(string assetPath, string variant = null, CancellationToken cancellationToken = default) where TAsset : UObject;
         #endregion
 
         #region 加载Scene
@@ -47,6 +55,7 @@ namespace TinaX.VFS
         #endregion
 
         void Release(UObject asset);
+        
     }
 }
 

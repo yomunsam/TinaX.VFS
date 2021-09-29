@@ -15,19 +15,9 @@ namespace TinaX.VFS.ConfigTpls
         public bool Enable;
 
         /// <summary>
-        /// 默认AssetBundle变体（Variant）
+        /// 全局资产配置
         /// </summary>
-        public string DefaultAssetBundleVariant;
-
-        /// <summary>
-        /// 全局忽略的文件夹名
-        /// </summary>
-        public List<string> GlobalIgnoreExtensions = new List<string>();
-
-        /// <summary>
-        /// 全局忽略的文件夹名
-        /// </summary>
-        public List<string> GlobalIgnoreFolderName = new List<string>();
+        public GlobalAssetConfigTpl GlobalAssetConfig = new GlobalAssetConfigTpl();
 
         /// <summary>
         /// 主包配置

@@ -14,9 +14,9 @@ namespace TinaX.VFS.BuildRules
         /// <summary>
         /// 根源资产路径
         /// </summary>
-        public string SourceAssetPath;
+        public string SourceAssetPath; //Runtime的标准化时候不会把这个变成小写
 
-        public List<AssetVariant> Variants;
+        public List<AssetVariant> Variants; //标准化时排序，按照AssetPath的文本长度从小到大往下排序
     }
 #pragma warning restore CA2235 // Mark all non-serializable fields
 #pragma warning restore CA1815 // Override equals and operator equals on value types

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Const;
+using TinaX.VFS.Consts;
 using UnityEngine;
 
 namespace TinaX.VFS.ConfigAssets
@@ -15,17 +15,10 @@ namespace TinaX.VFS.ConfigAssets
     {
         public bool Enable;
 
-        public string DefaultAssetBundleVariant;
-
         /// <summary>
-        /// 全局忽略后缀
+        /// 全局资产配置
         /// </summary>
-        public List<string> GlobalIgnoreExtensions = new List<string>();
-
-        /// <summary>
-        /// 全局忽略的文件夹名
-        /// </summary>
-        public List<string> GlobalIgnoreFolderName = new List<string>();
+        public GlobalAssetConfigTpl GlobalAssetConfig = new GlobalAssetConfigTpl();
 
         [Header("Main Package")]
         public MainPackageConfigTpl MainPackage = new MainPackageConfigTpl();
@@ -42,9 +35,9 @@ namespace TinaX.VFS.ConfigAssets
             //用于在编辑器上首次生成这个Asset文件时给它一些默认值, 所以这部分代码仅编辑器下可用，出包之后会剔除掉节省体积
 
             Enable = true;
-            DefaultAssetBundleVariant = VFSConsts.DefaultAssetBundleVariant;
+            GlobalAssetConfig.DefaultAssetBundleVariant = VFSConsts.DefaultAssetBundleVariant;
 
-            GlobalIgnoreExtensions.AddRange(new string[]
+            GlobalAssetConfig.IgnoreExtensions.AddRange(new string[]
             {
                 ".exe",
                 ".apk",
@@ -54,14 +47,14 @@ namespace TinaX.VFS.ConfigAssets
                 ".dll",
                 ".so"
             });
-            GlobalIgnoreExtensions.AddRange(VFSConsts.GlobalIgnoreExtensions);
+            GlobalAssetConfig.IgnoreExtensions.AddRange(VFSConsts.GlobalIgnoreExtensions);
 
-            GlobalIgnoreFolderName.AddRange(VFSConsts.GlobalIgnoreFolderName);
+            GlobalAssetConfig.IgnoreFolderName.AddRange(VFSConsts.GlobalIgnoreFolderName);
             #endregion
 #endif
 
 #if UNITY_EDITOR && !TINAX_CONFIG_NO_RESOURCES
-            GlobalIgnoreFolderName.AddRange(new string[] { "Resources" });
+            GlobalAssetConfig.IgnoreFolderName.AddRange(new string[] { "Resources" });
 #endif
 
         }

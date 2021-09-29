@@ -20,8 +20,8 @@ namespace TinaXEditor.VFS.Utils.Config
                 throw new ArgumentNullException(nameof(configAsset));
 
             //全局配置的标准化
-            StandardizedIgnoreExtensions(ref configAsset.GlobalIgnoreExtensions); 
-            StandardizedIgnoreFolderName(ref configAsset.GlobalIgnoreFolderName);
+            StandardizedIgnoreExtensions(ref configAsset.GlobalAssetConfig.IgnoreExtensions); 
+            StandardizedIgnoreFolderName(ref configAsset.GlobalAssetConfig.IgnoreFolderName);
 
             //主包
             //主包中的Group

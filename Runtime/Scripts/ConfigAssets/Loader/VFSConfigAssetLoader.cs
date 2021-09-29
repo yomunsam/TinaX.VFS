@@ -52,22 +52,6 @@ namespace TinaX.VFS.ConfigAssets.Loader
 
         
 
-        /// <summary>
-        /// 预处理 VFS配置模板
-        /// （只处理全局配置，包和组里的配置往后面处理）
-        /// </summary>
-        /// <param name="target"></param>
-        public void PreProcessVFSConfigTpl(ref VFSConfigTpl target)
-        {
-            target.DefaultAssetBundleVariant = target.DefaultAssetBundleVariant.ToLower(); //涉及到路径的东西最后的lower
-
-            //标准化 全局忽略文件扩展名
-            StandardizedIgnoreExtensions(ref target.GlobalIgnoreExtensions);
-
-            //标准化 全局忽略文件夹名
-            StandardizedIgnoreFolderName(ref target.GlobalIgnoreFolderName);
-        }
-
 
         #region 数据的预处理与标准化
 

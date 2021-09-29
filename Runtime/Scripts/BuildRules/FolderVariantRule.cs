@@ -16,8 +16,8 @@ namespace TinaX.VFS.BuildRules
         /// <summary>
         /// 根源 资产文件夹路径
         /// </summary>
-        public string SourceFolderPath;
-        public List<FolderVariant> Variants;
+        public string SourceFolderPath; //Runtime标准化的时候这里结尾加上斜杠（不要小写）
+        public List<FolderVariant> Variants; //标准化时排序，按照FolderPath的文本长度从小到大往下排序
     }
 
 #pragma warning restore CA2235 // Mark all non-serializable fields

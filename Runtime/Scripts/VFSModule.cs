@@ -5,7 +5,7 @@ using TinaX.Container;
 using TinaX.Module;
 using TinaX.Modules;
 using TinaX.Services;
-using TinaX.VFS.Const;
+using TinaX.VFS.Consts;
 using TinaX.VFS.Internal;
 using TinaX.VFS.Services;
 using UnityEngine;

@@ -1,5 +1,5 @@
 using TinaX.VFS.BuildRules;
-using TinaX.VFS.Const;
+using TinaX.VFS.Consts;
 
 namespace TinaX.VFS.Extensions
 {

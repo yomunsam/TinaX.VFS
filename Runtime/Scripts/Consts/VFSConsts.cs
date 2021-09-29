@@ -1,4 +1,4 @@
-namespace TinaX.VFS.Const
+namespace TinaX.VFS.Consts
 {
     public static class VFSConsts
     {

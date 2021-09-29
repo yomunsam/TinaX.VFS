@@ -23,6 +23,8 @@ namespace TinaX.VFS.Groups.ConfigProviders
 
         public virtual void Standardize()
         {
+            if (Standardized)
+                return;
             GroupStandardizationUtil.StandardizeGroup(m_Config);
             Standardized = true;
         }

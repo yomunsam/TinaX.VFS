@@ -5,7 +5,14 @@ namespace TinaX.VFS
 {
     public interface IAsset : IDisposable
     {
-        T Get<T>() where T : UObject;
-        UObject Get();
+        UObject AssetObject { get; }
+        TAsset Get<TAsset>() where TAsset : UObject;
     }
+
+    public interface IAsset<TAsset> : IAsset where TAsset : UObject
+    {
+        TAsset Asset { get; }
+        TAsset Get();
+    }
+
 }
