@@ -60,6 +60,14 @@ namespace TinaXEditor.VFS.Managers
             VFSConfigUtils.CreateAndMapToVFSConfigTpl(ref vfs_conf_asset, out m_VFSConfigTpl);
         }
 
+        public static void RefreshConfiguration()
+        {
+            EditorVFSConfigManager.Clear();
+            m_VFSConfigTpl = null;
+            m_EditorMainPack = null;
+
+            InitializeMainPack();
+        }
 
         public static EditorAssetQueryResult QueryAsset(string assetPath)
         {

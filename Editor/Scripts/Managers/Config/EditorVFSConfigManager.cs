@@ -19,5 +19,10 @@ namespace TinaXEditor.VFS.Managers.Config
                 return _VFSConfigAsset;
             }
         }
+
+        public static void Clear()
+        {
+            _VFSConfigAsset = null;
+        }
     }
 }

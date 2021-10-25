@@ -1,5 +1,6 @@
+using System;
+using TinaX.VFS.ConfigAssets;
 using TinaX.VFS.Packages;
-using TinaX.VFS.Querier;
 using TinaXEditor.Core.Utils.Localization;
 using TinaXEditor.VFS.Managers;
 using TinaXEditor.VFS.Querier;
@@ -42,7 +43,10 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
             }
         }
 
-        private static UObject m_CurrentSelectObject;
+        private static UObject m_AssetMainTypeTargetObject; //下面这个Type是根据哪个UObject获取的
+        private static Type m_AssetMainType;
+
+        private static UObject m_AssetQueryResultTargetObject; //下面这个QueryResult是根据哪个UObject查出来的
         private static EditorAssetQueryResult m_AssetQueryResult;
 
         static void OnPostHeaderGUI(Editor editor)
@@ -50,10 +54,25 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
             if(editor.targets.Length == 1)
             {
                 var assetPath = AssetDatabase.GetAssetOrScenePath(editor.target);
+
+                if (m_AssetMainTypeTargetObject == null || m_AssetMainTypeTargetObject != editor.target)
+                {
+                    m_AssetMainType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+                }
+
+                if(m_AssetMainType == typeof(UnityEditor.MonoScript)
+                    || m_AssetMainType == typeof(UnityEditor.DefaultAsset)
+                    || m_AssetMainType == typeof(VFSConfigAsset))
+                {
+                    return;
+                }
+                if (!assetPath.StartsWith("Assets/"))
+                    return;
+
                 EditorGUILayout.BeginVertical("PreBackground");
                 EditorGUILayout.LabelField(L.Title, MyStyles.Title);
 
-                if(EditorVFSManager.AssetQuerier == null)
+                if (EditorVFSManager.AssetQuerier == null)
                 {
                     EditorGUILayout.LabelField(L.Label_VFSQuerierNotInit, EditorStyles.label);
                     if(GUILayout.Button(L.Btn_InitializeVFSQuerier, GUILayout.MaxWidth(120)))
@@ -63,10 +82,10 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
                 }
                 else
                 {
-                    if(m_CurrentSelectObject == null || m_CurrentSelectObject != editor.target)
+                    if(m_AssetQueryResultTargetObject == null || m_AssetQueryResultTargetObject != editor.target)
                     {
                         m_AssetQueryResult = EditorVFSManager.QueryAsset(assetPath);
-                        m_CurrentSelectObject = editor.target;
+                        m_AssetQueryResultTargetObject = editor.target;
                     }
 
                     //查询信息
@@ -103,6 +122,7 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
 
                     }
                 }
+
                 EditorGUILayout.EndVertical();
             }
         }
@@ -245,6 +265,7 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
                     return "Variant:{0}";
                 }
             }
+
         }
     }
 }

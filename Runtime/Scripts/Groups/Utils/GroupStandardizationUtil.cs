@@ -172,9 +172,27 @@ namespace TinaX.VFS.Groups.Utils
                 }
             }
 
+            //FolderSpecialBuildRules 目录特殊构建规则
+            for(int i = group.FolderSpecialBuildRules.Count -1; i >=0; i--)
+            {
+                var rule = group.FolderSpecialBuildRules[i];
+                //删首尾空 和 小写化
+                rule.Path = rule.Path.Trim().ToLower();
+                if (!rule.Path.EndsWith("/")) //末尾加斜杠
+                    rule.Path += "/";
+                //删除空项
+                if(rule.Path.IsNullOrEmpty() || rule.Path == "/")
+                {
+                    group.FolderSpecialBuildRules.RemoveAt(i);
+                    continue;
+                }
+                group.FolderSpecialBuildRules[i] = rule;
+            }
+            //排序
+            group.FolderSpecialBuildRules = group.FolderSpecialBuildRules.OrderBy(rule => rule.Path.Length).ToList();
 
             //AssetVariants 资产变体列表
-            for(int i = group.AssetVariants.Count -1; i >=0; i--)
+            for (int i = group.AssetVariants.Count -1; i >=0; i--)
             {
                 var rule = group.AssetVariants[i];
                 //删首尾空
@@ -207,6 +225,47 @@ namespace TinaX.VFS.Groups.Utils
                 rule.Variants = rule.Variants.OrderBy(v => v.AssetPath).ToList();
 
                 group.AssetVariants[i] = rule;
+            }
+
+            //FolderVariants 资产变体（文件夹）
+            for(int i = group.FolderVariants.Count -1; i >=0; i--)
+            {
+                var rule = group.FolderVariants[i];
+                //删首尾空
+                rule.SourceFolderPath = rule.SourceFolderPath.Trim();
+                if (!rule.SourceFolderPath.EndsWith("/"))
+                    rule.SourceFolderPath += "/"; //结尾加斜杠
+
+                //删除空项
+                if (string.IsNullOrEmpty(rule.SourceFolderPath))
+                {
+                    group.AssetVariants.RemoveAt(i);
+                    continue;
+                }
+
+                //处理Variants列表
+                for (int j = rule.Variants.Count - 1; j >= 0; j--)
+                {
+                    var item = rule.Variants[j];
+                    //删首尾空 和 小写
+                    item.FolderPath = item.FolderPath.ToLower().Trim();
+                    item.Variant = item.Variant.Trim().ToLower();
+                    if (!item.FolderPath.EndsWith("/")) //结尾加斜杠
+                        item.FolderPath += "/";
+
+                    //删除空项
+                    if (item.Variant.IsNullOrEmpty() || item.FolderPath.IsNullOrEmpty())
+                    {
+                        rule.Variants.RemoveAt(j);
+                        continue;
+                    }
+
+                    rule.Variants[j] = item;
+                }
+                //排序Variants列表
+                rule.Variants = rule.Variants.OrderBy(v => v.FolderPath).ToList();
+
+                group.FolderVariants[i] = rule;
             }
 
         }

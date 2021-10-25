@@ -176,6 +176,24 @@ namespace TinaXEditor.VFS.Groups.Utils
                 }
             }
 
+            //FolderSpecialBuildRules 目录特殊构建规则
+            for (int i = group.FolderSpecialBuildRules.Count - 1; i >= 0; i--)
+            {
+                var rule = group.FolderSpecialBuildRules[i];
+                //删首尾空 和尾部可能出现的"/"
+                rule.Path = rule.Path.Trim().TrimEnd('/');
+                
+                //删除空项
+                if (rule.Path.IsNullOrEmpty())
+                {
+                    group.FolderSpecialBuildRules.RemoveAt(i);
+                    continue;
+                }
+                group.FolderSpecialBuildRules[i] = rule;
+            }
+            //排序
+            group.FolderSpecialBuildRules = group.FolderSpecialBuildRules.OrderBy(rule => rule.Path.Length).ToList();
+
             //AssetVariants 资产变体列表
             for (int i = group.AssetVariants.Count - 1; i >= 0; i--)
             {
@@ -212,6 +230,42 @@ namespace TinaXEditor.VFS.Groups.Utils
                 group.AssetVariants[i] = rule;
             }
 
+            //FolderVariants 资产变体（文件夹）
+            for (int i = group.FolderVariants.Count - 1; i >= 0; i--)
+            {
+                var rule = group.FolderVariants[i];
+                //删首尾空
+                rule.SourceFolderPath = rule.SourceFolderPath.Trim().TrimEnd('/');
+
+                //删除空项
+                if (string.IsNullOrEmpty(rule.SourceFolderPath))
+                {
+                    group.AssetVariants.RemoveAt(i);
+                    continue;
+                }
+
+                //处理Variants列表
+                for (int j = rule.Variants.Count - 1; j >= 0; j--)
+                {
+                    var item = rule.Variants[j];
+                    //删首尾空 和 小写
+                    item.FolderPath = item.FolderPath.Trim().TrimEnd('/');
+                    item.Variant = item.Variant.Trim().ToLower();
+
+                    //删除空项
+                    if (item.Variant.IsNullOrEmpty() || item.FolderPath.IsNullOrEmpty())
+                    {
+                        rule.Variants.RemoveAt(j);
+                        continue;
+                    }
+
+                    rule.Variants[j] = item;
+                }
+                //排序Variants列表
+                rule.Variants = rule.Variants.OrderBy(v => v.FolderPath).ToList();
+
+                group.FolderVariants[i] = rule;
+            }
         }
     }
 }
