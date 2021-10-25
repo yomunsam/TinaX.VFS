@@ -7,11 +7,11 @@ namespace TinaX.VFS.Packages.ConfigProviders
     /// <summary>
     /// VFS 资产包 配置提供者
     /// </summary>
-    public class PackageConfigProvider : IConfigProvider<PackageConfigTpl>
+    public class MainPackageConfigProvider : IConfigProvider<MainPackageConfigTpl>
     {
-        protected readonly PackageConfigTpl m_Config;
+        protected readonly MainPackageConfigTpl m_Config;
 
-        public PackageConfigProvider(PackageConfigTpl configTpl)
+        public MainPackageConfigProvider(MainPackageConfigTpl configTpl)
         {
             this.m_Config = configTpl;
         }
@@ -19,11 +19,13 @@ namespace TinaX.VFS.Packages.ConfigProviders
 
         public bool CheckCompleted { get; private set; } = false;
 
-        public PackageConfigTpl Configuration => m_Config;
+        public MainPackageConfigTpl Configuration => m_Config;
 
         public void Standardize()
         {
-            throw new NotImplementedException();
+            if (Standardized)
+                return;
+            Standardized = true;
         }
 
         public bool TryCheckError(out ConfigError? error)

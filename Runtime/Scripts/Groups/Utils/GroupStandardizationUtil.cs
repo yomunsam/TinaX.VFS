@@ -172,6 +172,43 @@ namespace TinaX.VFS.Groups.Utils
                 }
             }
 
+
+            //AssetVariants 资产变体列表
+            for(int i = group.AssetVariants.Count -1; i >=0; i--)
+            {
+                var rule = group.AssetVariants[i];
+                //删首尾空
+                rule.SourceAssetPath = rule.SourceAssetPath.Trim();
+                //删除空项
+                if(string.IsNullOrEmpty(rule.SourceAssetPath))
+                {
+                    group.AssetVariants.RemoveAt(i);
+                    continue;
+                }
+
+                //处理Variants列表
+                for(int j = rule.Variants.Count -1; j >=0; j--)
+                {
+                    var item = rule.Variants[j];
+                    //删首尾空 和 小写
+                    item.AssetPath = item.AssetPath.ToLower().Trim();
+                    item.Variant = item.Variant.Trim().ToLower();
+
+                    //删除空项
+                    if(item.Variant.IsNullOrEmpty() || item.AssetPath.IsNullOrEmpty())
+                    {
+                        rule.Variants.RemoveAt(j);
+                        continue;
+                    }
+
+                    rule.Variants[j] = item;
+                }
+                //排序Variants列表
+                rule.Variants = rule.Variants.OrderBy(v => v.AssetPath).ToList();
+
+                group.AssetVariants[i] = rule;
+            }
+
         }
     }
 }

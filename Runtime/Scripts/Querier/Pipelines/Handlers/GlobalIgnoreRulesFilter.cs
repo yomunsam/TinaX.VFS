@@ -14,7 +14,7 @@ namespace TinaX.VFS.Querier.Pipelines.Handlers
 
         public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result, ref VFSMainPackage mainPackage, ref ExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
         {
-            string asset_path_lower = result.AssetPathLower;
+            string asset_path_lower = result.VirtualAssetPathLower;
             //后缀名过滤
             if(globalAssetConfig.IgnoreExtensions.Any(asset_path_lower.EndsWith))
             {

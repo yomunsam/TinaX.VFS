@@ -8,8 +8,13 @@ namespace TinaX.VFS.Packages
     /// </summary>
     public class VFSExpansionPack : VFSPackage
     {
+        protected ExpansionPackConfigTpl m_ExpansionPackConfig;
         public VFSExpansionPack(IConfigProvider<ExpansionPackConfigTpl> configProvider) : base(configProvider.Configuration)
         {
+            m_ExpansionPackConfig = configProvider.Configuration;
         }
+
+        public virtual string PackageName => m_ExpansionPackConfig.Name;
+
     }
 }

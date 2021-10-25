@@ -1,23 +1,20 @@
+using TinaX;
 using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Packages;
-using TinaX.VFS.Packages.Managers;
+using TinaXEditor.VFS.Packages;
+using TinaXEditor.VFS.Packages.Managers;
 
-namespace TinaX.VFS.Querier.Pipelines.Handlers
+namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
 {
-    /// <summary>
-    /// 查询资产的Pipeline流程：隐藏AssetBundle的目录结构
-    /// 
-    /// </summary>
-    public class HideAssetBundleDirectoryStructure : IQueryAssetHandler
+    class HideAssetBundleDirectoryStructure : IEditorQueryAssetHandler
     {
-        public string HandlerName => QueryAssetHandlerNameConsts.HideDirectoryStructure;
+        public string HandlerName => EditorQueryAssetHandlerNameConsts.HideDirectoryStructure;
 
-        public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result, ref VFSMainPackage mainPackage, ref ExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, ref EditorMainPackage mainPackage, ref EditorExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
         {
             if (!result.Valid)
-                return; //无效的资产不用管了
+                return; //无效的资产不用管
 
-            if (result.HideDirectoryStructure)
+            if(result.HideDirectoryStructure)
             {
                 //我们的规则还是用原始assetBundleName（不包含后缀）计算MD5，这儿规则和TinaX 6一样
                 string assetbundle_md5_32 = result.OriginalAssetBundleName.GetMD5(true, false);

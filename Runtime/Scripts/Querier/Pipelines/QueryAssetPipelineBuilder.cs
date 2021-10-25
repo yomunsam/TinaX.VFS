@@ -9,11 +9,16 @@ namespace TinaX.VFS.Querier.Pipelines
     /// </summary>
     public class QueryAssetPipelineBuilder
     {
-        public XPipeline<IQueryAssetHandler> CreateDefault()
+
+        public XPipeline<IQueryAssetHandler> Pipeline = new XPipeline<IQueryAssetHandler>();
+
+
+
+        public static QueryAssetPipelineBuilder CreateDefault()
         {
-            var pipeline = new XPipeline<IQueryAssetHandler>();
-            AppendDefaultPipeline(ref pipeline);
-            return pipeline;
+            var builder = new QueryAssetPipelineBuilder();
+            AppendDefaultPipeline(ref builder.Pipeline);
+            return builder;
         }
 
         /// <summary>
@@ -21,7 +26,7 @@ namespace TinaX.VFS.Querier.Pipelines
         /// 如果给的是空的Pipeline，就相当于设置Pipeline
         /// </summary>
         /// <param name="pipeline"></param>
-        public void AppendDefaultPipeline(ref XPipeline<IQueryAssetHandler> pipeline)
+        public static void AppendDefaultPipeline(ref XPipeline<IQueryAssetHandler> pipeline)
         {
             if (pipeline == null)
                 throw new ArgumentNullException(nameof(pipeline));
