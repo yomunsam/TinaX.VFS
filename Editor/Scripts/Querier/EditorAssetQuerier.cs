@@ -41,7 +41,7 @@ namespace TinaXEditor.VFS.Querier
                 return !queryContext.BreakPipeline;
             });
             if (string.IsNullOrEmpty(queryResult.VariantName) && !queryResult.IsVariant)
-                queryResult.VariantName = globalAssetConfigTpl.DefaultAssetBundleVariant;
+                queryResult.VariantName = globalAssetConfigTpl.DefaultAssetBundleVariant.Trim().TrimStart('.');
 
             return queryResult;
         }

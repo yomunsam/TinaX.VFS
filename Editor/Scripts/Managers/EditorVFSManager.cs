@@ -27,6 +27,8 @@ namespace TinaXEditor.VFS.Managers
 
         public static VFSConfigTpl VFSConfig => m_VFSConfigTpl;
 
+        public static EditorMainPackage MainPackage => m_EditorMainPack;
+
         public static void InitializeAssetQuerier()
         {
             if (m_AssetQuerier != null)

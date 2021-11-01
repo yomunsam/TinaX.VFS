@@ -49,7 +49,7 @@ namespace TinaXEditor.VFS.Groups
                     continue;
                 string assetPathLower = assetPath.ToLower();
                 //管理检查
-                if (this.IsMatchedAssetPathLower(assetPath)) 
+                if (this.IsMatchedAssetPathLower(assetPathLower)) 
                 {
                     groupAssets.Add(new AssetPathAndGuid(assetPath, assetPathLower, guid));
                 }
