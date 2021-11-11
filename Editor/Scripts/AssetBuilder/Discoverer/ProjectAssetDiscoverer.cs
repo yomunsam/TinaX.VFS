@@ -1,0 +1,87 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TinaX.VFS.ConfigTpls;
+using TinaXEditor.VFS.Packages;
+using TinaXEditor.VFS.Packages.Managers;
+using TinaXEditor.VFS.Querier;
+using UnityEditor;
+using UnityEngine;
+
+namespace TinaXEditor.VFS.AssetBuilder.Discoverer
+{
+    /// <summary>
+    /// 项目资产发现器
+    /// 范围为整个Unity工程
+    /// </summary>
+    public class ProjectAssetDiscoverer : AssetDiscovererBase, IAssetDiscoverer
+    {
+        private readonly IEditorAssetQuerier m_AssetQuerier;
+        private readonly EditorMainPackage m_MainPackage;
+        private readonly EditorExpansionPackManager m_ExpansionPackManager;
+        private readonly GlobalAssetConfigTpl m_GlobalAssetConfig;
+
+        public ProjectAssetDiscoverer(IEditorAssetQuerier assetQuerier,
+            EditorMainPackage mainPackage,
+            EditorExpansionPackManager expansionPackManager,
+            GlobalAssetConfigTpl globalAssetConfig)
+        {
+            this.m_AssetQuerier = assetQuerier;
+            this.m_MainPackage = mainPackage;
+            this.m_ExpansionPackManager = expansionPackManager;
+            this.m_GlobalAssetConfig = globalAssetConfig;
+        }
+
+        /// <summary>
+        /// 是否执行过至少一次收集任务
+        /// </summary>
+        public bool Collected { get; private set; } = false;
+
+
+        /// <summary>
+        /// 收集可被管理的资产
+        /// </summary>
+        /// <returns></returns>
+        public async Task CollectManageableAssetsAsync()
+        {
+            var guids = AssetDatabase.FindAssets("", new string[] { "Assets/" });
+            Debug.LogFormat("guids count:{0}", guids.Length);
+            foreach(var guid in guids)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+                
+                //忽略文件夹、C#代码等内容
+                if(type == typeof(UnityEditor.MonoScript)
+                    || type == typeof(UnityEditor.DefaultAsset))
+                {
+                    continue;
+                }
+
+                //在查询器中查询该资产
+                var query_result = m_AssetQuerier.QueryAsset(assetPath, m_MainPackage, m_ExpansionPackManager, m_GlobalAssetConfig);
+                if (!query_result.Valid)
+                    return;
+
+                //整理信息
+                UpdateAssetBundleInfo(ref query_result);
+            }
+
+            await Task.CompletedTask;
+            Collected = true;
+        }
+
+        public Task<AssetBundleBuild[]> GetUnityAssetBundleBuilds()
+        {
+            var result = new List<AssetBundleBuild>(this.m_AssetBundleInfoList.Count);
+            foreach(var item in this.m_AssetBundleInfoList)
+            {
+                result.Add(item.GetUnityAssetBundleBuild());
+            }
+            return Task.FromResult(result.ToArray());
+        }        
+
+    }
+}
