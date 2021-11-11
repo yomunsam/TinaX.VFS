@@ -1,8 +1,6 @@
 using System.IO;
 using TinaX.Systems.Pipeline;
 using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Querier;
-using TinaX.VFS.Querier.Pipelines;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 using TinaXEditor.VFS.Querier.Pipelines;
@@ -12,7 +10,7 @@ namespace TinaXEditor.VFS.Querier
     /// <summary>
     /// 编辑器下的资产查询器
     /// </summary>
-    public class EditorAssetQuerier
+    public class EditorAssetQuerier : IEditorAssetQuerier
     {
         protected readonly XPipeline<IEditorQueryAssetHandler> m_Pipleline;
 

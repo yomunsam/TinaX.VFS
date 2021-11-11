@@ -6,6 +6,7 @@ using TinaX.VFS.Utils.Configs;
 using TinaXEditor.VFS.Managers.Config;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.ConfigProviders;
+using TinaXEditor.VFS.Packages.Managers;
 using TinaXEditor.VFS.Querier;
 using TinaXEditor.VFS.Querier.Pipelines;
 
@@ -28,6 +29,9 @@ namespace TinaXEditor.VFS.Managers
         public static VFSConfigTpl VFSConfig => m_VFSConfigTpl;
 
         public static EditorMainPackage MainPackage => m_EditorMainPack;
+
+        public static EditorExpansionPackManager ExpansionPackManager => null;
+
 
         public static void InitializeAssetQuerier()
         {
