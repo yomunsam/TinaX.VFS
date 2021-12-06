@@ -24,7 +24,7 @@ namespace TinaX.VFS.Packages
     /// <summary>
     /// VFS Package
     /// </summary>
-    public class VFSPackage
+    public abstract class VFSPackage
     {
         protected readonly PackageConfigTpl m_Config;
 
@@ -124,7 +124,14 @@ namespace TinaX.VFS.Packages
             return false;
         }
 
-        
+        /// <summary>
+        /// 获取本包在Virtual Space中的AssetBundle存储根目录
+        /// </summary>
+        /// <param name="virtualSpacePath"></param>
+        /// <param name="platformName"></param>
+        /// <returns></returns>
+
+        public abstract string GetAssetBundleRootFolder(string virtualSpacePath, string platformName);
 
     }
 }

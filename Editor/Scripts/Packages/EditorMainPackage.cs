@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Packages;
+using TinaX.VFS.Utils;
 using TinaXEditor.VFS.Groups;
 using TinaXEditor.VFS.Groups.ConfigProviders;
 using TinaXEditor.VFS.Querier;
@@ -121,17 +124,36 @@ namespace TinaXEditor.VFS.Packages
         }
 
         /// <summary>
-        /// 获取虚拟资产路径 基于是否有变体的设定
+        /// 从构建输出目录中，复制AssetBundle到Virtual Space目录
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="buildOutputFolder"></param>
+        /// <param name="virtualSpace"></param>
         /// <returns></returns>
-        //protected virtual string GetVirtualAssetPathLowerByVariantOrNot(ref EditorAssetQueryResult result)
-        //{
-        //    if (result.IsVariant)
-        //        return result.VariantSourceAssetPathLower;
-        //    else
-        //        return result.AssetPathLower;
-        //}
+        public virtual Task CopyAssetBundlesFromBuildOutputFolderToVirtualSpace(string buildOutputFolder, string virtualSpace, string platformName, EditorAssetQueryResult[] queryResults)
+        {
+            string abRootFolderInVSpace = GetAssetBundleRootFolder(virtualSpace, platformName);
+            foreach(var item in queryResults)
+            {
+                var fileName = VFSUtils.GetAssetBundleFileName(item.AssetBundleName, item.VariantName);
+                var filePath_outputFolder = Path.Combine(buildOutputFolder, fileName);
+
+                if(File.Exists(filePath_outputFolder))
+                {
+                    var targetFilePath = Path.Combine(abRootFolderInVSpace, fileName);
+                    var targetFileFolder = Path.GetDirectoryName(targetFilePath);
+                    if (!Directory.Exists(targetFileFolder))
+                        Directory.CreateDirectory(targetFileFolder);
+
+                    if (File.Exists(targetFilePath))
+                        File.Delete(targetFilePath);
+                    File.Copy(filePath_outputFolder, targetFilePath);
+                }
+            }
+
+            //Todo: 这玩意以后可以改成多线程的
+
+            return Task.CompletedTask;
+        }
 
     }
 }

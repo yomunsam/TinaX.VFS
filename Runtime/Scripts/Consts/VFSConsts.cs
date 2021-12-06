@@ -37,5 +37,21 @@ namespace TinaX.VFS.Consts
         {
             "Editor",
         };
+
+        /// <summary>
+        /// 项目工程中（Editor），存储VFS数据的路径
+        /// </summary>
+        public const string ProjectVFSArchiveFolder = "TinaX/VFS";
+
+        /// <summary>
+        /// 工程中（Editor）的Virtual Space的文件名名称
+        /// </summary>
+        public const string VirtualSpaceFolderNameInProject = "VSpace";
+
+        /// <summary>
+        /// Runtime模式的Virtual Space的文件名名称
+        /// </summary>
+        public const string VirtualSpaceFolderNameInRuntime = "VFS_VSpace";
+
     }
 }

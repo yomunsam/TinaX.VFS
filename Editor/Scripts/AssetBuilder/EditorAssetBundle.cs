@@ -11,6 +11,13 @@ namespace TinaXEditor.VFS.AssetBuilder
 
         public List<EditorAssetInfo> Assets { get; set; }
 
+        public bool ManagedByMainPack { get; set; }
+
+        /// <summary>
+        /// If not mainpackage, expansion package name
+        /// </summary>
+        public string PackageName { get; set; }
+
 
         public AssetBundleBuild GetUnityAssetBundleBuild()
         {

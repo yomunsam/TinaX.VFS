@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TinaX.VFS.Packages;
 using TinaXEditor.VFS.Querier;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
         /// </summary>
         protected List<EditorAssetBundle> m_AssetBundleInfoList = new List<EditorAssetBundle>();
 
+        protected List<EditorAssetQueryResult> m_AssetQueryResults = new List<EditorAssetQueryResult>();
 
 
         protected virtual void UpdateAssetBundleInfo(ref EditorAssetQueryResult queryResult)
@@ -38,7 +40,12 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
                 {
                     AssetBundleName = queryResult.AssetBundleName,
                     AssetBundleVariant = queryResult.VariantName,
+                    ManagedByMainPack = queryResult.ManagedByMainPack,
                 };
+                if(!queryResult.ManagedByMainPack)
+                {
+                    assetBundleInfo.PackageName = (queryResult.ManagedPackage as VFSExpansionPack).PackageName;
+                }
                 m_AssetBundleInfoDict[queryResult.AssetBundleName].Add(queryResult.VariantName, assetBundleInfo);
             }
 
@@ -59,7 +66,8 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
                     FileNameInAssetBundle = queryResult.FileNameInAssetBundle
                 });
             }
-            
+
+
         }
 
 

@@ -1,6 +1,7 @@
 namespace TinaXEditor.VFS.Const
 {
-    class VFSEditorConsts
+    public static class VFSEditorConsts
     {
+        
     }
 }

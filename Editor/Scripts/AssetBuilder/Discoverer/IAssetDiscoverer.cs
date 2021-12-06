@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using TinaXEditor.VFS.Querier;
 using UnityEditor;
 
 namespace TinaXEditor.VFS.AssetBuilder.Discoverer
@@ -18,6 +19,10 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
         /// </summary>
         /// <returns></returns>
         Task CollectManageableAssetsAsync();
-        Task<AssetBundleBuild[]> GetUnityAssetBundleBuilds();
+        EditorAssetQueryResult[] GetAssetQueryResults();
+        EditorAssetBundle[] GetEditorAssetBundles();
+        EditorAssetQueryResult[] GetExpansionPackAssetQueryResults(string packageName);
+        EditorAssetQueryResult[] GetMainPackAssetQueryResults();
+        Task<AssetBundleBuild[]> GetUnityAssetBundleBuildsAsync();
     }
 }

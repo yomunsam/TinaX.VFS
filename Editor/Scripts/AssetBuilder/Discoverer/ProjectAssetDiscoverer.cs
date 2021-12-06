@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.Packages;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 using TinaXEditor.VFS.Querier;
@@ -39,6 +40,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
         /// </summary>
         public bool Collected { get; private set; } = false;
 
+        
 
         /// <summary>
         /// 收集可被管理的资产
@@ -52,7 +54,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
-                
+
                 //忽略文件夹、C#代码等内容
                 if(type == typeof(UnityEditor.MonoScript)
                     || type == typeof(UnityEditor.DefaultAsset))
@@ -63,17 +65,21 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
                 //在查询器中查询该资产
                 var query_result = m_AssetQuerier.QueryAsset(assetPath, m_MainPackage, m_ExpansionPackManager, m_GlobalAssetConfig);
                 if (!query_result.Valid)
-                    return;
+                    continue;
 
                 //整理信息
                 UpdateAssetBundleInfo(ref query_result);
+
+                //存储信息
+                m_AssetQueryResults.Add(query_result);
+
             }
 
             await Task.CompletedTask;
             Collected = true;
         }
 
-        public Task<AssetBundleBuild[]> GetUnityAssetBundleBuilds()
+        public Task<AssetBundleBuild[]> GetUnityAssetBundleBuildsAsync()
         {
             var result = new List<AssetBundleBuild>(this.m_AssetBundleInfoList.Count);
             foreach(var item in this.m_AssetBundleInfoList)
@@ -81,7 +87,28 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
                 result.Add(item.GetUnityAssetBundleBuild());
             }
             return Task.FromResult(result.ToArray());
-        }        
+        }
 
+        public EditorAssetQueryResult[] GetAssetQueryResults()
+        {
+            return m_AssetQueryResults.ToArray();
+        }
+
+        public EditorAssetQueryResult[] GetMainPackAssetQueryResults()
+        {
+            return m_AssetQueryResults.Where(qr => qr.ManagedByMainPack).ToArray();
+        }
+
+        public EditorAssetQueryResult[] GetExpansionPackAssetQueryResults(string packageName)
+        {
+            var query = from qr in m_AssetQueryResults
+                        where qr.ManagedByMainPack == false && (qr.ManagedPackage as VFSExpansionPack).PackageName == packageName
+                        select qr;
+            return query.ToArray();
+        }
+
+
+        public EditorAssetBundle[] GetEditorAssetBundles()
+            => m_AssetBundleInfoList.ToArray();
     }
 }

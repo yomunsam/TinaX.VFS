@@ -4,9 +4,11 @@ using Cysharp.Threading.Tasks;
 using TinaX.Container;
 using TinaX.Module;
 using TinaX.Modules;
+using TinaX.Options;
 using TinaX.Services;
 using TinaX.VFS.Consts;
 using TinaX.VFS.Internal;
+using TinaX.VFS.Options;
 using TinaX.VFS.Services;
 using UnityEngine;
 
@@ -23,7 +25,12 @@ namespace TinaX.VFS
 
         public void ConfigureServices(IServiceContainer services)
         {
-            services.Singleton<IVFS, VFSService>().Alias<IVFSInternal>().Alias<IAssetService>();
+            var bindData = services.Singleton<IVFS, VFSService>().Alias<IVFSInternal>();
+            var options = services.Get<IOptions<VFSOption>>();
+            if (options.Value.ImplementBuiltInAssetServiceInterface)
+            {
+                bindData.Alias<IAssetService>();
+            }
         }
 
         public async UniTask<ModuleBehaviourResult> OnStart(IServiceContainer services, CancellationToken cancellationToken)
