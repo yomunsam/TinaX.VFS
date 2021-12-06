@@ -2,6 +2,7 @@ using System.Threading;
 using CatLib.Container;
 using Cysharp.Threading.Tasks;
 using TinaX.Container;
+using TinaX.Core.Behaviours;
 using TinaX.Module;
 using TinaX.Modules;
 using TinaX.Options;
@@ -20,7 +21,7 @@ namespace TinaX.VFS
         public string ModuleName => VFSConsts.ServiceName;
 
 
-        public UniTask<ModuleBehaviourResult> OnInit(IServiceContainer services, CancellationToken cancellationToken)
+        public UniTask<ModuleBehaviourResult> OnInitAsync(IServiceContainer services, CancellationToken cancellationToken)
             => UniTask.FromResult(ModuleBehaviourResult.CreateSuccess(ModuleName));
 
         public void ConfigureServices(IServiceContainer services)
@@ -33,7 +34,9 @@ namespace TinaX.VFS
             }
         }
 
-        public async UniTask<ModuleBehaviourResult> OnStart(IServiceContainer services, CancellationToken cancellationToken)
+        public void ConfigureBehaviours(IBehaviourManager behaviour, IServiceContainer services) { }
+
+        public async UniTask<ModuleBehaviourResult> OnStartAsync(IServiceContainer services, CancellationToken cancellationToken)
         {
 #if TINAX_DEV
             Debug.Log("VFS Module 开始启动");
@@ -43,13 +46,14 @@ namespace TinaX.VFS
         }
 
 
+        
+
+        public UniTask OnRestartAsync(IServiceContainer services, CancellationToken cancellationToken)
+            => UniTask.CompletedTask;
+
         public void OnQuit()
         {
         }
 
-        public UniTask OnRestart(IServiceContainer services, CancellationToken cancellationToken)
-            => UniTask.CompletedTask;
-
-        
     }
 }
