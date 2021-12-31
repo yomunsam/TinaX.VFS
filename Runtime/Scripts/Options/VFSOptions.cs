@@ -6,7 +6,7 @@ namespace TinaX.VFS.Options
     /// <summary>
     /// VFS 系统配置
     /// </summary>
-    public class VFSOption
+    public class VFSOptions
     {
         /// <summary>
         /// 是否启用

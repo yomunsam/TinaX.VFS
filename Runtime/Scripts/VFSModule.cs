@@ -1,6 +1,6 @@
-using System.Threading;
 using CatLib.Container;
 using Cysharp.Threading.Tasks;
+using System.Threading;
 using TinaX.Container;
 using TinaX.Core.Behaviours;
 using TinaX.Module;
@@ -11,7 +11,6 @@ using TinaX.VFS.Consts;
 using TinaX.VFS.Internal;
 using TinaX.VFS.Options;
 using TinaX.VFS.Services;
-using UnityEngine;
 
 namespace TinaX.VFS
 {
@@ -27,7 +26,7 @@ namespace TinaX.VFS
         public void ConfigureServices(IServiceContainer services)
         {
             var bindData = services.Singleton<IVFS, VFSService>().Alias<IVFSInternal>();
-            var options = services.Get<IOptions<VFSOption>>();
+            var options = services.Get<IOptions<VFSOptions>>();
             if (options.Value.ImplementBuiltInAssetServiceInterface)
             {
                 bindData.Alias<IAssetService>();
@@ -39,7 +38,7 @@ namespace TinaX.VFS
         public async UniTask<ModuleBehaviourResult> OnStartAsync(IServiceContainer services, CancellationToken cancellationToken)
         {
 #if TINAX_DEV
-            Debug.Log("VFS Module 开始启动");
+            UnityEngine.Debug.Log("VFS Module 开始启动");
 #endif
             await services.Get<IVFSInternal>().StartAsync(cancellationToken);
             return ModuleBehaviourResult.CreateSuccess(ModuleName);

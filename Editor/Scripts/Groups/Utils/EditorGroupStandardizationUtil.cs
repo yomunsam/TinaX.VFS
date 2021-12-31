@@ -39,7 +39,11 @@ namespace TinaXEditor.VFS.Groups.Utils
                 }
 
                 //删掉找不到对应资产的空项
+#if UNITY_2021_1_OR_NEWER
                 if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(item, AssetPathToGUIDOptions.OnlyExistingAssets)))
+#else
+                if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(item)))
+#endif
                 {
                     group.AssetPaths.RemoveAt(i);
                     continue;

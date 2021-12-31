@@ -11,6 +11,7 @@ using TinaXEditor.VFS.Querier;
 using UnityEditor;
 using UnityEngine;
 
+#nullable enable
 namespace TinaXEditor.VFS.AssetBuilder.Discoverer
 {
     /// <summary>
@@ -21,18 +22,18 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
     {
         private readonly IEditorAssetQuerier m_AssetQuerier;
         private readonly EditorMainPackage m_MainPackage;
-        private readonly EditorExpansionPackManager m_ExpansionPackManager;
+        private readonly EditorExpansionPackManager? m_ExpansionPackManager;
         private readonly GlobalAssetConfigTpl m_GlobalAssetConfig;
 
         public ProjectAssetDiscoverer(IEditorAssetQuerier assetQuerier,
             EditorMainPackage mainPackage,
-            EditorExpansionPackManager expansionPackManager,
+            EditorExpansionPackManager? expansionPackManager,
             GlobalAssetConfigTpl globalAssetConfig)
         {
-            this.m_AssetQuerier = assetQuerier;
-            this.m_MainPackage = mainPackage;
+            this.m_AssetQuerier = assetQuerier ?? throw new ArgumentNullException(nameof(assetQuerier));
+            this.m_MainPackage = mainPackage ?? throw new ArgumentNullException(nameof(mainPackage));
             this.m_ExpansionPackManager = expansionPackManager;
-            this.m_GlobalAssetConfig = globalAssetConfig;
+            this.m_GlobalAssetConfig = globalAssetConfig ?? throw new ArgumentNullException(nameof(globalAssetConfig));
         }
 
         /// <summary>
@@ -49,8 +50,10 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
         public async Task CollectManageableAssetsAsync()
         {
             var guids = AssetDatabase.FindAssets("", new string[] { "Assets/" });
+#if TINAX_DEV
             Debug.LogFormat("guids count:{0}", guids.Length);
-            foreach(var guid in guids)
+#endif
+            foreach (var guid in guids)
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
