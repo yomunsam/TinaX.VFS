@@ -2568,6 +2568,7 @@ namespace TinaX.VFSKit
         {
             if (group == null) { vdisk_path = string.Empty; return string.Empty; }
             //没有匹配的组，无效
+            
             if(group.HandleMode == GroupHandleMode.RemoteOnly)
             {
                 //资源只有可能在web,
@@ -2620,8 +2621,17 @@ namespace TinaX.VFSKit
             //有没有可能这个文件在web?
             if (group.HandleMode == GroupHandleMode.LocalOrRemote && mWebVFSReady)
             {
-                if (group.FilesHash_Remote != null)
-                    return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group); //StreamingAssets找不到相关的信息，然后这个文件又有可能在remote,所以就直接认为它在remote了
+                if (group.FilesHash_Remote != null && group.FilesHash_StreamingAssets != null)
+                {
+                    if(group.FilesHash_StreamingAssets.TryGetFileHashValue(assetbundle, out var streamAsset_hash) && group.FilesHash_Remote.TryGetFileHashValue(assetbundle, out var remote_hash))
+                    {
+                        if(streamAsset_hash.Equals(remote_hash))
+                        {
+                            return asset_path_streamingassets;
+                        }
+                    }
+                    //return this.GetWebAssetDownloadUrl(PlatformText, assetbundle, ref group);
+                }
                 else
                     return asset_path_streamingassets; //放弃
             }
