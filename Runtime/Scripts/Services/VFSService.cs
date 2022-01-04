@@ -3,7 +3,6 @@ using System;
 using System.Threading;
 using TinaX.Exceptions;
 using TinaX.Options;
-using TinaX.Services.ConfigAssets;
 using TinaX.VFS.ConfigAssets;
 using TinaX.VFS.Internal;
 using TinaX.VFS.Options;
@@ -19,14 +18,18 @@ namespace TinaX.VFS.Services
         private readonly VFSOptions m_Option;
 
         //------------构造方法--------------------------------------------------------------------------
-        public VFSService(IOptions<VFSOptions> option,
-            IConfigAssetService configAssetService)
+        public VFSService(IOptions<VFSOptions> option)
         {
             this.m_Option = option.Value;
         }
 
         //------------私有字段--------------------------------------------------------------------------
         private bool m_Initialized;
+
+        /// <summary>
+        /// 在编辑器下，使用UnityEditor.AssetDatabase 加载资产？
+        /// </summary>
+        private bool m_LoadAssetByEditor = false;
 
         //------------公开方法--------------------------------------------------------------------------
 
@@ -59,6 +62,11 @@ namespace TinaX.VFS.Services
                 Debug.LogFormat("VFS is not enabled according to the configuration");
                 return;
             }
+
+            //资产加载方式
+#if UNITY_EDITOR
+            m_LoadAssetByEditor = true; //编辑器下，默认资产加载方式是UnityEditor.AssetDatabase
+#endif
 
             await UniTask.CompletedTask;
 
