@@ -13,8 +13,6 @@ namespace TinaX.VFS.ConfigAssets
 #endif
     public class VFSConfigAsset : ScriptableObject
     {
-        public bool Enable;
-
         /// <summary>
         /// 全局资产配置
         /// </summary>
@@ -34,7 +32,7 @@ namespace TinaX.VFS.ConfigAssets
             #region Default
             //用于在编辑器上首次生成这个Asset文件时给它一些默认值, 所以这部分代码仅编辑器下可用，出包之后会剔除掉节省体积
 
-            Enable = true;
+            //Enable = true;
             GlobalAssetConfig.DefaultAssetBundleVariant = VFSConsts.DefaultAssetBundleVariant;
 
             GlobalAssetConfig.IgnoreExtensions.AddRange(new string[]
@@ -49,7 +47,7 @@ namespace TinaX.VFS.ConfigAssets
             });
             GlobalAssetConfig.IgnoreExtensions.AddRange(VFSConsts.GlobalIgnoreExtensions);
 
-            GlobalAssetConfig.IgnoreFolderName.AddRange(VFSConsts.GlobalIgnoreFolderName);
+            GlobalAssetConfig.IgnoreFolderNames.AddRange(VFSConsts.GlobalIgnoreFolderName);
             #endregion
 #endif
 

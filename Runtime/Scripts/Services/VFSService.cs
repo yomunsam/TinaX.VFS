@@ -57,11 +57,11 @@ namespace TinaX.VFS.Services
             {
                 throw new XException($"Failed to load configuration assets \"{m_Option.ConfigAssetLoadPath}\" ");
             }
-            if (!vfs_config_asset.Enable)
-            {
-                Debug.LogFormat("VFS is not enabled according to the configuration");
-                return;
-            }
+            //if (!vfs_config_asset.Enable)
+            //{
+            //    Debug.LogFormat("VFS is not enabled according to the configuration");
+            //    return;
+            //}
 
             //资产加载方式
 #if UNITY_EDITOR

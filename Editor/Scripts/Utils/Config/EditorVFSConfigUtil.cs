@@ -21,7 +21,7 @@ namespace TinaXEditor.VFS.Utils.Config
 
             //全局配置的标准化
             StandardizedIgnoreExtensions(ref configAsset.GlobalAssetConfig.IgnoreExtensions); 
-            StandardizedIgnoreFolderName(ref configAsset.GlobalAssetConfig.IgnoreFolderName);
+            StandardizedIgnoreFolderName(ref configAsset.GlobalAssetConfig.IgnoreFolderNames);
 
             //主包
             //主包中的Group

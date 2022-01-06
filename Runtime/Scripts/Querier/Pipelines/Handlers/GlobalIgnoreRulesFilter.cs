@@ -25,7 +25,7 @@ namespace TinaX.VFS.Querier.Pipelines.Handlers
             }
 
             //文件夹名过滤
-            if (globalAssetConfig.IgnoreFolderName.Any(asset_path_lower.Contains))
+            if (globalAssetConfig.IgnoreFolderNames.Any(asset_path_lower.Contains))
             {
                 //命中文件夹过滤规则
                 result.Valid = false;

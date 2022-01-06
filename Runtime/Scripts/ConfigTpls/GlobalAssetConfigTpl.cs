@@ -22,6 +22,6 @@ namespace TinaX.VFS.ConfigTpls
         /// <summary>
         /// 全局忽略的文件夹名
         /// </summary>
-        public List<string> IgnoreFolderName = new List<string>();
+        public List<string> IgnoreFolderNames = new List<string>();
     }
 }

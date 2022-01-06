@@ -24,7 +24,7 @@ namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
             }
 
             //文件夹过滤
-            if(globalAssetConfig.IgnoreFolderName.Any(result.AssetPathLower.Contains))
+            if(globalAssetConfig.IgnoreFolderNames.Any(result.AssetPathLower.Contains))
             {
                 result.Valid = false;
                 context.Break();
