@@ -1,23 +1,27 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
 
-namespace TinaXEditor.VFS.AssetBuilder
+namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
 {
-    public class EditorAssetBundle
+    /// <summary>
+    /// 资产构建器 AssetBundle 对象
+    /// </summary>
+    public class VFSAssetBundle
     {
         public string AssetBundleName { get; set; }
-
         public string AssetBundleVariant { get; set; }
 
-        public List<EditorAssetInfo> Assets { get; set; }
+        /// <summary>
+        /// 该AssetBundle中存在的资产
+        /// </summary>
+        public readonly List<EditorAssetInfo> Assets = new List<EditorAssetInfo>();
 
-        public bool ManagedByMainPack { get; set; }
+        public bool ManagedByMainPack { get; set; } //主包中的资产
 
         /// <summary>
         /// If not mainpackage, expansion package name
         /// </summary>
         public string PackageName { get; set; }
-
 
         public AssetBundleBuild GetUnityAssetBundleBuild()
         {
@@ -28,15 +32,13 @@ namespace TinaXEditor.VFS.AssetBuilder
                 assetBundleName = $"{this.AssetBundleName}.{this.AssetBundleVariant}",
                 assetBundleVariant = this.AssetBundleVariant,
             };
-            if (this.Assets == null)
-                this.Assets = new List<EditorAssetInfo>();
 
             List<string> assetNames = new List<string>(this.Assets.Count);
             List<string> addressableNames = new List<string>(this.Assets.Count);
 
-            foreach(var asset in this.Assets)
+            foreach (var asset in this.Assets)
             {
-                assetNames.Add(asset.AssetPath);
+                assetNames.Add(asset.ProjectAssetPath);
                 addressableNames.Add(asset.FileNameInAssetBundle);
             }
             result.assetNames = assetNames.ToArray();

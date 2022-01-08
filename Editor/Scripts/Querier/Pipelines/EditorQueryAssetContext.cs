@@ -11,5 +11,17 @@ namespace TinaXEditor.VFS.Querier.Pipelines
         /// 终断Pipeline流程
         /// </summary>
         public void Break() => BreakPipeline = true;
+
+
+        /// <summary>
+        /// 在主包中查询
+        /// </summary>
+        public bool QueryMainPack { get; set; } = true;
+
+        /// <summary>
+        /// 在扩展包中查询
+        /// </summary>
+        public bool QueryExpansionPack { get; set; } = true;
+
     }
 }

@@ -117,7 +117,7 @@ namespace TinaXEditor.VFS.IMGUIs.PackageConfigEditor
                     var size = m_SP_Groups!.arraySize;
                     if(size <= 1)
                     {
-                        EditorUtility.DisplayDialog("Cannot delete group", "The assets package should contain at least one assets group", "Okey");
+                        EditorUtility.DisplayDialog("Cannot delete group", L.PackageShouldContainAtLeastOneGroup, L.Common_Confirm);
                         return;
                     }
 
@@ -262,6 +262,18 @@ namespace TinaXEditor.VFS.IMGUIs.PackageConfigEditor
             bool IsHans = EditorLocalizationUtil.IsHans();
             bool IsJp = EditorLocalizationUtil.IsJapanese();
 
+            public string Common_Confirm
+            {
+                get
+                {
+                    if (IsHans)
+                        return "确定";
+                    if (IsJp)
+                        return "確認";
+                    return "Confirm";
+                }
+            }
+
             public string EditrObjectMissing
             {
                 get
@@ -362,6 +374,16 @@ namespace TinaXEditor.VFS.IMGUIs.PackageConfigEditor
                 }
             }
 
+
+            public string PackageShouldContainAtLeastOneGroup
+            {
+                get
+                {
+                    if (IsHans)
+                        return "资产包中需要有至少一个资产组";
+                    return "The assets package should contain at least one assets group";
+                }
+            }
 
         }
     }

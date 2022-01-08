@@ -1,8 +1,6 @@
-using System.Linq;
 using TinaX.VFS.BuildRules;
 using TinaX.VFS.ConfigProviders;
 using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Scripts.Structs;
 
 namespace TinaX.VFS.Groups
 {

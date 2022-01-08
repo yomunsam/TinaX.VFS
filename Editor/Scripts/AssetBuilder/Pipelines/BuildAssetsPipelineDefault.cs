@@ -1,5 +1,6 @@
 ﻿using System;
 using TinaX.Systems.Pipeline;
+using TinaXEditor.VFS.AssetBuilder.Pipelines.Handlers;
 
 #nullable enable
 namespace TinaXEditor.VFS.AssetBuilder.Pipelines
@@ -19,6 +20,17 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
             if (pipeline == null)
                 throw new ArgumentNullException(nameof(pipeline));
 
+            //准备VFS对象
+            pipeline.AddLast(new PrepareVFSEditorObjectsAsyncHandler());
+
+            //发现资产
+            pipeline.AddLast(new DiscoverAssetsAsyncHandler());
+
+            //构建AssetBundle
+            pipeline.AddLast(new BuildAssetBundlesAsyncHandler());
+
+            //复制AssetBundle到Virtual Space
+            pipeline.AddLast(new CopyAssetBundleToVirtualSpaceAsyncHandler());
         }
 
     }

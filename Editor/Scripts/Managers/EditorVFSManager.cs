@@ -1,8 +1,5 @@
-using System;
 using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Querier;
-using TinaX.VFS.Querier.Pipelines;
-using TinaX.VFS.Utils.Configs;
+using TinaX.VFS.Utils;
 using TinaXEditor.VFS.Managers.Config;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.ConfigProviders;
@@ -35,11 +32,12 @@ namespace TinaXEditor.VFS.Managers
 
         public static void InitializeAssetQuerier()
         {
-            if (m_AssetQuerier != null)
-                return;
-            m_AssetQuerier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault()); //Todo:这儿看看以后搞成可扩展
             if (m_EditorMainPack == null)
                 InitializeMainPack();
+            if (m_AssetQuerier != null)
+                return;
+            m_AssetQuerier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault(), m_EditorMainPack, new EditorExpansionPackManager(), m_VFSConfigTpl.GlobalAssetConfig); //Todo:这儿看看以后搞成可扩展
+            
         }
 
         public static void InitializeMainPack()
@@ -53,7 +51,7 @@ namespace TinaXEditor.VFS.Managers
             EditorMainPackageConfigProvider provider = new EditorMainPackageConfigProvider(m_VFSConfigTpl.MainPackage);
             provider.Standardize();
             m_EditorMainPack = new EditorMainPackage(provider);
-            m_EditorMainPack.InitializeGroups(); 
+            m_EditorMainPack.Initialize(); //初始化
         }
 
         public static void InitializeVFSConfigTpl()
@@ -63,7 +61,7 @@ namespace TinaXEditor.VFS.Managers
             var vfs_conf_asset = EditorVFSConfigManager.ConfigAsset;
             if (vfs_conf_asset == null)
                 return;
-            VFSConfigUtils.CreateAndMapToVFSConfigTpl(ref vfs_conf_asset, out m_VFSConfigTpl);
+            VFSConfigUtils.MapToVFSConfigTpl(in vfs_conf_asset, out m_VFSConfigTpl);
         }
 
         public static void RefreshConfiguration()
@@ -77,7 +75,7 @@ namespace TinaXEditor.VFS.Managers
 
         public static EditorAssetQueryResult QueryAsset(string assetPath)
         {
-            return m_AssetQuerier.QueryAsset(assetPath, m_EditorMainPack, null, m_VFSConfigTpl.GlobalAssetConfig);
+            return m_AssetQuerier.QueryAsset(assetPath);
         }
 
     }

@@ -8,8 +8,11 @@ namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
     {
         public string HandlerName => EditorQueryAssetHandlerNameConsts.QueryFromMainPackage;
 
-        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, ref EditorMainPackage mainPackage, ref EditorExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, in EditorMainPackage mainPackage, in EditorExpansionPackManager expansionPackManager, in GlobalAssetConfigTpl globalAssetConfig)
         {
+            if (!context.QueryMainPack)
+                return; //本次查询不在主包中查询。
+
             if (result.ManagedGroup != null)
                 return; //资产的归属已经找到了，本流程就不需要执行了。
 

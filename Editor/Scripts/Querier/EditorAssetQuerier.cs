@@ -5,6 +5,7 @@ using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 using TinaXEditor.VFS.Querier.Pipelines;
 
+#nullable enable
 namespace TinaXEditor.VFS.Querier
 {
     /// <summary>
@@ -13,14 +14,20 @@ namespace TinaXEditor.VFS.Querier
     public class EditorAssetQuerier : IEditorAssetQuerier
     {
         protected readonly XPipeline<IEditorQueryAssetHandler> m_Pipleline;
+        private readonly EditorMainPackage m_MainPackage;
+        private readonly EditorExpansionPackManager m_ExpansionPackManager;
+        private readonly GlobalAssetConfigTpl m_GlobalAssetConfigTpl;
 
-        public EditorAssetQuerier(XPipeline<IEditorQueryAssetHandler> queryPipeline)
+        public EditorAssetQuerier(XPipeline<IEditorQueryAssetHandler> queryPipeline, EditorMainPackage mainPackage, EditorExpansionPackManager expansionPackManager, GlobalAssetConfigTpl globalAssetConfigTpl)
         {
             this.m_Pipleline = queryPipeline;
+            this.m_MainPackage = mainPackage;
+            this.m_ExpansionPackManager = expansionPackManager;
+            this.m_GlobalAssetConfigTpl = globalAssetConfigTpl;
         }
 
 
-        public virtual EditorAssetQueryResult QueryAsset(string assetPath, EditorMainPackage mainPackage, EditorExpansionPackManager expansionPackManager, GlobalAssetConfigTpl globalAssetConfigTpl)
+        public virtual EditorAssetQueryResult QueryAsset(string assetPath)
         {
             //上下文
             var queryContext = new EditorQueryAssetContext();
@@ -35,11 +42,11 @@ namespace TinaXEditor.VFS.Querier
 
             m_Pipleline.Start(handler =>
             {
-                handler.QueryAsset(ref queryContext, ref queryResult, ref mainPackage, ref expansionPackManager, ref globalAssetConfigTpl);
+                handler.QueryAsset(ref queryContext, ref queryResult, in m_MainPackage, in m_ExpansionPackManager, in m_GlobalAssetConfigTpl);
                 return !queryContext.BreakPipeline;
             });
             if (string.IsNullOrEmpty(queryResult.VariantName) && !queryResult.IsVariant)
-                queryResult.VariantName = globalAssetConfigTpl.DefaultAssetBundleVariant.Trim().TrimStart('.');
+                queryResult.VariantName = m_GlobalAssetConfigTpl.DefaultAssetBundleVariant.Trim().TrimStart('.');
 
             return queryResult;
         }

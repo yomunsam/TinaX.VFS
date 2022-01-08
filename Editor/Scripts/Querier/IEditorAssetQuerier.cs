@@ -9,6 +9,6 @@ namespace TinaXEditor.VFS.Querier
     /// </summary>
     public interface IEditorAssetQuerier
     {
-        EditorAssetQueryResult QueryAsset(string assetPath, EditorMainPackage mainPackage, EditorExpansionPackManager expansionPackManager, GlobalAssetConfigTpl globalAssetConfigTpl);
+        EditorAssetQueryResult QueryAsset(string assetPath);
     }
 }

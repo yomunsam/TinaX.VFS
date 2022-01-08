@@ -9,7 +9,7 @@ namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
     {
         public string HandlerName => EditorQueryAssetHandlerNameConsts.HideDirectoryStructure;
 
-        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, ref EditorMainPackage mainPackage, ref EditorExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, in EditorMainPackage mainPackage, in EditorExpansionPackManager expansionPackManager, in GlobalAssetConfigTpl globalAssetConfig)
         {
             if (!result.Valid)
                 return; //无效的资产不用管

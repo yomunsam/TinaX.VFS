@@ -5,7 +5,7 @@
         /// <summary>
         /// 与Editor工程完全一致的资产寻址路径
         /// </summary>
-        public string AssetPath;
+        public string ProjectAssetPath;
 
         /// <summary>
         /// 虚拟资产路径

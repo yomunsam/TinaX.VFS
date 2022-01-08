@@ -16,39 +16,23 @@ namespace TinaX.VFS.ConfigAssets.Loader
     /// </summary>
     public class VFSConfigAssetLoader
     {
-        private readonly XPipeline<ILoadVFSConfigAssetHandler> m_LoadVFSConfigAssetAsyncPipeline = new XPipeline<ILoadVFSConfigAssetHandler>();
+        
+        ///// <summary>
+        ///// 把VFS配置资产的数据给弄到配置模板里（不作多余的处理）
+        ///// </summary>
+        ///// <param name="source"></param>
+        ///// <param name="target"></param>
+        //public void MapToVFSConfigTpl(ref VFSConfigAsset source, ref VFSConfigTpl target)
+        //{
+        //    if (source == null)
+        //        throw new ArgumentNullException(nameof(source));
+        //    if (target == null)
+        //        throw new ArgumentNullException(nameof(target));
 
-        public VFSConfigAssetLoader()
-        {
-            LoadVFSConfigAssetAsyncPipelineConfigure(ref m_LoadVFSConfigAssetAsyncPipeline);
-        }
-
-
-        private void LoadVFSConfigAssetAsyncPipelineConfigure(ref XPipeline<ILoadVFSConfigAssetHandler> pipeline)
-        {
-            //准备从PersistentDataPath加载
-            pipeline.Use(LoadVFSConfigAssetHandlerNameConsts.ReadyLoadFromPersistentDataPath, (LoadVFSConfigAssetContext context, ILoadVFSConfigAssetHandler next, CancellationToken cancellationToken) =>
-            {
-                return UniTask.CompletedTask;
-            });
-        }
-
-        /// <summary>
-        /// 把VFS配置资产的数据给弄到配置模板里（不作多余的处理）
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="target"></param>
-        public void MapToVFSConfigTpl(ref VFSConfigAsset source, ref VFSConfigTpl target)
-        {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (target == null)
-                throw new ArgumentNullException(nameof(target));
-
-            //这里借用Json来处理，目的是深拷贝
-            var json_str = JsonUtility.ToJson(source);
-            JsonUtility.FromJsonOverwrite(json_str, target);
-        }
+        //    //这里借用Json来处理，目的是深拷贝
+        //    var json_str = JsonUtility.ToJson(source);
+        //    JsonUtility.FromJsonOverwrite(json_str, target);
+        //}
 
         
 

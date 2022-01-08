@@ -12,7 +12,7 @@ namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
     {
         public string HandlerName => EditorQueryAssetHandlerNameConsts.FilterByGlobalIgnoreRule;
 
-        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, ref EditorMainPackage mainPackage, ref EditorExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, in EditorMainPackage mainPackage, in EditorExpansionPackManager expansionPackManager, in GlobalAssetConfigTpl globalAssetConfig)
         {
             //后缀名过滤
             if (globalAssetConfig.IgnoreExtensions.Any(result.AssetPathLower.EndsWith))

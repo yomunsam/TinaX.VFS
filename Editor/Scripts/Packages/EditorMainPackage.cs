@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Packages;
@@ -8,33 +9,28 @@ using TinaXEditor.VFS.Groups;
 using TinaXEditor.VFS.Groups.ConfigProviders;
 using TinaXEditor.VFS.Querier;
 using TinaXEditor.VFS.Scripts.ConfigProviders;
+using UnityEngine;
 
 namespace TinaXEditor.VFS.Packages
 {
     public class EditorMainPackage : VFSMainPackage
     {
+        //------------固定字段------------------------------------------------------------------------------------
         private readonly IEditorConfigProvider<MainPackageConfigTpl> m_EditorConfigProvider;
 
+
+        //------------构造方法------------------------------------------------------------------------------------
         public EditorMainPackage(IEditorConfigProvider<MainPackageConfigTpl> configProvider) : base(configProvider)
         {
             m_EditorConfigProvider = configProvider;
         }
 
+        //------------公开属性------------------------------------------------------------------------------------
         public List<EditorVFSGroup> EditorGroups { get; private set; } = new List<EditorVFSGroup>();
 
-        public override void InitializeGroups()
-        {
-            if (Groups.Count > 0)
-                return;
-            for (var i = 0; i < m_Config.Groups.Count; i++)
-            {
-                var conf_provider = new EditorGroupConfigProvider(m_Config.Groups[i]);
-                conf_provider.Standardize();
-                var group = new EditorVFSGroup(conf_provider);
-                this.Groups.Add(group);
-                EditorGroups.Add(group);
-            }
-        }
+
+
+        //------------公开方法------------------------------------------------------------------------------------
 
         /// <summary>
         /// 【编辑器用】查询资产（调用时请确保AssetQueryResult中的AssetPath、AssetPathLower、AssetExtension已经准备好）
@@ -155,5 +151,22 @@ namespace TinaXEditor.VFS.Packages
             return Task.CompletedTask;
         }
 
+
+
+
+        //------------私有方法------------------------------------------------------------------------------------
+        protected override void InitializeGroups()
+        {
+            if (Groups.Count > 0)
+                return;
+            for (var i = 0; i < m_Config.Groups.Count; i++)
+            {
+                var conf_provider = new EditorGroupConfigProvider(m_Config.Groups[i]);
+                conf_provider.Standardize();
+                var group = new EditorVFSGroup(conf_provider);
+                this.Groups.Add(group);
+                EditorGroups.Add(group);
+            }
+        }
     }
 }

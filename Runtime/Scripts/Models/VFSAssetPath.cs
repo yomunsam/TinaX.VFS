@@ -1,4 +1,4 @@
-namespace TinaX.VFS.Scripts.Structs
+namespace TinaX.VFS.Models
 {
     public struct VFSAssetPath
     {

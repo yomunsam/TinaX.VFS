@@ -1,6 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using TinaXEditor.VFS.AssetBuilder.AssetBundles;
 using TinaXEditor.VFS.Querier;
-using UnityEditor;
 
 namespace TinaXEditor.VFS.AssetBuilder.Discoverer
 {
@@ -10,19 +9,10 @@ namespace TinaXEditor.VFS.AssetBuilder.Discoverer
     public interface IAssetDiscoverer
     {
         /// <summary>
-        /// 是否执行过至少一次收集任务
+        /// 去收集可被管理的资产，最终填到VFSAssetBundles对象里
         /// </summary>
-        bool Collected { get; }
-
-        /// <summary>
-        /// 收集可被管理的资产
-        /// </summary>
-        /// <returns></returns>
-        Task CollectManageableAssetsAsync();
-        EditorAssetQueryResult[] GetAssetQueryResults();
-        EditorAssetBundle[] GetEditorAssetBundles();
-        EditorAssetQueryResult[] GetExpansionPackAssetQueryResults(string packageName);
-        EditorAssetQueryResult[] GetMainPackAssetQueryResults();
-        Task<AssetBundleBuild[]> GetUnityAssetBundleBuildsAsync();
+        /// <param name="vfsAssetBundles"></param>
+        /// <param name="assetQuerier">资产查询器</param>
+        void DiscoverAssets(VFSAssetBundles vfsAssetBundles, IEditorAssetQuerier assetQuerier);
     }
 }

@@ -26,29 +26,42 @@ namespace TinaX.VFS.Packages
     /// </summary>
     public abstract class VFSPackage
     {
+        //------------固定字段------------------------------------------------------------------------------------
+
         protected readonly PackageConfigTpl m_Config;
 
+        //------------构造方法------------------------------------------------------------------------------------
         public VFSPackage(PackageConfigTpl configTpl)
         {
             m_Config = configTpl;
         }
-        
+
+        //------------私有字段------------------------------------------------------------------------------------
+        protected bool m_Initialized = false;
+
+        //------------公开属性------------------------------------------------------------------------------------
         public PackageConfigTpl Configuration => m_Config;
 
         public List<VFSGroup> Groups { get; private set; } = new List<VFSGroup>();
 
-        public virtual void InitializeGroups()
+
+        //------------公开方法------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// 初始化 包
+        /// </summary>
+        public virtual void Initialize()
         {
-            if (Groups.Count > 0)
+            if (m_Initialized)
                 return;
-            for(var i = 0; i < m_Config.Groups.Count; i++)
-            {
-                var conf_provider = new GroupConfigProvider(m_Config.Groups[i]);
-                conf_provider.Standardize();
-                var group = new VFSGroup(conf_provider);
-                this.Groups.Add(group);
-            }
+
+            //初始化组
+            InitializeGroups();
+
+            m_Initialized = true;
         }
+
+        
 
         /// <summary>
         /// 查询资产（调用时请确保AssetQueryResult中的AssetPath、AssetPathLower、AssetExtension是好的）
@@ -133,5 +146,19 @@ namespace TinaX.VFS.Packages
 
         public abstract string GetAssetBundleRootFolder(string virtualSpacePath, string platformName);
 
+
+        //------------私有方法------------------------------------------------------------------------------------
+        protected virtual void InitializeGroups()
+        {
+            if (Groups.Count > 0)
+                return;
+            for (var i = 0; i < m_Config.Groups.Count; i++)
+            {
+                var conf_provider = new GroupConfigProvider(m_Config.Groups[i]);
+                conf_provider.Standardize();
+                var group = new VFSGroup(conf_provider);
+                this.Groups.Add(group);
+            }
+        }
     }
 }

@@ -13,8 +13,8 @@ namespace TinaXEditor.VFS.Querier.Pipelines
 
         void QueryAsset(ref EditorQueryAssetContext context, 
             ref EditorAssetQueryResult result, 
-            ref EditorMainPackage mainPackage, 
-            ref EditorExpansionPackManager expansionPackManager, 
-            ref GlobalAssetConfigTpl globalAssetConfig);
+            in EditorMainPackage mainPackage, 
+            in EditorExpansionPackManager expansionPackManager, 
+            in GlobalAssetConfigTpl globalAssetConfig);
     }
 }
