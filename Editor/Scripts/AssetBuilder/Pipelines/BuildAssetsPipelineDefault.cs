@@ -31,6 +31,9 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
 
             //复制AssetBundle到Virtual Space
             pipeline.AddLast(new CopyAssetBundleToVirtualSpaceAsyncHandler());
+
+            //保存数据文件
+            pipeline.AddLast(new SaveDataFileAsyncHandler());
         }
 
     }

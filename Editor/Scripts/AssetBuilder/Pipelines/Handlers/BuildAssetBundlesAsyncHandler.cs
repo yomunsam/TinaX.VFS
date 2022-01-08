@@ -38,18 +38,24 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines.Handlers
             buildParams.UseCache = context.BuildArgs.UseCache;
 
             var exitCode = ContentPipeline.BuildAssetBundles(buildParams, buildContent, out var results);
-            if (exitCode >= ReturnCode.Success)
+            bool success = exitCode >= ReturnCode.Success;
+            if (success)
             {
+                context.BundleBuildResults = results;
                 var manifest = ScriptableObject.CreateInstance<CompatibilityAssetBundleManifest>();
                 manifest.SetResults(results.BundleInfos);
                 File.WriteAllText(Path.Combine(context.AssetBundlesOutputFolder, "manifest"), manifest.ToString());
             }
+
 
             sw.Stop();
             if (context.HansLog)
                 Debug.LogFormat("    构建AssetBundle结束，共用时:{0}秒", sw.Elapsed.TotalSeconds.ToString("N3"));
             else
                 Debug.LogFormat("    Build AssetBundles finish, use time: {0}s", sw.Elapsed.TotalSeconds.ToString("N3"));
+
+            if (!success)
+                context.Break();
         }
     }
 }

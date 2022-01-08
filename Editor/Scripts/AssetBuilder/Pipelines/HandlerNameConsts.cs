@@ -34,5 +34,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
 
         public const string CopyAssetBundleToVirtualSpace = @"CopyAssetBundleToVirtualSpace";
 
+        public const string SaveDataFiles = @"SaveDataFiles";
+
     }
 }

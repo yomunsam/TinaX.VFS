@@ -42,9 +42,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines.Handlers
                 return Task.CompletedTask;
             }
             var configTpl = VFSConfigUtils.MapToVFSConfigTpl(configAsset);
-
-            //全局配置资产
-            context.GlobalConfig = configTpl.GlobalAssetConfig;
+            context.VFSConfigTpl = configTpl;
 
             //主包
             var mainPackageConfigProvider = new EditorMainPackageConfigProvider(configTpl.MainPackage);
@@ -56,7 +54,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines.Handlers
             context.ExpansionPackManager = new Packages.Managers.EditorExpansionPackManager();
 
             //资产查询器
-            var querier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault(), context.MainPackage, context.ExpansionPackManager, context.GlobalConfig);
+            var querier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault(), context.MainPackage, context.ExpansionPackManager, configTpl.GlobalAssetConfig);
             context.AssetQuerier = querier;
 
 

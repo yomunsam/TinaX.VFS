@@ -5,6 +5,7 @@ using TinaXEditor.VFS.AssetBuilder.Discoverer;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 using TinaXEditor.VFS.Querier;
+using UnityEditor.Build.Pipeline.Interfaces;
 
 #nullable enable
 namespace TinaXEditor.VFS.AssetBuilder.Pipelines
@@ -19,10 +20,9 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
             this.BuildArgs = args;
         }
 
-        /// <summary>
-        /// 资产的全局配置
-        /// </summary>
-        public GlobalAssetConfigTpl? GlobalConfig;
+        public VFSConfigTpl? VFSConfigTpl;
+
+        
 
         /// <summary>
         /// 主包 编辑器对象
@@ -53,6 +53,9 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
 
         public string AssetBundlesOutputFolder { get; set; } = string.Empty;
 
+        public IBundleBuildResults? BundleBuildResults { get; set; }
+
+
         /// <summary>
         /// 是否终断Pipeline的标记
         /// </summary>
@@ -62,6 +65,8 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
         /// 汉语Log
         /// </summary>
         public bool HansLog { get; set; } = false;
+
+        public void Break() => BreakPipeline = true;
 
     }
 }

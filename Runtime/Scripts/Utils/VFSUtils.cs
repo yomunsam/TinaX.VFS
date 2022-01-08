@@ -53,5 +53,11 @@ namespace TinaX.VFS.Utils
         public static string GetExpansionPackageAssetBundleRootFolder(string virtualSpacePath, string platformName, string packageName)
             => Path.Combine(virtualSpacePath, platformName, "expansions", packageName, "root");
 
+        public static string GetMainPackageDataFolder(string virtualSpacePath, string platformName)
+            => Path.Combine(virtualSpacePath, platformName, "vfs_main", "data");
+
+        public static string GetVFSConfigTplFilePath(string mainPackageDataFolder)
+            => Path.Combine(mainPackageDataFolder, VFSConsts.VFSConfigJsonFileName);
+
     }
 }

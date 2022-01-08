@@ -27,6 +27,7 @@ namespace TinaXEditor.VFS.AssetBuilder
         /// （就是可以在编辑器右下角看到的那个信息，其实没啥用，VFS不使用那个信息打包）
         /// </summary>
         public bool MarkAssetBundleInfo { get; set; } = false;
+        public bool ClearProjectVirtualSpaceFolder { get; set; } = true;
 
 
         public bool UseCache { get; set; } = false;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using TinaX.VFS.Utils;
 using UnityEditor;
 
 namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
@@ -10,6 +11,21 @@ namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
     {
         public string AssetBundleName { get; set; }
         public string AssetBundleVariant { get; set; }
+
+        /// <summary>
+        /// AssetBundle文件名（纯文件名，不含目录
+        /// </summary>
+        public string AssetBundleFileName
+        {
+            get
+            {
+                if(_assetBundleFileName == null)
+                    _assetBundleFileName = VFSUtils.GetAssetBundleFileName(AssetBundleName, AssetBundleVariant);
+                return _assetBundleFileName;
+            }
+        }
+
+        private string _assetBundleFileName;
 
         /// <summary>
         /// 该AssetBundle中存在的资产
