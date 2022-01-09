@@ -28,20 +28,22 @@ namespace TinaX.VFSKit.Loader
             try
             {
                 XFile.DeleteIfExists(save_path);
-                var req = UnityWebRequest.Get(url);
-                req.timeout = timeout;
-                req.downloadHandler = new DownloadHandlerVDisk(save_path);
-                await req.SendWebRequest();
+                using(var req = UnityWebRequest.Get(url))
+                {
+                    req.timeout = timeout;
+                    req.downloadHandler = new DownloadHandlerVDisk(save_path);
+                    await req.SendWebRequest();
 #if UNITY_2020_2_OR_NEWER
-                if(req.result != UnityWebRequest.Result.Success)
+                    if (req.result != UnityWebRequest.Result.Success)
 #else
                 if (req.isNetworkError || req.isHttpError)
 #endif
-                {
-                    if (req.responseCode == 404)
-                        throw new FileNotFoundException("file not found from web :" + url, url);
-                    else
-                        throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+                    {
+                        if (req.responseCode == 404)
+                            throw new FileNotFoundException("file not found from web :" + url, url);
+                        else
+                            throw new DownloadNetworkException($"[{req.responseCode}]Failed to download file from web: {url} --> {req.error}", url, req.error, req.responseCode);
+                    }
                 }
             }
             catch(UnityWebRequestException e)

@@ -2704,20 +2704,22 @@ namespace TinaX.VFSKit
         {
             try
             {
-                Debug.Log("喵，say hello:" + url);
-                var req = UnityWebRequest.Get(url);
-                req.timeout = timeout;
-                await req.SendWebRequest();
+                //Debug.Log("喵，say hello:" + url);
+                using (var req = UnityWebRequest.Get(url))
+                {
+                    req.timeout = timeout;
+                    await req.SendWebRequest();
 
 #if UNITY_2020_2_OR_NEWER
-                if (req.result != UnityWebRequest.Result.Success)
-                    return false;
+                    if (req.result != UnityWebRequest.Result.Success)
+                        return false;
 #else
                 if (req.isNetworkError || req.isHttpError)
                     return false;
 #endif
 
-                return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
+                    return (StringHelper.RemoveUTF8BOM(req.downloadHandler.data) == "hello");
+                }
             }
             catch
             {
