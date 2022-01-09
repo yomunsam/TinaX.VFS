@@ -11,7 +11,7 @@ namespace TinaX.VFS.Options
         /// <summary>
         /// 是否启用
         /// </summary>
-        public bool Enable { get; set; }
+        public bool Enable { get; set; } = true;
 
         /// <summary>
         /// 实现内置资产服务接口
@@ -21,6 +21,5 @@ namespace TinaX.VFS.Options
         public string ConfigAssetLoadPath { get; set; } = VFSConsts.DefaultConfigAssetName;
 
 
-        public VFSConfigAssetLoader ConfigAssetLoader { get; } = new VFSConfigAssetLoader();
     }
 }

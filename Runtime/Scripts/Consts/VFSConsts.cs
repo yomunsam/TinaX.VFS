@@ -52,7 +52,7 @@ namespace TinaX.VFS.Consts
         /// <summary>
         /// Runtime模式的Virtual Space的文件名名称
         /// </summary>
-        public const string VirtualSpaceFolderNameInRuntime = "VFS_VSpace";
+        public const string VirtualSpaceFolderNameInRuntime = "vfs_vspace";
 
     }
 }

@@ -1,11 +1,22 @@
 using Cysharp.Threading.Tasks;
 using System;
+using System.IO;
 using System.Threading;
+using TinaX.Core.Helper.Platform;
+using TinaX.Core.Platforms;
 using TinaX.Exceptions;
 using TinaX.Options;
 using TinaX.VFS.ConfigAssets;
 using TinaX.VFS.Internal;
+using TinaX.VFS.LoadAssets;
+using TinaX.VFS.Loader.DataLoader;
 using TinaX.VFS.Options;
+using TinaX.VFS.Packages;
+using TinaX.VFS.Packages.ConfigProviders;
+using TinaX.VFS.Packages.Managers;
+using TinaX.VFS.Querier;
+using TinaX.VFS.SerializableModels;
+using TinaX.VFS.Utils;
 using UnityEngine;
 using UObject = UnityEngine.Object;
 
@@ -21,16 +32,27 @@ namespace TinaX.VFS.Services
         public VFSService(IOptions<VFSOptions> option)
         {
             this.m_Option = option.Value;
+            m_VirtualSpaceInStramingAssets = VFSUtils.GetStreamingAssetsVirtualSpacePath();
+            m_VirtualSpaceInLocalStorage = VFSUtils.GetLocalStorageVirtualSpacePath(Path.Combine(UnityEngine.Application.persistentDataPath, "TinaX"));
+            m_PlatformName = PlatformHelper.GetName(PlatformHelper.GetXRuntimePlatform(Application.platform));
         }
 
         //------------私有字段--------------------------------------------------------------------------
         private bool m_Initialized;
 
         /// <summary>
-        /// 在编辑器下，使用UnityEditor.AssetDatabase 加载资产？
+        /// 在编辑器下，使用UnityEditor.AssetDatabase 加载资产而非AssetBundle方式？
         /// </summary>
-        private bool m_LoadAssetByEditor = false;
+        private bool m_LoadAssetViaEditor = false;
 
+        private string m_VirtualSpaceInStramingAssets;
+        private string m_VirtualSpaceInLocalStorage;
+        private string m_PlatformName;
+
+        private VFSConfigModel? m_ConfigModel;
+        private VFSMainPackage? m_MainPack;
+        private ExpansionPackManager? m_ExpansionPackManager;
+        private AssetQuerier? m_AssetQuerier;
         //------------公开方法--------------------------------------------------------------------------
 
 
@@ -52,50 +74,49 @@ namespace TinaX.VFS.Services
             if (!m_Option.Enable)
                 return;
 
-            var vfs_config_asset = await LoadVFSConfigAssetAsync(m_Option.ConfigAssetLoadPath, cancellationToken);
-            if(vfs_config_asset == null)
-            {
-                throw new XException($"Failed to load configuration assets \"{m_Option.ConfigAssetLoadPath}\" ");
-            }
-            //if (!vfs_config_asset.Enable)
-            //{
-            //    Debug.LogFormat("VFS is not enabled according to the configuration");
-            //    return;
-            //}
-
             //资产加载方式
 #if UNITY_EDITOR
-            m_LoadAssetByEditor = true; //编辑器下，默认资产加载方式是UnityEditor.AssetDatabase
+            switch (VFSLoadModeInEditor.LoadMode)
+            {
+                case AssetLoadModeInEditor.LoadViaAssetDatabase:    //编辑器下，使用UnityEditor.AssetDatabase直接加载资产
+                    m_LoadAssetViaEditor = true;
+                    break;
+                case AssetLoadModeInEditor.OverrideVirtualSpaceInStreamingAssetsPath:
+                    m_VirtualSpaceInStramingAssets = VFSLoadModeInEditor.OverrideVirtualSpaceInStreamingAssetsPath;
+                    m_LoadAssetViaEditor = false;
+                    break;
+            }
 #endif
 
-            await UniTask.CompletedTask;
+            var dataLoader = new DataLoader(m_PlatformName, m_VirtualSpaceInStramingAssets, m_VirtualSpaceInLocalStorage, m_LoadAssetViaEditor);
+            //加载主包配置（以及全局配置）
+            m_ConfigModel = await dataLoader.LoadVFSConfigAsync();
+
+            //初始化主包（扩展包由开发者调用加入）
+            InitializeMainPack();
+
+            //Todo:扩展包
+            m_ExpansionPackManager = new ExpansionPackManager();
+
+            //资产查询器
+            //m_AssetQuerier = new AssetQuerier()
 
 
             m_Initialized = true;
         }
 
-
-
         #endregion
 
 
-
-        /// <summary>
-        /// 运行时加载VFS的配置文件
-        /// </summary>
-        /// <param name="loadPath"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private UniTask<VFSConfigAsset> LoadVFSConfigAssetAsync(string loadPath, CancellationToken cancellationToken)
+        //------------私有方法--------------------------------------------------------------------------
+        private void InitializeMainPack()
         {
-            /*
-             * TinaX.Core中的IConfigAssetService依赖IAssetService来加载AssetBundle中的配置文件
-             * 而VFS正是IAssetService的实现者，因此在VFS的启动过程中，不能用IConfigAssetService来加载资产，
-             * VFS的配置资产需要自行解决加载问题
-             */
-
-            return UniTask.FromResult<VFSConfigAsset>(null);
-
+            if (m_MainPack != null)
+                return;
+            var mainPackConfigProvider = new MainPackageConfigProvider(m_ConfigModel!.MainPackage);
+            mainPackConfigProvider.Standardize(); //标准化
+            m_MainPack = new VFSMainPackage(mainPackConfigProvider);
+            m_MainPack.Initialize();
         }
 
     }

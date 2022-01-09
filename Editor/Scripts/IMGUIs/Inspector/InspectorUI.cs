@@ -54,7 +54,6 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
             if(editor.targets.Length == 1)
             {
                 var assetPath = AssetDatabase.GetAssetOrScenePath(editor.target);
-
                 if (m_AssetMainTypeTargetObject == null || m_AssetMainTypeTargetObject != editor.target)
                 {
                     m_AssetMainType = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
@@ -66,6 +65,8 @@ namespace TinaXEditor.VFS.IMGUIs.Inspector
                 {
                     return;
                 }
+                if (!typeof(AssetImporter).IsAssignableFrom(editor.target.GetType()))
+                    return;
                 if (!assetPath.StartsWith("Assets/"))
                     return;
 

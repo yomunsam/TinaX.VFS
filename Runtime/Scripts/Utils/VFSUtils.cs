@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using TinaX.VFS.Consts;
 
+#nullable enable
 namespace TinaX.VFS.Utils
 {
     public static class VFSUtils
@@ -33,6 +34,12 @@ namespace TinaX.VFS.Utils
             return string.Empty;
 #endif
         }
+
+        public static string GetStreamingAssetsVirtualSpacePath()
+            => Path.Combine(UnityEngine.Application.streamingAssetsPath,"tinax", VFSConsts.VirtualSpaceFolderNameInRuntime);
+
+        public static string GetLocalStorageVirtualSpacePath(string rootPath)
+            => Path.Combine(rootPath, VFSConsts.VirtualSpaceFolderNameInRuntime);
 
         /// <summary>
         /// 获取MainPackage在VirualSpace中存放AssetBundle的根目录
