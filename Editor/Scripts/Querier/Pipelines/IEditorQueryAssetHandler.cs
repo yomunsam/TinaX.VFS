@@ -1,4 +1,4 @@
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 
@@ -15,6 +15,6 @@ namespace TinaXEditor.VFS.Querier.Pipelines
             ref EditorAssetQueryResult result, 
             in EditorMainPackage mainPackage, 
             in EditorExpansionPackManager expansionPackManager, 
-            in GlobalAssetConfigTpl globalAssetConfig);
+            in GlobalAssetConfigModel globalAssetConfig);
     }
 }

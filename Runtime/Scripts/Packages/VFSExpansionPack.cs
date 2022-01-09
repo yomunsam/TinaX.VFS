@@ -1,6 +1,5 @@
-using System.IO;
 using TinaX.VFS.ConfigProviders;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaX.VFS.Utils;
 
 namespace TinaX.VFS.Packages
@@ -10,8 +9,8 @@ namespace TinaX.VFS.Packages
     /// </summary>
     public class VFSExpansionPack : VFSPackage
     {
-        protected ExpansionPackConfigTpl m_ExpansionPackConfig;
-        public VFSExpansionPack(IConfigProvider<ExpansionPackConfigTpl> configProvider) : base(configProvider.Configuration)
+        protected ExpansionPackConfigModel m_ExpansionPackConfig;
+        public VFSExpansionPack(IConfigProvider<ExpansionPackConfigModel> configProvider) : base(configProvider.Configuration)
         {
             m_ExpansionPackConfig = configProvider.Configuration;
         }

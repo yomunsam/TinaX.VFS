@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using TinaX.VFS.Consts;
+using TinaXEditor.VFS.Const;
 
 namespace TinaXEditor.VFS.Packages.io.nekonya.tinax.vfs.Editor.Scripts.Utils
 {
@@ -18,5 +19,9 @@ namespace TinaXEditor.VFS.Packages.io.nekonya.tinax.vfs.Editor.Scripts.Utils
         /// <returns></returns>
         public static string GetProjectAssetBundleOutputPath(string platformName)
             => Path.Combine(Directory.GetCurrentDirectory(), VFSConsts.ProjectVFSArchiveFolder, "Build", platformName);
+
+        public static string GetAssetsHashFilePath()
+            => Path.Combine(Directory.GetCurrentDirectory(), VFSConsts.ProjectVFSArchiveFolder, "Build", "Data", VFSEditorConsts.AssetsHashFileName);
+
     }
 }

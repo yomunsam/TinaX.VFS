@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using TinaX.VFS.Utils;
 using UnityEditor;
+using UnityEngine;
 
 namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
 {
@@ -13,7 +14,7 @@ namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
         public string AssetBundleVariant { get; set; }
 
         /// <summary>
-        /// AssetBundle文件名（纯文件名，不含目录
+        /// AssetBundle文件名（带文件后缀名
         /// </summary>
         public string AssetBundleFileName
         {

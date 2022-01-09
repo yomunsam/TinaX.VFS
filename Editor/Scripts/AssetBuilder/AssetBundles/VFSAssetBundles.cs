@@ -40,6 +40,13 @@ namespace TinaXEditor.VFS.AssetBuilder.AssetBundles
                 };
                 if (!assetBundleInfo.ManagedByMainPack)
                     assetBundleInfo.PackageName = (queryResult.ManagedPackage as VFSExpansionPack)!.PackageName;
+                assetBundleInfo.Assets.Add(new EditorAssetInfo
+                {
+                    ProjectAssetPath = queryResult.AssetPath,
+                    VirtualAssetPath = queryResult.VirtualAssetPath,
+                    VariantName = queryResult.VariantName,
+                    FileNameInAssetBundle = queryResult.FileNameInAssetBundle
+                });
                 m_AssetBundleInfoList.Add(assetBundleInfo);
                 m_AssetQueryResults.Add(queryResult);
             }

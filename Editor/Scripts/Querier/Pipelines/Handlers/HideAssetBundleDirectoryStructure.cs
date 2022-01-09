@@ -1,5 +1,5 @@
 using TinaX;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaXEditor.VFS.Packages;
 using TinaXEditor.VFS.Packages.Managers;
 
@@ -9,7 +9,7 @@ namespace TinaXEditor.VFS.Querier.Pipelines.Handlers
     {
         public string HandlerName => EditorQueryAssetHandlerNameConsts.HideDirectoryStructure;
 
-        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, in EditorMainPackage mainPackage, in EditorExpansionPackManager expansionPackManager, in GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref EditorQueryAssetContext context, ref EditorAssetQueryResult result, in EditorMainPackage mainPackage, in EditorExpansionPackManager expansionPackManager, in GlobalAssetConfigModel globalAssetConfig)
         {
             if (!result.Valid)
                 return; //无效的资产不用管

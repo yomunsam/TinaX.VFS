@@ -1,26 +1,25 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets.Configurations;
 using TinaX.VFS.Packages;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaX.VFS.Utils;
 using TinaXEditor.VFS.Groups;
 using TinaXEditor.VFS.Groups.ConfigProviders;
 using TinaXEditor.VFS.Querier;
 using TinaXEditor.VFS.Scripts.ConfigProviders;
-using UnityEngine;
 
 namespace TinaXEditor.VFS.Packages
 {
     public class EditorMainPackage : VFSMainPackage
     {
         //------------固定字段------------------------------------------------------------------------------------
-        private readonly IEditorConfigProvider<MainPackageConfigTpl> m_EditorConfigProvider;
+        private readonly IEditorConfigProvider<MainPackageConfig, MainPackageConfigModel> m_EditorConfigProvider;
 
 
         //------------构造方法------------------------------------------------------------------------------------
-        public EditorMainPackage(IEditorConfigProvider<MainPackageConfigTpl> configProvider) : base(configProvider)
+        public EditorMainPackage(IEditorConfigProvider<MainPackageConfig, MainPackageConfigModel> configProvider) : base(configProvider)
         {
             m_EditorConfigProvider = configProvider;
         }
@@ -159,9 +158,10 @@ namespace TinaXEditor.VFS.Packages
         {
             if (Groups.Count > 0)
                 return;
+            var assetConfig = m_EditorConfigProvider.EditorConfiguration;
             for (var i = 0; i < m_Config.Groups.Count; i++)
             {
-                var conf_provider = new EditorGroupConfigProvider(m_Config.Groups[i]);
+                var conf_provider = new EditorGroupConfigProvider(assetConfig.Groups[i], m_Config.Groups[i]);
                 conf_provider.Standardize();
                 var group = new EditorVFSGroup(conf_provider);
                 this.Groups.Add(group);

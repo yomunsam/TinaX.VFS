@@ -1,5 +1,4 @@
 using TinaX.Systems.Pipeline;
-using TinaX.VFS.Pipelines.LoadVFSConfigAsset;
 
 namespace TinaX.VFS.Extensions
 {
@@ -9,10 +8,6 @@ namespace TinaX.VFS.Extensions
     public static class PipelineExtensions
     {
 
-        public static XPipeline<ILoadVFSConfigAssetHandler> Use(this XPipeline<ILoadVFSConfigAssetHandler> pipeline, string name, GeneralLoadVFSConfigAssetHandler.LoadVFSConfigAssetAsyncDelegate handlerFunc)
-        {
-            pipeline.AddLast(new GeneralLoadVFSConfigAssetHandler(name, handlerFunc));
-            return pipeline;
-        }
+        
     }
 }

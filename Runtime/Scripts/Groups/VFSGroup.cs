@@ -1,6 +1,6 @@
 using TinaX.VFS.BuildRules;
 using TinaX.VFS.ConfigProviders;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 
 namespace TinaX.VFS.Groups
 {
@@ -10,17 +10,17 @@ namespace TinaX.VFS.Groups
     /// </summary>
     public class VFSGroup
     {
-        protected readonly IConfigProvider<GroupConfigTpl> m_ConfigProvider;
-        protected readonly GroupConfigTpl m_Config;
+        protected readonly IConfigProvider<GroupConfigModel> m_ConfigProvider;
+        protected readonly GroupConfigModel m_Config;
 
-        public VFSGroup(IConfigProvider<GroupConfigTpl> configProvider)
+        public VFSGroup(IConfigProvider<GroupConfigModel> configProvider)
         {
             this.m_ConfigProvider = configProvider;
             m_ConfigProvider.Standardize();
             m_Config = configProvider.Configuration; //Todo: 我觉得可能不应该放在这儿
         }
 
-        public GroupConfigTpl Configuration => m_Config;
+        public GroupConfigModel Configuration => m_Config;
 
         public string GroupName => m_Config.Name;
 

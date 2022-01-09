@@ -1,7 +1,3 @@
-using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Packages;
-using TinaX.VFS.Packages.Managers;
-
 namespace TinaX.VFS.Querier.Pipelines.Handlers
 {
     /// <summary>
@@ -12,7 +8,7 @@ namespace TinaX.VFS.Querier.Pipelines.Handlers
     {
         public string HandlerName => QueryAssetHandlerNameConsts.HideDirectoryStructure;
 
-        public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result, ref VFSMainPackage mainPackage, ref ExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result)
         {
             if (!result.Valid)
                 return; //无效的资产不用管了

@@ -1,5 +1,4 @@
-﻿using TinaX;
-using TinaX.VFS.ConfigTpls;
+﻿using TinaX.VFS.SerializableModels;
 using TinaXEditor.VFS.AssetBuilder.AssetBundles;
 using TinaXEditor.VFS.AssetBuilder.Discoverer;
 using TinaXEditor.VFS.Packages;
@@ -20,7 +19,7 @@ namespace TinaXEditor.VFS.AssetBuilder.Pipelines
             this.BuildArgs = args;
         }
 
-        public VFSConfigTpl? VFSConfigTpl;
+        public VFSConfigModel? VFSConfigModel;
 
         
 

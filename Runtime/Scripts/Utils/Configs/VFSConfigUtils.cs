@@ -1,6 +1,6 @@
 using System;
 using TinaX.VFS.ConfigAssets;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels;
 using UnityEngine;
 
 #nullable enable
@@ -13,25 +13,25 @@ namespace TinaX.VFS.Utils
     {
 
         /// <summary>
-        /// 将给定的VFS配置资产 Map到 VFSConfigTpl
+        /// 将给定的VFS配置资产 Map到 VFSConfigModel
         /// </summary>
         /// <param name="configAsset"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static VFSConfigTpl MapToVFSConfigTpl(VFSConfigAsset configAsset)
+        public static VFSConfigModel MapToVFSConfigModel(VFSConfigAsset configAsset)
         {
-            MapToVFSConfigTpl(in configAsset, out var tpl);
+            MapToVFSConfigModel(in configAsset, out var tpl);
             return tpl;
         }
 
-        public static void MapToVFSConfigTpl(in VFSConfigAsset configAsset, out VFSConfigTpl tpl)
+        public static void MapToVFSConfigModel(in VFSConfigAsset configAsset, out VFSConfigModel tpl)
         {
             if (configAsset == null)
                 throw new ArgumentNullException(nameof(configAsset));
 
             //借用Unity的Json库做深拷贝
             var jsonStr = JsonUtility.ToJson(configAsset);
-            tpl = JsonUtility.FromJson<VFSConfigTpl>(jsonStr);
+            tpl = JsonUtility.FromJson<VFSConfigModel>(jsonStr);
         }
     }
 }

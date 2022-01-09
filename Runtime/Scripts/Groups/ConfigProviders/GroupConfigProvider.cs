@@ -1,17 +1,17 @@
 using TinaX.VFS.ConfigProviders;
-using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Groups.Utils;
+using TinaX.VFS.SerializableModels.Configurations;
 
 namespace TinaX.VFS.Groups.ConfigProviders
 {
     /// <summary>
     /// VFS 资产组 配置提供者 的默认接口实现
     /// </summary>
-    public class GroupConfigProvider : IConfigProvider<GroupConfigTpl>
+    public class GroupConfigProvider : IConfigProvider<GroupConfigModel>
     {
-        protected readonly GroupConfigTpl m_Config;
+        protected readonly GroupConfigModel m_Config;
 
-        public GroupConfigProvider(GroupConfigTpl configTpl)
+        public GroupConfigProvider(GroupConfigModel configTpl)
         {
             this.m_Config = configTpl;
         }
@@ -19,7 +19,7 @@ namespace TinaX.VFS.Groups.ConfigProviders
 
         public bool CheckCompleted { get; private set; } = false;
 
-        public GroupConfigTpl Configuration => m_Config;
+        public GroupConfigModel Configuration => m_Config;
 
         public virtual void Standardize()
         {

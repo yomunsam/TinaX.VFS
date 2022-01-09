@@ -1,4 +1,5 @@
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets;
+using TinaX.VFS.SerializableModels;
 using TinaX.VFS.Utils;
 using TinaXEditor.VFS.Managers.Config;
 using TinaXEditor.VFS.Packages;
@@ -12,9 +13,13 @@ namespace TinaXEditor.VFS.Managers
     [UnityEditor.InitializeOnLoad]
     public static class EditorVFSManager
     {
+        private static VFSConfigAsset m_VFSConfigAsset;
+        private static VFSConfigModel m_VFSConfigModel;
+        private static bool m_VFSConfigInitialized = false;
+
         private static EditorAssetQuerier m_AssetQuerier;
         private static EditorMainPackage m_EditorMainPack;
-        private static VFSConfigTpl m_VFSConfigTpl;
+
 
         static EditorVFSManager()
         {
@@ -23,7 +28,7 @@ namespace TinaXEditor.VFS.Managers
 
         public static EditorAssetQuerier AssetQuerier => m_AssetQuerier;
 
-        public static VFSConfigTpl VFSConfig => m_VFSConfigTpl;
+        public static VFSConfigModel VFSConfigModel => m_VFSConfigModel;
 
         public static EditorMainPackage MainPackage => m_EditorMainPack;
 
@@ -36,38 +41,44 @@ namespace TinaXEditor.VFS.Managers
                 InitializeMainPack();
             if (m_AssetQuerier != null)
                 return;
-            m_AssetQuerier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault(), m_EditorMainPack, new EditorExpansionPackManager(), m_VFSConfigTpl.GlobalAssetConfig); //Todo:这儿看看以后搞成可扩展
-            
+            m_AssetQuerier = new EditorAssetQuerier(EditorQueryAssetPipelineDefault.CreateDefault(), m_EditorMainPack, new EditorExpansionPackManager(), m_VFSConfigModel.GlobalAssetConfig); //Todo:这儿看看以后搞成可扩展
+
         }
 
         public static void InitializeMainPack()
         {
             if (m_EditorMainPack != null)
                 return;
-            if (m_VFSConfigTpl == null)
-                InitializeVFSConfigTpl();
-            if (m_VFSConfigTpl == null)
+            InitializeVFSConfig(); 
+            if (m_VFSConfigModel == null)
                 return;
-            EditorMainPackageConfigProvider provider = new EditorMainPackageConfigProvider(m_VFSConfigTpl.MainPackage);
+            EditorMainPackageConfigProvider provider = new EditorMainPackageConfigProvider(m_VFSConfigAsset.MainPackage, m_VFSConfigModel.MainPackage);
             provider.Standardize();
             m_EditorMainPack = new EditorMainPackage(provider);
             m_EditorMainPack.Initialize(); //初始化
         }
 
-        public static void InitializeVFSConfigTpl()
+        public static void InitializeVFSConfig()
         {
-            if (m_VFSConfigTpl != null)
+            if (m_VFSConfigInitialized)
                 return;
-            var vfs_conf_asset = EditorVFSConfigManager.ConfigAsset;
-            if (vfs_conf_asset == null)
-                return;
-            VFSConfigUtils.MapToVFSConfigTpl(in vfs_conf_asset, out m_VFSConfigTpl);
+
+            EditorVFSConfigManager.Clear();
+            m_VFSConfigAsset = EditorVFSConfigManager.ConfigAsset;
+            if (m_VFSConfigAsset != null)
+            {
+                VFSConfigUtils.MapToVFSConfigModel(in m_VFSConfigAsset, out m_VFSConfigModel);
+            }
+
+            m_VFSConfigInitialized = true;
         }
 
         public static void RefreshConfiguration()
         {
             EditorVFSConfigManager.Clear();
-            m_VFSConfigTpl = null;
+            m_VFSConfigModel = null;
+            m_VFSConfigAsset = null;
+            m_VFSConfigInitialized = false;
             m_EditorMainPack = null;
 
             InitializeMainPack();

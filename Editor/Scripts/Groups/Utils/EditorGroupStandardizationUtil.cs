@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using TinaX;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets.Configurations;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,8 +16,10 @@ namespace TinaXEditor.VFS.Groups.Utils
         /// 对组的标准化
         /// </summary>
         /// <param name="group"></param>
-        public static void StandardizeGroup(GroupConfigTpl group)
+        public static void StandardizeGroup(GroupConfig group)
         {
+            if(group == null)
+                throw new ArgumentNullException(nameof(group));
             //由于组里的配置耦合度比较高，所以我们就暂时先都写在一起了，以后如果实在不美观的话再拆分（嘛弄不好哪天就重构了（flag+1））
 
             #region GroupName

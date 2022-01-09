@@ -56,8 +56,10 @@ namespace TinaX.VFS.Utils
         public static string GetMainPackageDataFolder(string virtualSpacePath, string platformName)
             => Path.Combine(virtualSpacePath, platformName, "vfs_main", "data");
 
-        public static string GetVFSConfigTplFilePath(string mainPackageDataFolder)
+        public static string GetVFSConfigModelFilePath(string mainPackageDataFolder)
             => Path.Combine(mainPackageDataFolder, VFSConsts.VFSConfigJsonFileName);
 
+        public static string GetVFSBundleManifestFilePath(string mainPackageDataFolder)
+            => Path.Combine(mainPackageDataFolder, VFSConsts.VFSBundleManifestFileName);
     }
 }

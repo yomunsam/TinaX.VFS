@@ -1,7 +1,3 @@
-using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Packages;
-using TinaX.VFS.Packages.Managers;
-
 namespace TinaX.VFS.Querier.Pipelines
 {
     /// <summary>
@@ -11,6 +7,6 @@ namespace TinaX.VFS.Querier.Pipelines
     {
         string HandlerName { get; }
 
-        void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result, ref VFSMainPackage mainPackage, ref ExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig);
+        void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result);
     }
 }

@@ -1,5 +1,5 @@
 using System.Linq;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 using UnityEngine;
 
 namespace TinaX.VFS.Groups.Utils
@@ -13,7 +13,7 @@ namespace TinaX.VFS.Groups.Utils
         /// 对组的标准化
         /// </summary>
         /// <param name="group"></param>
-        public static void StandardizeGroup(GroupConfigTpl group)
+        public static void StandardizeGroup(GroupConfigModel group)
         {
             // 标准化 AssetPaths
             for (int i = group.AssetPaths.Count - 1; i >= 0; i--)

@@ -1,25 +1,30 @@
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets.Configurations;
 using TinaX.VFS.Groups.ConfigProviders;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaXEditor.VFS.Groups.Utils;
 using TinaXEditor.VFS.Scripts.ConfigProviders;
 using UnityEditor;
 using UnityEngine;
 
+#nullable enable
 namespace TinaXEditor.VFS.Groups.ConfigProviders
 {
-    public class EditorGroupConfigProvider : GroupConfigProvider, IEditorConfigProvider<GroupConfigTpl>
+    public class EditorGroupConfigProvider : GroupConfigProvider, IEditorConfigProvider<GroupConfig, GroupConfigModel>
     {
-        protected readonly GroupConfigTpl m_EditorConfig;
+        protected readonly GroupConfig m_EditorConfig;
 
-        public EditorGroupConfigProvider(GroupConfigTpl configTpl) : base(configTpl)
+        public EditorGroupConfigProvider(GroupConfig config) : base(JsonUtility.FromJson<GroupConfigModel>(JsonUtility.ToJson(config)))
         {
-            //这个提供者继承了Runtime下的提供者，它需要提供Runtime格式的配置和Editor标准的配置，
-            //于是，奇妙的深拷贝大法
-            var json = EditorJsonUtility.ToJson(configTpl);
-            m_EditorConfig = JsonUtility.FromJson<GroupConfigTpl>(json);
+            m_EditorConfig = config;
         }
 
-        public GroupConfigTpl EditorConfiguration => m_EditorConfig;
+        public EditorGroupConfigProvider(GroupConfig config, GroupConfigModel configModel) : base(configModel)
+        {
+            m_EditorConfig = config;
+        }
+
+        public GroupConfig EditorConfiguration => m_EditorConfig;
+
 
         public override void Standardize()
         {

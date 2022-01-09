@@ -1,18 +1,15 @@
-using System.Collections.Generic;
-using System.Linq;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets.Configurations;
 using TinaX.VFS.Groups;
-using TinaXEditor.VFS.Models;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaXEditor.VFS.Scripts.ConfigProviders;
-using UnityEditor;
 
 namespace TinaXEditor.VFS.Groups
 {
     public class EditorVFSGroup : VFSGroup
     {
-        private readonly IEditorConfigProvider<GroupConfigTpl> m_EditorConfigProvider;
+        private readonly IEditorConfigProvider<GroupConfig, GroupConfigModel> m_EditorConfigProvider;
 
-        public EditorVFSGroup(IEditorConfigProvider<GroupConfigTpl> configProvider) : base(configProvider)
+        public EditorVFSGroup(IEditorConfigProvider<GroupConfig, GroupConfigModel> configProvider) : base(configProvider)
         {
             this.m_EditorConfigProvider = configProvider;
         }

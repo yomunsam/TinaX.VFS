@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.ConfigAssets.Configurations;
 using TinaX.VFS.Consts;
 using UnityEngine;
 
@@ -16,15 +16,15 @@ namespace TinaX.VFS.ConfigAssets
         /// <summary>
         /// 全局资产配置
         /// </summary>
-        public GlobalAssetConfigTpl GlobalAssetConfig = new GlobalAssetConfigTpl();
+        public GlobalAssetConfig GlobalAssetConfig = new GlobalAssetConfig();
 
         [Header("Main Package")]
-        public MainPackageConfigTpl MainPackage = new MainPackageConfigTpl();
+        public MainPackageConfig MainPackage = new MainPackageConfig();
 
         /// <summary>
         /// 扩展包
         /// </summary>
-        public List<ExpansionPackConfigTpl> ExpansionPacks = new List<ExpansionPackConfigTpl>();
+        public List<ExpansionPackConfig> ExpansionPacks = new List<ExpansionPackConfig>();
 
         public VFSConfigAsset()
         {

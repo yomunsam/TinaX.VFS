@@ -15,6 +15,7 @@ namespace TinaX.VFS.Consts
         /// 按照约定它应该放在Virtual Space中主包的data目录下
         /// </summary>
         public const string VFSConfigJsonFileName = "vfs.conf.json";
+        public const string VFSBundleManifestFileName = "vfs.manifest.json";
 
         /// <summary>
         /// 固定资产构建Tag: Editor Only

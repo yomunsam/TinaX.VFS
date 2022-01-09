@@ -1,5 +1,5 @@
 using TinaX.VFS.ConfigProviders;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 using TinaX.VFS.Utils;
 
 namespace TinaX.VFS.Packages
@@ -9,7 +9,7 @@ namespace TinaX.VFS.Packages
     /// </summary>
     public class VFSMainPackage : VFSPackage
     {
-        public VFSMainPackage(IConfigProvider<MainPackageConfigTpl> configProvider) : base(configProvider.Configuration)
+        public VFSMainPackage(IConfigProvider<MainPackageConfigModel> configProvider) : base(configProvider.Configuration)
         {
         }
 

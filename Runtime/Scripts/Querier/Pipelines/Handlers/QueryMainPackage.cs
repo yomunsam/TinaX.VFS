@@ -1,19 +1,17 @@
-using TinaX.VFS.ConfigTpls;
-using TinaX.VFS.Packages;
-using TinaX.VFS.Packages.Managers;
-
 namespace TinaX.VFS.Querier.Pipelines.Handlers
 {
     public class QueryMainPackage : IQueryAssetHandler
     {
         public string HandlerName => QueryAssetHandlerNameConsts.QueryFromMainPackage;
 
-        public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result, ref VFSMainPackage mainPackage, ref ExpansionPackManager expansionPackManager, ref GlobalAssetConfigTpl globalAssetConfig)
+        public void QueryAsset(ref QueryAssetContext context, ref AssetQueryResult result)
         {
             if (result.ManagedPackage != null)
                 return; //资产的归属已经找到了，本流程就不需要执行了。
+            if (context.MainPackage == null)
+                return;
 
-            if (mainPackage.TryQueryAsset(ref result))
+            if (context.MainPackage.TryQueryAsset(ref result))
             {
                 //查到了
                 result.ManagedByMainPack = true;

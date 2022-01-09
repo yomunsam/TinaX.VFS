@@ -1,17 +1,17 @@
 using System;
 using TinaX.VFS.ConfigProviders;
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 
 namespace TinaX.VFS.Packages.ConfigProviders
 {
     /// <summary>
     /// VFS 资产包 配置提供者
     /// </summary>
-    public class MainPackageConfigProvider : IConfigProvider<MainPackageConfigTpl>
+    public class MainPackageConfigProvider : IConfigProvider<MainPackageConfigModel>
     {
-        protected readonly MainPackageConfigTpl m_Config;
+        protected readonly MainPackageConfigModel m_Config;
 
-        public MainPackageConfigProvider(MainPackageConfigTpl configTpl)
+        public MainPackageConfigProvider(MainPackageConfigModel configTpl)
         {
             this.m_Config = configTpl;
         }
@@ -19,16 +19,16 @@ namespace TinaX.VFS.Packages.ConfigProviders
 
         public bool CheckCompleted { get; private set; } = false;
 
-        public MainPackageConfigTpl Configuration => m_Config;
+        public MainPackageConfigModel Configuration => m_Config;
 
-        public void Standardize()
+        public virtual void Standardize()
         {
             if (Standardized)
                 return;
             Standardized = true;
         }
 
-        public bool TryCheckError(out ConfigError? error)
+        public virtual bool TryCheckError(out ConfigError? error)
         {
             throw new NotImplementedException();
         }

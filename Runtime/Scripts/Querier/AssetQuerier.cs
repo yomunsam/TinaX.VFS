@@ -1,11 +1,12 @@
 using System.IO;
 using TinaX.Container;
 using TinaX.Systems.Pipeline;
-using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Packages;
 using TinaX.VFS.Packages.Managers;
 using TinaX.VFS.Querier.Pipelines;
+using TinaX.VFS.SerializableModels.Configurations;
 
+#nullable enable
 namespace TinaX.VFS.Querier
 {
     /// <summary>
@@ -14,27 +15,34 @@ namespace TinaX.VFS.Querier
     public class AssetQuerier
     {
         protected XPipeline<IQueryAssetHandler> m_Pipeline;
+        private readonly IServiceContainer m_Services;
+        private readonly GlobalAssetConfigModel m_GlobalAssetConfig;
+        private readonly VFSMainPackage m_MainPackage;
+        private readonly ExpansionPackManager m_ExpansionPackManager;
 
-        public AssetQuerier(QueryAssetPipelineBuilder pipelineBuilder)
-        {
-            m_Pipeline = pipelineBuilder.Pipeline;
-        }
-
-        public AssetQuerier(XPipeline<IQueryAssetHandler> queryPipeline)
+        public AssetQuerier(XPipeline<IQueryAssetHandler> queryPipeline,
+            IServiceContainer services,
+            GlobalAssetConfigModel globalAssetConfig,
+            VFSMainPackage mainPackage,
+            ExpansionPackManager expansionPackManager)
         {
             m_Pipeline = queryPipeline;
+            this.m_Services = services;
+            this.m_GlobalAssetConfig = globalAssetConfig;
+            this.m_MainPackage = mainPackage;
+            this.m_ExpansionPackManager = expansionPackManager;
         }
 
 
         public XPipeline<IQueryAssetHandler> QueryPipeline => m_Pipeline;
 
 
-        public virtual AssetQueryResult QueryAsset(string assetPath, string variant, IServiceContainer services, VFSMainPackage mainPackage, ExpansionPackManager expansionPackManager, GlobalAssetConfigTpl globalAssetConfigTpl)
+        public virtual AssetQueryResult QueryAsset(string assetPath, string variant)
         {
             //上下文
-            var queryContext = new QueryAssetContext
+            var queryContext = new QueryAssetContext(m_Services, m_GlobalAssetConfig)
             {
-                Services = services
+                MainPackage = m_MainPackage,  
             };
             var queryresult = new AssetQueryResult
             {
@@ -46,7 +54,7 @@ namespace TinaX.VFS.Querier
 
             m_Pipeline.Start(handler =>
             {
-                handler.QueryAsset(ref queryContext, ref queryresult, ref mainPackage, ref expansionPackManager, ref globalAssetConfigTpl);
+                handler.QueryAsset(ref queryContext, ref queryresult);
                 return !queryContext.BreakPipeline;
             });
 

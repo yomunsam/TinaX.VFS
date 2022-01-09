@@ -1,15 +1,15 @@
-using TinaX.VFS.ConfigTpls;
+using TinaX.VFS.SerializableModels.Configurations;
 
 namespace TinaX.VFS.ConfigProviders
 {
     /// <summary>
     /// 全局资产 配置提供者 默认接口实现
     /// </summary>
-    public class GlobalAssetConfigProvider : IConfigProvider<GlobalAssetConfigTpl>
+    public class GlobalAssetConfigProvider : IConfigProvider<GlobalAssetConfigModel>
     {
-        private readonly GlobalAssetConfigTpl m_Config;
+        private readonly GlobalAssetConfigModel m_Config;
 
-        public GlobalAssetConfigProvider(GlobalAssetConfigTpl configTpl)
+        public GlobalAssetConfigProvider(GlobalAssetConfigModel configTpl)
         {
             this.m_Config = configTpl;
         }
@@ -18,7 +18,7 @@ namespace TinaX.VFS.ConfigProviders
 
         public bool CheckCompleted { get; private set; } = false;
 
-        public GlobalAssetConfigTpl Configuration => m_Config;
+        public GlobalAssetConfigModel Configuration => m_Config;
 
         public void Standardize()
         {

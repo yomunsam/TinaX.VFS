@@ -10,10 +10,10 @@
  */
 
 using System.Collections.Generic;
-using TinaX.VFS.ConfigTpls;
 using TinaX.VFS.Groups;
 using TinaX.VFS.Groups.ConfigProviders;
 using TinaX.VFS.Querier;
+using TinaX.VFS.SerializableModels.Configurations;
 
 namespace TinaX.VFS.Packages
 {
@@ -28,19 +28,19 @@ namespace TinaX.VFS.Packages
     {
         //------------固定字段------------------------------------------------------------------------------------
 
-        protected readonly PackageConfigTpl m_Config;
+        protected readonly PackageConfigModel m_Config;
 
         //------------构造方法------------------------------------------------------------------------------------
-        public VFSPackage(PackageConfigTpl configTpl)
+        public VFSPackage(PackageConfigModel configModel)
         {
-            m_Config = configTpl;
+            m_Config = configModel;
         }
 
         //------------私有字段------------------------------------------------------------------------------------
         protected bool m_Initialized = false;
 
         //------------公开属性------------------------------------------------------------------------------------
-        public PackageConfigTpl Configuration => m_Config;
+        public PackageConfigModel Configuration => m_Config;
 
         public List<VFSGroup> Groups { get; private set; } = new List<VFSGroup>();
 

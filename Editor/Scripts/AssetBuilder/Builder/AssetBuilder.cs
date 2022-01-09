@@ -33,20 +33,20 @@ namespace TinaXEditor.VFS.AssetBuilder.Builder
 
         public string AssetBundleOutputFolder { get; set; }
 
-        public AssetBuilder SetBuildPlatform(XRuntimePlatform platform)
-        {
-            this.BuildPlatform = platform;
-            this.BuildTarget = EditorPlatformHelper.GetBuildTarget(platform);
-            this.BuildTargetGroup = EditorPlatformHelper.GetBuildTargetGroup(platform);
-            AssetBundleOutputFolder = EditorVFSUtils.GetProjectAssetBundleOutputPath(PlatformHelper.GetName(platform));
-            return this;
-        }
+        //public AssetBuilder SetBuildPlatform(XRuntimePlatform platform)
+        //{
+        //    this.BuildPlatform = platform;
+        //    this.BuildTarget = EditorPlatformHelper.GetBuildTarget(platform);
+        //    this.BuildTargetGroup = EditorPlatformHelper.GetBuildTargetGroup(platform);
+        //    AssetBundleOutputFolder = EditorVFSUtils.GetProjectAssetBundleOutputPath(PlatformHelper.GetName(platform));
+        //    return this;
+        //}
 
-        public AssetBuilder SetBuildTarget(UnityEditor.BuildTarget buildTarget)
-        {
-            this.BuildTarget = buildTarget;
-            return this;
-        }
+        //public AssetBuilder SetBuildTarget(UnityEditor.BuildTarget buildTarget)
+        //{
+        //    this.BuildTarget = buildTarget;
+        //    return this;
+        //}
 
 
         /// <summary>
