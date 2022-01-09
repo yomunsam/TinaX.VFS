@@ -1,12 +1,14 @@
-using Cysharp.Threading.Tasks;
 using System;
 using System.IO;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using TinaX.Container;
 using TinaX.Core.Helper.Platform;
-using TinaX.Core.Platforms;
+using TinaX.Core.Utils;
 using TinaX.Exceptions;
 using TinaX.Options;
-using TinaX.VFS.ConfigAssets;
+using TinaX.Systems.Pipeline;
+using TinaX.VFS.Assets;
 using TinaX.VFS.Internal;
 using TinaX.VFS.LoadAssets;
 using TinaX.VFS.Loader.DataLoader;
@@ -14,7 +16,9 @@ using TinaX.VFS.Options;
 using TinaX.VFS.Packages;
 using TinaX.VFS.Packages.ConfigProviders;
 using TinaX.VFS.Packages.Managers;
+using TinaX.VFS.Pipelines.LoadAsset;
 using TinaX.VFS.Querier;
+using TinaX.VFS.Querier.Pipelines;
 using TinaX.VFS.SerializableModels;
 using TinaX.VFS.Utils;
 using UnityEngine;
@@ -27,14 +31,25 @@ namespace TinaX.VFS.Services
     {
         //------------固定字段--------------------------------------------------------------------------
         private readonly VFSOptions m_Option;
+        private readonly IServiceContainer m_Services;
+        private readonly bool m_Hans;
+
+        private readonly VFSAssetManager m_AssetManager;
 
         //------------构造方法--------------------------------------------------------------------------
-        public VFSService(IOptions<VFSOptions> option)
+        public VFSService(IOptions<VFSOptions> option, IServiceContainer services)
         {
             this.m_Option = option.Value;
             m_VirtualSpaceInStramingAssets = VFSUtils.GetStreamingAssetsVirtualSpacePath();
             m_VirtualSpaceInLocalStorage = VFSUtils.GetLocalStorageVirtualSpacePath(Path.Combine(UnityEngine.Application.persistentDataPath, "TinaX"));
             m_PlatformName = PlatformHelper.GetName(PlatformHelper.GetXRuntimePlatform(Application.platform));
+            this.m_Services = services;
+
+            m_LoadAssetAsyncPipeline = LoadAssetPipelineDefault.CreateAsyncDefault();
+
+            m_Hans = LocalizationUtil.IsHans();
+            m_AssetManager = new VFSAssetManager();
+
         }
 
         //------------私有字段--------------------------------------------------------------------------
@@ -53,16 +68,30 @@ namespace TinaX.VFS.Services
         private VFSMainPackage? m_MainPack;
         private ExpansionPackManager? m_ExpansionPackManager;
         private AssetQuerier? m_AssetQuerier;
-        //------------公开方法--------------------------------------------------------------------------
+
+        private XPipeline<ILoadAssetAsyncHandler> m_LoadAssetAsyncPipeline;
+        //------------公开方法（服务接口对外）--------------------------------------------------------------------------
+
+        public async UniTask<IAsset> LoadAssetAsync(string loadPath, Type type, string? variant = null)
+        {
+            var asset = await DoLoadAssetAsync(loadPath, type, variant);
+            return asset;
+        }
 
 
-
-        //------------公开方法--------------------------------------------------------------------------
+        public AssetQueryResult QueryAsset(string loadPath, string? variant = null)
+        {
+            if (!m_Initialized)
+                throw new XException("The method must be called after the VFS module has finished starting.");
+            return m_AssetQuerier!.QueryAsset(loadPath, variant ?? m_ConfigModel!.GlobalAssetConfig.DefaultAssetBundleVariant);
+        }
 
         public void Release(UObject asset)
         {
             throw new NotImplementedException();
         }
+
+        //------------其他公开方法--------------------------------------------------------------------------
 
 
         #region 生命周期
@@ -99,7 +128,7 @@ namespace TinaX.VFS.Services
             m_ExpansionPackManager = new ExpansionPackManager();
 
             //资产查询器
-            //m_AssetQuerier = new AssetQuerier()
+            m_AssetQuerier = new AssetQuerier(QueryAssetPipelineDefault.CreateDefault(), m_Services, m_ConfigModel.GlobalAssetConfig, m_MainPack!, m_ExpansionPackManager);
 
 
             m_Initialized = true;
@@ -117,6 +146,36 @@ namespace TinaX.VFS.Services
             mainPackConfigProvider.Standardize(); //标准化
             m_MainPack = new VFSMainPackage(mainPackConfigProvider);
             m_MainPack.Initialize();
+        }
+
+
+        /// <summary>
+        /// 资产加载的内部方法
+        /// </summary>
+        /// <param name="loadPath"></param>
+        /// <param name="type"></param>
+        /// <param name="variant"></param>
+        /// <returns></returns>
+        private async UniTask<VFSAsset> DoLoadAssetAsync(string loadPath, Type type, string? variant = null, CancellationToken cancellationToken = default)
+        {
+            //context
+            var context = new LoadAssetContext(m_AssetQuerier!, m_AssetManager)
+            {
+                HansLog = m_Hans,
+            };
+            //payload
+            var payload = new LoadAssetPayload(loadPath, variant ?? m_ConfigModel!.GlobalAssetConfig.DefaultAssetBundleVariant);
+
+            await m_LoadAssetAsyncPipeline.StartAsync(async handler =>
+            {
+                await handler.LoadAssetAsync(context, payload);
+                return !context.BreakPipeline && !cancellationToken.IsCancellationRequested;
+            });
+
+            if (payload.LoadedAsset == null)
+                throw new NotFoundException($"Load asset failed, not found : {loadPath}", loadPath);
+
+            return payload.LoadedAsset!;
         }
 
     }

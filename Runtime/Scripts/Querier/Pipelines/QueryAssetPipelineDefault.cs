@@ -7,18 +7,14 @@ namespace TinaX.VFS.Querier.Pipelines
     /// <summary>
     /// 查询资产管线构建器
     /// </summary>
-    public class QueryAssetPipelineBuilder
+    public static class QueryAssetPipelineDefault
     {
 
-        public XPipeline<IQueryAssetHandler> Pipeline = new XPipeline<IQueryAssetHandler>();
-
-
-
-        public static QueryAssetPipelineBuilder CreateDefault()
+        public static XPipeline<IQueryAssetHandler> CreateDefault()
         {
-            var builder = new QueryAssetPipelineBuilder();
-            AppendDefaultPipeline(ref builder.Pipeline);
-            return builder;
+            var pipeline = new XPipeline<IQueryAssetHandler>();
+            AppendDefaultPipeline(ref pipeline);
+            return pipeline;
         }
 
         /// <summary>

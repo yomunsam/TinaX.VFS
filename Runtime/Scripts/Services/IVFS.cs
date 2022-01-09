@@ -2,12 +2,16 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using TinaX.Exceptions;
+using TinaX.VFS.Querier;
 using UObject = UnityEngine.Object;
 
 namespace TinaX.VFS
 {
     public interface IVFS
     {
+        UniTask<IAsset> LoadAssetAsync(string loadPath, Type type, string variant = null);
+        AssetQueryResult QueryAsset(string loadPath, string variant = null);
+
         //#region 同步加载系列
 
         //UObject Load(string assetPath, Type type);

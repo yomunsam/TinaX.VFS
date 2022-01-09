@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Cysharp.Threading.Tasks;
 using TinaX.Core.Helper.String;
+using TinaX.Exceptions;
 using TinaX.Services.ConfigAssets;
 using TinaX.VFS.ConfigAssets;
 using TinaX.VFS.Consts;
@@ -64,17 +65,19 @@ namespace TinaX.VFS.Loader.DataLoader
             var uri = new System.Uri(configFilePathInStreamingAssets);
             try
             {
-                var req = UnityWebRequest.Get(uri);
-                var result = await req.SendWebRequest();
-                if(req.result == UnityWebRequest.Result.ProtocolError)
+                using(var req = UnityWebRequest.Get(uri))
                 {
-                    if(req.responseCode == 404)
+                    var result = await req.SendWebRequest();
+                    if (req.result == UnityWebRequest.Result.ProtocolError)
                     {
-                        throw new FileNotFoundException("Failed to load VFS config file from localStorage path {0}, file not found.", uri.ToString());
+                        if (req.responseCode == 404)
+                        {
+                            throw new NotFoundException("Failed to load VFS config file from localStorage path {0}, file not found.", uri.ToString());
+                        }
                     }
+                    var json = StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+                    return JsonUtility.FromJson<VFSConfigModel>(json);
                 }
-                var json = StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
-                return JsonUtility.FromJson<VFSConfigModel>(json);
             }
             catch(UnityWebRequestException ex)
             {
@@ -82,7 +85,7 @@ namespace TinaX.VFS.Loader.DataLoader
                 {
                     if (ex.UnityWebRequest.responseCode == 404)
                     {
-                        throw new FileNotFoundException("Failed to load VFS config file from localStorage path {0}, file not found.", uri.ToString());
+                        throw new NotFoundException("Failed to load VFS config file from localStorage path {0}, file not found.", uri.ToString());
                     }
                 }
                 throw;
