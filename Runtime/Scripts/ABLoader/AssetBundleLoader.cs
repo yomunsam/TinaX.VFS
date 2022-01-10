@@ -66,22 +66,23 @@ namespace TinaX.VFSKit.Loader
 
         public async UniTask<AssetBundle> LoadAssetBundleFromWebAsync(string path,string assetBundleName,int timeout)
         {
-            var req = UnityWebRequestAssetBundle.GetAssetBundle(path);
-            req.timeout = timeout;
-            await req.SendWebRequest();
-
+            using (var req = UnityWebRequestAssetBundle.GetAssetBundle(path))
+            {
+                req.timeout = timeout;
+                await req.SendWebRequest();
 #if UNITY_2020_2_OR_NEWER
-            if(req.result != UnityWebRequest.Result.Success)
+                if (req.result != UnityWebRequest.Result.Success)
 #else
             if (req.isNetworkError || req.isHttpError)
 #endif
-            {
-                if (req.responseCode == 404)
-                    throw new FileNotFoundException("assetbundle not found from web :" + path, path);
-                else
-                    throw new DownloadNetworkException($"[{req.responseCode}]Failed to download assetbundle from web: {path} --> {req.error}", path, req.error, req.responseCode);
+                {
+                    if (req.responseCode == 404)
+                        throw new FileNotFoundException("assetbundle not found from web :" + path, path);
+                    else
+                        throw new DownloadNetworkException($"[{req.responseCode}]Failed to download assetbundle from web: {path} --> {req.error}", path, req.error, req.responseCode);
+                }
+                return DownloadHandlerAssetBundle.GetContent(req);
             }
-            return DownloadHandlerAssetBundle.GetContent(req);
         }
 
         public AssetBundle LoadAssetBundleFromAndroidStreamingAssets(string path, string assetbundleName, string virtualDiskPath)

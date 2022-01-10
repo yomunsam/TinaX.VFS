@@ -1505,18 +1505,20 @@ namespace TinaX.VFSKit
         {
             try
             {
-                var req = UnityWebRequest.Get(new Uri(path));
-                await req.SendWebRequest();
+                using(var req = UnityWebRequest.Get(new Uri(path)))
+                {
+                    await req.SendWebRequest();
 #if UNITY_2020_2_OR_NEWER
-                if(req.result == UnityWebRequest.Result.ProtocolError)
+                    if (req.result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (req.isHttpError)
 #endif
-                {
-                    if (req.responseCode == 404)
-                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                    {
+                        if (req.responseCode == 404)
+                            throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                    }
+                    return req.downloadHandler.data;
                 }
-                return req.downloadHandler.data;
             }
             catch(UnityWebRequestException e)
             {
@@ -1537,18 +1539,21 @@ namespace TinaX.VFSKit
         {
             try
             {
-                var req = UnityWebRequest.Get(new Uri(path));
-                await req.SendWebRequest();
+                using (var req = UnityWebRequest.Get(new Uri(path)))
+                {
+                    await req.SendWebRequest();
 #if UNITY_2020_2_OR_NEWER
-                if(req.result == UnityWebRequest.Result.ProtocolError)
+                    if (req.result == UnityWebRequest.Result.ProtocolError)
 #else
                 if (req.isHttpError)
 #endif
-                {
-                    if (req.responseCode == 404)
-                        throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                    {
+                        if (req.responseCode == 404)
+                            throw new Exceptions.FileNotFoundException($"Failed to load file from StreamingAssets, file path:{path}", path);
+                    }
+                    return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
                 }
-                return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+                
             }
             catch(UnityWebRequestException e)
             {
@@ -1572,31 +1577,34 @@ namespace TinaX.VFSKit
         {
             try
             {
-                Debug.Log("喵，下载文本：" + uri.ToString());
-                var req = UnityWebRequest.Get(uri);
-                req.timeout = timeout;
-                await req.SendWebRequest();
+                //Debug.Log("喵，下载文本：" + uri.ToString());
+                using(var req = UnityWebRequest.Get(uri))
+                {
+                    req.timeout = timeout;
+                    await req.SendWebRequest();
 
 #if UNITY_2020_2_OR_NEWER
-                if(req.result != UnityWebRequest.Result.Success)
+                    if (req.result != UnityWebRequest.Result.Success)
 #else
                 if (req.isNetworkError || req.isHttpError)
 #endif
-                {
-                    if (req.responseCode == 404)
-                        throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
-                    else
-                        throw new VFSException("Failed to get text from web:" + uri.ToString());
-                }
-                if (encoding == null)
-                    return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
-                else
-                {
-                    if (encoding == Encoding.UTF8)
+                    {
+                        if (req.responseCode == 404)
+                            throw new FileNotFoundException("Failed to get text from web : " + uri.ToString(), uri.ToString());
+                        else
+                            throw new VFSException("Failed to get text from web:" + uri.ToString());
+                    }
+                    if (encoding == null)
                         return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
                     else
-                        return encoding.GetString(req.downloadHandler.data);
+                    {
+                        if (encoding == Encoding.UTF8)
+                            return StringHelper.RemoveUTF8BOM(req.downloadHandler.data);
+                        else
+                            return encoding.GetString(req.downloadHandler.data);
+                    }
                 }
+                
             }
             catch(UnityWebRequestException e)
             {
