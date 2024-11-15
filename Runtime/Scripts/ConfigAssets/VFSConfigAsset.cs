@@ -52,7 +52,7 @@ namespace TinaX.VFS.ConfigAssets
 #endif
 
 #if UNITY_EDITOR && !TINAX_CONFIG_NO_RESOURCES
-            GlobalAssetConfig.IgnoreFolderName.AddRange(new string[] { "Resources" });
+            GlobalAssetConfig.IgnoreFolderNames.AddRange(new string[] { "Resources" });
 #endif
 
         }
